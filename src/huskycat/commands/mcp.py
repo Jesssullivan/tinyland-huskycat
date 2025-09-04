@@ -2,7 +2,6 @@
 MCP Server command for AI integration.
 """
 
-
 from ..core.base import BaseCommand, CommandResult, CommandStatus
 
 
