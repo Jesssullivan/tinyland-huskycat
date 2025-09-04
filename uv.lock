@@ -523,6 +523,7 @@ dev = [
     { name = "types-jsonschema" },
     { name = "types-pyyaml" },
     { name = "types-requests" },
+    { name = "yamllint" },
 ]
 
 [package.metadata]
@@ -567,6 +568,7 @@ dev = [
     { name = "types-jsonschema", specifier = ">=4.25.1.20250822" },
     { name = "types-pyyaml", specifier = ">=6.0.12.20250822" },
     { name = "types-requests", specifier = ">=2.32.4.20250809" },
+    { name = "yamllint", specifier = ">=1.37.1" },
 ]
 
 [[package]]
