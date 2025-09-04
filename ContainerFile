@@ -70,6 +70,7 @@ FROM alpine:3.19
 # Install runtime dependencies only
 RUN apk add --no-cache \
     python3 \
+    py3-pip \
     nodejs \
     git \
     bash \
@@ -81,11 +82,19 @@ RUN addgroup -g 1001 huskycat && \
     adduser -D -u 1001 -G huskycat huskycat
 
 # Copy tools from builder
-COPY --from=builder /usr/local/bin /usr/local/bin
-COPY --from=builder /usr/lib/python3.* /usr/lib/python3.11/
-COPY --from=builder /usr/lib/node_modules /usr/lib/node_modules
-# Copy Go tools (currently empty directory)
-COPY --from=builder /go/bin /usr/local/bin
+COPY --from=builder /usr/local/bin /usr/local/bin/
+COPY --from=builder /usr/bin/black /usr/bin/black
+COPY --from=builder /usr/bin/flake8 /usr/bin/flake8
+COPY --from=builder /usr/bin/mypy /usr/bin/mypy
+COPY --from=builder /usr/bin/pylint /usr/bin/pylint
+COPY --from=builder /usr/bin/bandit /usr/bin/bandit
+COPY --from=builder /usr/bin/ruff /usr/bin/ruff
+COPY --from=builder /usr/bin/yamllint /usr/bin/yamllint
+COPY --from=builder /usr/bin/shellcheck /usr/bin/shellcheck
+COPY --from=builder /usr/lib/python3.11 /usr/lib/python3.11/
+COPY --from=builder /usr/lib/node_modules /usr/lib/node_modules/
+# Copy Go tools (currently empty directory) 
+COPY --from=builder /go/bin /tmp/go-tools
 
 # Copy application files
 WORKDIR /app
@@ -106,7 +115,7 @@ USER huskycat
 WORKDIR /workspace
 
 # Environment variables
-ENV PATH="/app:${PATH}"
+ENV PATH="/usr/local/bin:/app:${PATH}"
 ENV PYTHONPATH="/app:${PYTHONPATH}"
 
 # Health check

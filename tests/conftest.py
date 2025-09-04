@@ -13,8 +13,8 @@ import hypothesis
 from hypothesis import strategies as st
 
 # Add src directory to Python path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 # Configure Hypothesis for more aggressive testing
 hypothesis.settings.register_profile("ci", max_examples=1000, deadline=None)
@@ -77,7 +77,7 @@ class DataProcessor:
 @pytest.fixture
 def bad_python_code() -> str:
     """Provide bad Python code for testing validation tools."""
-    return '''#!/usr/bin/env python3
+    return """#!/usr/bin/env python3
 
 def calculate_sum(numbers):
     sum=0
@@ -105,7 +105,7 @@ def unsafe_calc(expr):
 
 def concatenate(a,b):
     return str(a)+str(b)
-'''
+"""
 
 
 @pytest.fixture
@@ -126,7 +126,7 @@ def mcp_server_config() -> Dict[str, Any]:
         "validation": {
             "timeout": 30,
             "max_file_size": 1024 * 1024,  # 1MB
-        }
+        },
     }
 
 
@@ -147,7 +147,7 @@ def container_test_config() -> Dict[str, Any]:
         "environment": {
             "PYTHONPATH": "/app",
             "NODE_PATH": "/usr/local/lib/node_modules",
-        }
+        },
     }
 
 
@@ -156,26 +156,28 @@ def git_hook_test_repo(isolated_dir: Path) -> Path:
     """Create a test git repository with hooks."""
     repo_dir = isolated_dir / "test_repo"
     repo_dir.mkdir()
-    
+
     # Initialize git repo
     os.system(f"cd {repo_dir} && git init")
     os.system(f"cd {repo_dir} && git config user.email 'test@example.com'")
     os.system(f"cd {repo_dir} && git config user.name 'Test User'")
-    
+
     # Create .husky directory
     husky_dir = repo_dir / ".husky"
     husky_dir.mkdir()
-    
+
     # Create sample pre-commit hook
     pre_commit = husky_dir / "pre-commit"
-    pre_commit.write_text("""#!/usr/bin/env sh
+    pre_commit.write_text(
+        """#!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
 echo "Running pre-commit validation..."
 exit 0
-""")
+"""
+    )
     pre_commit.chmod(0o755)
-    
+
     return repo_dir
 
 
@@ -183,13 +185,29 @@ exit 0
 @st.composite
 def python_code_strategy(draw) -> str:
     """Generate valid Python code structures."""
-    function_name = draw(st.text(min_size=3, max_size=20, alphabet=st.characters(whitelist_categories=("Ll", "Lu", "Nd", "_"))))
+    function_name = draw(
+        st.text(
+            min_size=3,
+            max_size=20,
+            alphabet=st.characters(whitelist_categories=("Ll", "Lu", "Nd", "_")),
+        )
+    )
     if not function_name[0].isalpha():
         function_name = "f" + function_name
-    
-    parameters = draw(st.lists(st.text(min_size=1, max_size=10, alphabet=st.characters(whitelist_categories=("Ll", "Lu", "Nd", "_"))), min_size=0, max_size=3))
+
+    parameters = draw(
+        st.lists(
+            st.text(
+                min_size=1,
+                max_size=10,
+                alphabet=st.characters(whitelist_categories=("Ll", "Lu", "Nd", "_")),
+            ),
+            min_size=0,
+            max_size=3,
+        )
+    )
     parameters = [p for p in parameters if p.isidentifier()]
-    
+
     param_str = ", ".join(parameters) if parameters else ""
     return f"def {function_name}({param_str}):\n    return None"
 
@@ -232,15 +250,15 @@ def pytest_collection_modifyitems(config, items):
         # Mark property-based tests
         if "property" in item.nodeid or "hypothesis" in str(item.function):
             item.add_marker(pytest.mark.property)
-        
+
         # Mark container tests
         if "container" in item.nodeid or "docker" in item.nodeid:
             item.add_marker(pytest.mark.container)
-        
+
         # Mark slow tests
         if "slow" in item.nodeid or "e2e" in item.nodeid:
             item.add_marker(pytest.mark.slow)
-        
+
         # Mark security tests
         if "security" in item.nodeid or "bandit" in item.nodeid:
             item.add_marker(pytest.mark.security)
@@ -250,15 +268,17 @@ def pytest_collection_modifyitems(config, items):
 def test_environment_setup():
     """Set up test environment variables."""
     original_env = os.environ.copy()
-    
+
     # Set test-specific environment variables
-    os.environ.update({
-        "TESTING": "true",
-        "LOG_LEVEL": "DEBUG",
-        "MCP_SERVER_URL": "http://localhost:8080",
-        "MCP_SERVER_TOKEN": "test-token-123",
-    })
-    
+    os.environ.update(
+        {
+            "TESTING": "true",
+            "LOG_LEVEL": "DEBUG",
+            "MCP_SERVER_URL": "http://localhost:8080",
+            "MCP_SERVER_TOKEN": "test-token-123",
+        }
+    )
+
     try:
         yield
     finally:
@@ -296,7 +316,7 @@ except ImportError:
 def assert_valid_python_code(code: str) -> None:
     """Assert that given code is valid Python."""
     try:
-        compile(code, '<test>', 'exec')
+        compile(code, "<test>", "exec")
     except SyntaxError as e:
         pytest.fail(f"Invalid Python code: {e}")
 
@@ -310,21 +330,27 @@ def assert_no_security_issues(code: str) -> None:
 
 def assert_follows_style(code: str, max_line_length: int = 88) -> None:
     """Assert that code follows basic style guidelines."""
-    lines = code.split('\n')
+    lines = code.split("\n")
     for i, line in enumerate(lines, 1):
-        assert len(line) <= max_line_length, f"Line {i} exceeds max length: {len(line)} > {max_line_length}"
+        assert (
+            len(line) <= max_line_length
+        ), f"Line {i} exceeds max length: {len(line)} > {max_line_length}"
 
 
 def assert_test_quality(test_function) -> None:
     """Assert that a test function meets quality standards."""
     import inspect
-    
+
     # Check for docstring
-    assert test_function.__doc__ is not None, f"Test {test_function.__name__} missing docstring"
-    
+    assert (
+        test_function.__doc__ is not None
+    ), f"Test {test_function.__name__} missing docstring"
+
     # Check for proper naming
-    assert test_function.__name__.startswith("test_"), f"Test {test_function.__name__} doesn't follow naming convention"
-    
+    assert test_function.__name__.startswith(
+        "test_"
+    ), f"Test {test_function.__name__} doesn't follow naming convention"
+
     # Check function signature for proper typing (if annotations exist)
     sig = inspect.signature(test_function)
     for param_name, param in sig.parameters.items():
@@ -335,16 +361,16 @@ def assert_test_quality(test_function) -> None:
 
 def assert_e2e_environment_ready() -> bool:
     """Assert that E2E testing environment is properly configured."""
-    required_packages = ['playwright', 'requests', 'docker']
+    required_packages = ["playwright", "requests", "docker"]
     missing_packages = []
-    
+
     for package in required_packages:
         try:
             __import__(package)
         except ImportError:
             missing_packages.append(package)
-    
+
     if missing_packages:
         pytest.skip(f"E2E environment not ready, missing packages: {missing_packages}")
-    
+
     return True

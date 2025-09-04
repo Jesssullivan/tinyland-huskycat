@@ -11,35 +11,35 @@ from ..core.base import BaseCommand, CommandResult, CommandStatus
 
 class StatusCommand(BaseCommand):
     """Command to display HuskyCat status and configuration."""
-    
+
     @property
     def name(self) -> str:
         return "status"
-    
+
     @property
     def description(self) -> str:
         return "Show HuskyCat status and configuration"
-    
+
     def execute(self) -> CommandResult:
         """
         Show current status.
-        
+
         Returns:
             CommandResult with status information
         """
         status_info = {}
-        
+
         # Check git repository
         try:
             result = subprocess.run(
                 ["git", "rev-parse", "--git-dir"],
                 capture_output=True,
                 text=True,
-                check=True
+                check=True,
             )
             git_dir = Path(result.stdout.strip())
             status_info["git_repository"] = "Yes"
-            
+
             # Check for hooks
             hooks_dir = git_dir / "hooks"
             hooks = []
@@ -47,11 +47,11 @@ class StatusCommand(BaseCommand):
                 if (hooks_dir / hook_name).exists():
                     hooks.append(hook_name)
             status_info["git_hooks"] = hooks if hooks else ["None installed"]
-            
+
         except subprocess.CalledProcessError:
             status_info["git_repository"] = "No"
             status_info["git_hooks"] = ["N/A"]
-        
+
         # Check cache directory
         cache_dir = Path.home() / ".cache" / "huskycats"
         if cache_dir.exists():
@@ -63,11 +63,11 @@ class StatusCommand(BaseCommand):
             status_info["cached_schemas"] = schemas if schemas else ["None"]
         else:
             status_info["cached_schemas"] = ["Cache directory not found"]
-        
+
         # Check configuration
         status_info["config_dir"] = str(self.config_dir)
         status_info["config_exists"] = self.config_dir.exists()
-        
+
         # Format output
         output_lines = [
             "HuskyCat Status",
@@ -80,9 +80,9 @@ class StatusCommand(BaseCommand):
         ]
         for schema in status_info["cached_schemas"]:
             output_lines.append(f"  • {schema}")
-        
+
         return CommandResult(
             status=CommandStatus.SUCCESS,
             message="\n".join(output_lines),
-            data=status_info
+            data=status_info,
         )

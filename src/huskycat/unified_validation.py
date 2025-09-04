@@ -549,6 +549,7 @@ class GitLabCIValidator(Validator):
         """Check if GitLab CI validator is available"""
         try:
             from gitlab_ci_validator import GitLabCISchemaValidator
+
             return True
         except ImportError:
             return False
@@ -558,24 +559,25 @@ class GitLabCIValidator(Validator):
         # Check for .gitlab-ci.yml or files in .gitlab/ci/
         name = filepath.name
         return (
-            name == ".gitlab-ci.yml" or 
-            name.startswith(".gitlab-ci") or
-            ".gitlab/ci/" in str(filepath) or
-            ".gitlab-ci" in str(filepath)
+            name == ".gitlab-ci.yml"
+            or name.startswith(".gitlab-ci")
+            or ".gitlab/ci/" in str(filepath)
+            or ".gitlab-ci" in str(filepath)
         )
 
     def validate(self, filepath: Path) -> ValidationResult:
         """Validate GitLab CI YAML file against official schema"""
         start_time = time.time()
-        
+
         try:
             # Lazy load the validator
             from gitlab_ci_validator import GitLabCISchemaValidator
+
             validator = GitLabCISchemaValidator()
 
             # Validate the file
             is_valid, errors, warnings = validator.validate_file(str(filepath))
-            
+
             duration_ms = int((time.time() - start_time) * 1000)
 
             return ValidationResult(
@@ -592,7 +594,9 @@ class GitLabCIValidator(Validator):
                 tool=self.name,
                 filepath=str(filepath),
                 success=False,
-                errors=["GitLab CI validator not installed. Install with: pip install jsonschema pyyaml requests"],
+                errors=[
+                    "GitLab CI validator not installed. Install with: pip install jsonschema pyyaml requests"
+                ],
                 duration_ms=int((time.time() - start_time) * 1000),
             )
         except Exception as e:

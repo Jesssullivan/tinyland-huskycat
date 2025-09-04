@@ -23,23 +23,23 @@ from http.server import HTTPServer, SimpleHTTPRequestHandler
 
 class MockGitLabPagesServer:
     """Mock GitLab Pages server for testing."""
-    
+
     def __init__(self, port: int = 8000):
         self.port = port
         self.server = None
         self.thread = None
         self.running = False
-    
+
     def start(self):
         """Start the mock server."""
         handler = self._create_handler()
-        self.server = HTTPServer(('localhost', self.port), handler)
+        self.server = HTTPServer(("localhost", self.port), handler)
         self.thread = threading.Thread(target=self.server.serve_forever)
         self.thread.daemon = True
         self.thread.start()
         self.running = True
         time.sleep(0.5)  # Give server time to start
-    
+
     def stop(self):
         """Stop the mock server."""
         if self.server:
@@ -48,16 +48,18 @@ class MockGitLabPagesServer:
         if self.thread:
             self.thread.join(timeout=5)
         self.running = False
-    
+
     def _create_handler(self):
         """Create request handler class."""
+
         class MockPagesHandler(SimpleHTTPRequestHandler):
             def do_GET(self):
-                if self.path == '/':
+                if self.path == "/":
                     self.send_response(200)
-                    self.send_header('Content-type', 'text/html')
+                    self.send_header("Content-type", "text/html")
                     self.end_headers()
-                    self.wfile.write(b'''
+                    self.wfile.write(
+                        b"""
                     <!DOCTYPE html>
                     <html>
                     <head><title>HuskyCat Documentation</title></head>
@@ -77,12 +79,14 @@ class MockGitLabPagesServer:
                         <pre><code>pip install huskycat</code></pre>
                     </body>
                     </html>
-                    ''')
-                elif self.path == '/installation':
+                    """
+                    )
+                elif self.path == "/installation":
                     self.send_response(200)
-                    self.send_header('Content-type', 'text/html')
+                    self.send_header("Content-type", "text/html")
                     self.end_headers()
-                    self.wfile.write(b'''
+                    self.wfile.write(
+                        b"""
                     <html>
                     <head><title>Installation - HuskyCat</title></head>
                     <body>
@@ -92,34 +96,38 @@ class MockGitLabPagesServer:
                         <pre><code>pip install huskycat</code></pre>
                     </body>
                     </html>
-                    ''')
-                elif self.path.startswith('/downloads/'):
+                    """
+                    )
+                elif self.path.startswith("/downloads/"):
                     # Mock binary download
                     self.send_response(200)
-                    self.send_header('Content-type', 'application/octet-stream')
-                    self.send_header('Content-Length', '1024')
+                    self.send_header("Content-type", "application/octet-stream")
+                    self.send_header("Content-Length", "1024")
                     self.end_headers()
-                    self.wfile.write(b'x' * 1024)  # Mock binary data
+                    self.wfile.write(b"x" * 1024)  # Mock binary data
                 else:
                     self.send_response(404)
                     self.end_headers()
-        
+
         return MockPagesHandler
 
 
 class MockMCPServer:
     """Mock MCP server for testing."""
-    
+
     def __init__(self, port: int = 8080):
         self.port = port
         self.process = None
         self.running = False
-    
+
     def start(self):
         """Start the mock MCP server."""
         # Create a simple mock server script
-        server_script = tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False)
-        server_script.write(f'''
+        server_script = tempfile.NamedTemporaryFile(
+            mode="w", suffix=".py", delete=False
+        )
+        server_script.write(
+            f"""
 import http.server
 import socketserver
 import json
@@ -187,20 +195,23 @@ class MockMCPHandler(http.server.BaseHTTPRequestHandler):
 with socketserver.TCPServer(("", {self.port}), MockMCPHandler) as httpd:
     print(f"Mock MCP server running on port {self.port}")
     httpd.serve_forever()
-''')
+"""
+        )
         server_script.close()
-        
+
         # Start the server process
-        self.process = subprocess.Popen([
-            sys.executable, server_script.name
-        ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        
+        self.process = subprocess.Popen(
+            [sys.executable, server_script.name],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+
         self.running = True
         time.sleep(2)  # Give server time to start
-        
+
         # Clean up script file
         os.unlink(server_script.name)
-    
+
     def stop(self):
         """Stop the mock MCP server."""
         if self.process:
@@ -214,11 +225,11 @@ with socketserver.TCPServer(("", {self.port}), MockMCPHandler) as httpd:
 
 class MockContainerRegistry:
     """Mock container registry for testing."""
-    
+
     def __init__(self):
         self.images = {}
         self.tags = {}
-    
+
     def push_image(self, image_name: str, tag: str = "latest"):
         """Mock image push."""
         full_name = f"{image_name}:{tag}"
@@ -226,15 +237,15 @@ class MockContainerRegistry:
             "name": image_name,
             "tag": tag,
             "size": "100MB",
-            "created": "2024-01-01T00:00:00Z"
+            "created": "2024-01-01T00:00:00Z",
         }
         return True
-    
+
     def pull_image(self, image_name: str, tag: str = "latest"):
         """Mock image pull."""
         full_name = f"{image_name}:{tag}"
         return self.images.get(full_name)
-    
+
     def list_images(self):
         """Mock image listing."""
         return list(self.images.keys())
@@ -242,34 +253,42 @@ class MockContainerRegistry:
 
 class TempGitRepository:
     """Temporary Git repository for testing."""
-    
+
     def __init__(self, repo_dir: Path):
         self.repo_dir = repo_dir
         self.initialized = False
-    
+
     def initialize(self):
         """Initialize the Git repository."""
         subprocess.run(["git", "init"], cwd=self.repo_dir, check=True)
-        subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=self.repo_dir, check=True)
-        subprocess.run(["git", "config", "user.name", "Test User"], cwd=self.repo_dir, check=True)
+        subprocess.run(
+            ["git", "config", "user.email", "test@example.com"],
+            cwd=self.repo_dir,
+            check=True,
+        )
+        subprocess.run(
+            ["git", "config", "user.name", "Test User"], cwd=self.repo_dir, check=True
+        )
         self.initialized = True
-    
+
     def add_file(self, filename: str, content: str):
         """Add a file to the repository."""
         file_path = self.repo_dir / filename
         file_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(file_path, 'w') as f:
+        with open(file_path, "w") as f:
             f.write(content)
-    
+
     def commit(self, message: str):
         """Commit changes."""
         subprocess.run(["git", "add", "."], cwd=self.repo_dir, check=True)
         subprocess.run(["git", "commit", "-m", message], cwd=self.repo_dir, check=True)
-    
+
     def create_branch(self, branch_name: str):
         """Create and checkout a new branch."""
-        subprocess.run(["git", "checkout", "-b", branch_name], cwd=self.repo_dir, check=True)
-    
+        subprocess.run(
+            ["git", "checkout", "-b", branch_name], cwd=self.repo_dir, check=True
+        )
+
     def tag_commit(self, tag_name: str):
         """Tag current commit."""
         subprocess.run(["git", "tag", tag_name], cwd=self.repo_dir, check=True)
@@ -280,7 +299,7 @@ class TempGitRepository:
 def free_port() -> int:
     """Get a free port for testing."""
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.bind(('', 0))
+        s.bind(("", 0))
         s.listen(1)
         port = s.getsockname()[1]
     return port
@@ -320,25 +339,25 @@ def temp_project_environment() -> Generator[Path, None, None]:
     temp_dir = tempfile.mkdtemp(prefix="huskycats_e2e_")
     project_dir = Path(temp_dir) / "test_project"
     project_dir.mkdir(parents=True)
-    
+
     # Copy essential files for testing
     source_files = [
         "pyproject.toml",
-        "package.json", 
+        "package.json",
         ".gitlab-ci.yml",
         "ContainerFile",
-        "Makefile"
+        "Makefile",
     ]
-    
+
     for source_file in source_files:
         if Path(source_file).exists():
             shutil.copy2(source_file, project_dir / source_file)
-    
+
     # Create basic directory structure
     (project_dir / "src").mkdir()
     (project_dir / "tests").mkdir()
     (project_dir / "docs").mkdir()
-    
+
     try:
         yield project_dir
     finally:
@@ -350,12 +369,12 @@ def temp_git_repo(temp_project_environment: Path) -> TempGitRepository:
     """Create a temporary Git repository."""
     repo = TempGitRepository(temp_project_environment)
     repo.initialize()
-    
+
     # Add initial files
     repo.add_file("README.md", "# Test Project")
     repo.add_file("src/main.py", "def main(): pass")
     repo.commit("Initial commit")
-    
+
     return repo
 
 
@@ -370,7 +389,7 @@ def mock_ci_environment() -> Dict[str, str]:
         "CI_PROJECT_NAME": "huskycats",
         "CI_PROJECT_URL": "https://gitlab.com/example/huskycats",
         "CI_PIPELINE_ID": "12345",
-        "CI_JOB_ID": "67890"
+        "CI_JOB_ID": "67890",
     }
 
 
@@ -396,50 +415,54 @@ def isolated_test_environment(mock_ci_environment: Dict[str, str]):
 @pytest.fixture
 def mock_docker_client():
     """Mock Docker client for testing."""
+
     class MockImage:
         def __init__(self, id: str, tags: List[str]):
             self.id = id
             self.tags = tags
-    
+
     class MockContainer:
         def __init__(self, id: str, status: str = "running"):
             self.id = id
             self.status = status
             self.ports = {"8080/tcp": [{"HostPort": "8080"}]}
-        
+
         def reload(self):
             pass
-        
+
         def stop(self, timeout: int = 10):
             self.status = "stopped"
-        
+
         def remove(self):
             pass
-    
+
     class MockImages:
         def build(self, **kwargs):
             image = MockImage("test-image-id", ["test:latest"])
-            build_logs = ["Step 1/5 : FROM python:3.9", "Successfully built test-image-id"]
+            build_logs = [
+                "Step 1/5 : FROM python:3.9",
+                "Successfully built test-image-id",
+            ]
             return image, build_logs
-        
+
         def remove(self, image_id: str, force: bool = False):
             pass
-    
+
     class MockContainers:
         def run(self, image, **kwargs):
             return MockContainer("test-container-id")
-    
+
     class MockDockerClient:
         def __init__(self):
             self.images = MockImages()
             self.containers = MockContainers()
-        
+
         def ping(self):
             return True
-        
+
         def from_env(self):
             return self
-    
+
     return MockDockerClient()
 
 
@@ -447,10 +470,11 @@ def mock_docker_client():
 def sample_validation_files(temp_project_environment: Path) -> Dict[str, Path]:
     """Create sample files for validation testing."""
     files = {}
-    
+
     # Good Python code
     good_python = temp_project_environment / "good_code.py"
-    good_python.write_text('''#!/usr/bin/env python3
+    good_python.write_text(
+        '''#!/usr/bin/env python3
 """Sample good Python code."""
 from typing import List
 
@@ -468,12 +492,14 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-''')
-    files['good_python'] = good_python
-    
+'''
+    )
+    files["good_python"] = good_python
+
     # Bad Python code
     bad_python = temp_project_environment / "bad_code.py"
-    bad_python.write_text('''#!/usr/bin/env python3
+    bad_python.write_text(
+        """#!/usr/bin/env python3
 
 def calculate_sum(numbers):
     sum=0
@@ -487,12 +513,14 @@ def unsafe_eval(expr):
 def main():
     result=calculate_sum([1,2,3])
     print(result)
-''')
-    files['bad_python'] = bad_python
-    
+"""
+    )
+    files["bad_python"] = bad_python
+
     # Valid YAML
     valid_yaml = temp_project_environment / "valid.yml"
-    valid_yaml.write_text('''
+    valid_yaml.write_text(
+        """
 version: "3.8"
 services:
   web:
@@ -501,12 +529,14 @@ services:
       - "80:80"
     environment:
       - DEBUG=false
-''')
-    files['valid_yaml'] = valid_yaml
-    
+"""
+    )
+    files["valid_yaml"] = valid_yaml
+
     # Invalid YAML
     invalid_yaml = temp_project_environment / "invalid.yml"
-    invalid_yaml.write_text('''
+    invalid_yaml.write_text(
+        """
 version: "3.8"
 services:
   web:
@@ -515,9 +545,10 @@ services:
       - "80:80
     environment:
       - DEBUG=false
-''')
-    files['invalid_yaml'] = invalid_yaml
-    
+"""
+    )
+    files["invalid_yaml"] = invalid_yaml
+
     return files
 
 
@@ -536,7 +567,7 @@ def performance_test_data():
 async def async_test_client():
     """Async HTTP client for testing."""
     import aiohttp
-    
+
     session = aiohttp.ClientSession()
     try:
         yield session
@@ -548,21 +579,22 @@ async def async_test_client():
 def wait_for_server(host: str, port: int, timeout: int = 30) -> bool:
     """Wait for server to be ready."""
     start_time = time.time()
-    
+
     while time.time() - start_time < timeout:
         try:
             with socket.create_connection((host, port), timeout=1):
                 return True
         except (socket.error, ConnectionRefusedError):
             time.sleep(0.5)
-    
+
     return False
 
 
 def create_test_dockerfile(directory: Path) -> Path:
     """Create a test Dockerfile."""
     dockerfile = directory / "Dockerfile"
-    dockerfile.write_text('''
+    dockerfile.write_text(
+        """
 FROM python:3.9-slim
 
 WORKDIR /app
@@ -575,15 +607,17 @@ COPY . .
 EXPOSE 8080
 
 CMD ["python", "app.py"]
-''')
-    
+"""
+    )
+
     # Create a simple requirements.txt
     requirements = directory / "requirements.txt"
     requirements.write_text("flask==2.0.1\nrequests==2.25.1\n")
-    
+
     # Create a simple app.py
     app_py = directory / "app.py"
-    app_py.write_text('''
+    app_py.write_text(
+        """
 from flask import Flask
 
 app = Flask(__name__)
@@ -598,15 +632,17 @@ def health():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080)
-''')
-    
+"""
+    )
+
     return dockerfile
 
 
 def create_test_gitlab_ci(directory: Path) -> Path:
     """Create a test .gitlab-ci.yml file."""
     gitlab_ci = directory / ".gitlab-ci.yml"
-    gitlab_ci.write_text('''
+    gitlab_ci.write_text(
+        """
 stages:
   - test
   - build
@@ -646,8 +682,9 @@ deploy:
     - echo "Deploying to production"
   only:
     - main
-''')
-    
+"""
+    )
+
     return gitlab_ci
 
 
@@ -657,7 +694,7 @@ def comprehensive_test_environment(temp_project_environment: Path) -> Path:
     # Create test files
     create_test_dockerfile(temp_project_environment)
     create_test_gitlab_ci(temp_project_environment)
-    
+
     # Create test directories and files
     test_structure = {
         "src/main.py": "def main(): print('Hello, World!')",
@@ -667,14 +704,14 @@ def comprehensive_test_environment(temp_project_environment: Path) -> Path:
         ".env.example": "DEBUG=true\nPORT=8080",
         "scripts/deploy.sh": "#!/bin/bash\necho 'Deploying...'",
     }
-    
+
     for file_path, content in test_structure.items():
         full_path = temp_project_environment / file_path
         full_path.parent.mkdir(parents=True, exist_ok=True)
         full_path.write_text(content)
-        
+
         # Make scripts executable
         if file_path.startswith("scripts/") and file_path.endswith(".sh"):
             full_path.chmod(0o755)
-    
+
     return temp_project_environment
