@@ -445,7 +445,9 @@ class AutoDevOpsCommand(BaseCommand):
         except (subprocess.CalledProcessError, FileNotFoundError):
             return False
 
-    def _validate_with_helm_template(self, project_path_obj: Path, chart_path: str) -> Dict:
+    def _validate_with_helm_template(
+        self, project_path_obj: Path, chart_path: str
+    ) -> Dict:
         """Validate using helm template."""
         result = {"valid": True, "errors": [], "warnings": []}
 

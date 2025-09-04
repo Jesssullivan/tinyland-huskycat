@@ -68,7 +68,9 @@ class HuskyCatFactory:
 
         return command_class(config_dir=self.config_dir, verbose=self.verbose)
 
-    def execute_command(self, command_name: str, *args: Any, **kwargs: Any) -> CommandResult:
+    def execute_command(
+        self, command_name: str, *args: Any, **kwargs: Any
+    ) -> CommandResult:
         """
         Execute a command by name.
 
