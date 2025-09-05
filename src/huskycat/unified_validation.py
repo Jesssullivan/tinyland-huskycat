@@ -92,7 +92,7 @@ class Validator(ABC):
                 return True
         except (subprocess.SubprocessError, FileNotFoundError):
             pass
-        
+
         # If local tool not available, check if container runtime is available
         if self.use_container:
             try:
@@ -103,12 +103,15 @@ class Validator(ABC):
             except (subprocess.SubprocessError, FileNotFoundError):
                 try:
                     result = subprocess.run(
-                        ["docker", "--version"], capture_output=True, text=True, timeout=5
+                        ["docker", "--version"],
+                        capture_output=True,
+                        text=True,
+                        timeout=5,
                     )
                     return result.returncode == 0
                 except (subprocess.SubprocessError, FileNotFoundError):
                     return False
-        
+
         return False
 
     def _execute_command(self, cmd: List[str], **kwargs) -> subprocess.CompletedProcess:
@@ -120,7 +123,7 @@ class Validator(ABC):
         else:
             # Execute locally
             return subprocess.run(cmd, **kwargs)
-    
+
     def _is_tool_available_locally(self) -> bool:
         """Check if tool is available locally"""
         try:
@@ -130,25 +133,29 @@ class Validator(ABC):
             return result.returncode == 0
         except (subprocess.SubprocessError, FileNotFoundError):
             return False
-    
+
     def _build_container_command(self, cmd: List[str]) -> List[str]:
         """Build container command for tool execution"""
         # Try podman first, then docker
         container_runtime = self._get_available_container_runtime()
         if not container_runtime:
             raise RuntimeError("No container runtime available")
-        
+
         # Build container command
         # Mount current directory as workspace and execute the validation command
         container_cmd = [
-            container_runtime, "run", "--rm", 
-            "-v", f"{Path.cwd()}:/workspace",
-            "-w", "/workspace",
-            "huskycat:local"
+            container_runtime,
+            "run",
+            "--rm",
+            "-v",
+            f"{Path.cwd()}:/workspace",
+            "-w",
+            "/workspace",
+            "huskycat:local",
         ] + cmd
-        
+
         return container_cmd
-    
+
     def _get_available_container_runtime(self) -> "Optional[str]":
         """Get available container runtime (podman or docker)"""
         for runtime in ["podman", "docker"]:
@@ -193,7 +200,9 @@ class BlackValidator(Validator):
             cmd.remove("--check")
 
         try:
-            result = self._execute_command(cmd, capture_output=True, text=True, timeout=30)
+            result = self._execute_command(
+                cmd, capture_output=True, text=True, timeout=30
+            )
             duration_ms = int((time.time() - start_time) * 1000)
 
             if result.returncode == 0:
@@ -335,7 +344,9 @@ class Flake8Validator(Validator):
         cmd = [self.command, str(filepath), "--format=json"]
 
         try:
-            result = self._execute_command(cmd, capture_output=True, text=True, timeout=30)
+            result = self._execute_command(
+                cmd, capture_output=True, text=True, timeout=30
+            )
             duration_ms = int((time.time() - start_time) * 1000)
 
             if result.returncode == 0:
@@ -395,7 +406,9 @@ class MypyValidator(Validator):
         cmd = [self.command, str(filepath), "--no-error-summary"]
 
         try:
-            result = self._execute_command(cmd, capture_output=True, text=True, timeout=30)
+            result = self._execute_command(
+                cmd, capture_output=True, text=True, timeout=30
+            )
             duration_ms = int((time.time() - start_time) * 1000)
 
             if result.returncode == 0:
@@ -456,7 +469,9 @@ class ESLintValidator(Validator):
             cmd.insert(1, "--fix")
 
         try:
-            result = self._execute_command(cmd, capture_output=True, text=True, timeout=30)
+            result = self._execute_command(
+                cmd, capture_output=True, text=True, timeout=30
+            )
             duration_ms = int((time.time() - start_time) * 1000)
 
             try:
@@ -563,7 +578,9 @@ class YamlLintValidator(Validator):
         cmd = [self.command, "-f", "parsable", str(filepath)]
 
         try:
-            result = self._execute_command(cmd, capture_output=True, text=True, timeout=30)
+            result = self._execute_command(
+                cmd, capture_output=True, text=True, timeout=30
+            )
             duration_ms = int((time.time() - start_time) * 1000)
 
             if result.returncode == 0:
@@ -630,7 +647,9 @@ class HadolintValidator(Validator):
         cmd = [self.command, str(filepath)]
 
         try:
-            result = self._execute_command(cmd, capture_output=True, text=True, timeout=30)
+            result = self._execute_command(
+                cmd, capture_output=True, text=True, timeout=30
+            )
             duration_ms = int((time.time() - start_time) * 1000)
 
             if result.returncode == 0:
@@ -689,7 +708,9 @@ class ShellcheckValidator(Validator):
         cmd = [self.command, "-f", "json", str(filepath)]
 
         try:
-            result = self._execute_command(cmd, capture_output=True, text=True, timeout=30)
+            result = self._execute_command(
+                cmd, capture_output=True, text=True, timeout=30
+            )
             duration_ms = int((time.time() - start_time) * 1000)
 
             if result.returncode == 0:
@@ -877,7 +898,9 @@ class ValidationEngine:
             YamlLintValidator(self.auto_fix, self.use_container),
             HadolintValidator(self.auto_fix, self.use_container),
             ShellcheckValidator(self.auto_fix, self.use_container),
-            GitLabCIValidator(self.auto_fix, self.use_container),  # Added GitLab CI validator
+            GitLabCIValidator(
+                self.auto_fix, self.use_container
+            ),  # Added GitLab CI validator
         ]
 
         # Filter to only available validators

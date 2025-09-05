@@ -54,9 +54,9 @@ class ValidateCommand(BaseCommand):
         # Enable container mode if essential Python tools are missing
         use_container = self._should_use_container()
         engine = ValidationEngine(
-            auto_fix=fix, 
+            auto_fix=fix,
             use_container=use_container,
-            interactive=interactive and staged
+            interactive=interactive and staged,
         )
 
         # Use the appropriate validation method
@@ -115,39 +115,47 @@ class ValidateCommand(BaseCommand):
     def _should_use_container(self) -> bool:
         """
         Determine if container should be used based on tool availability.
-        
+
         Uses container if essential Python validation tools are missing.
         """
         essential_tools = ["flake8", "mypy", "autoflake"]
         missing_tools = []
-        
+
         for tool in essential_tools:
             try:
                 subprocess.run(
-                    [tool, "--version"], 
-                    capture_output=True, 
-                    text=True, 
-                    timeout=5, 
-                    check=True
+                    [tool, "--version"],
+                    capture_output=True,
+                    text=True,
+                    timeout=5,
+                    check=True,
                 )
-            except (subprocess.CalledProcessError, FileNotFoundError, subprocess.TimeoutExpired):
+            except (
+                subprocess.CalledProcessError,
+                FileNotFoundError,
+                subprocess.TimeoutExpired,
+            ):
                 missing_tools.append(tool)
-        
+
         if missing_tools:
             # Check if container runtime is available
             try:
                 subprocess.run(
-                    ["podman", "--version"], 
-                    capture_output=True, 
-                    text=True, 
-                    timeout=5, 
-                    check=True
+                    ["podman", "--version"],
+                    capture_output=True,
+                    text=True,
+                    timeout=5,
+                    check=True,
                 )
                 return True  # Use container fallback
-            except (subprocess.CalledProcessError, FileNotFoundError, subprocess.TimeoutExpired):
+            except (
+                subprocess.CalledProcessError,
+                FileNotFoundError,
+                subprocess.TimeoutExpired,
+            ):
                 # Neither local tools nor container available - proceed with available tools
                 return False
-        
+
         return False  # All essential tools available locally
 
     def _get_files_to_validate(
