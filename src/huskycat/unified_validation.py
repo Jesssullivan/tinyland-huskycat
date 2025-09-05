@@ -696,10 +696,47 @@ class GitLabCIValidator(Validator):
         """Validate GitLab CI YAML file against official schema"""
         start_time = time.time()
 
+        # Try to import the GitLab CI validator
+        GitLabCISchemaValidator = None
+        import_error = None
+        
+        # Multiple import strategies
+        import sys
+        import os
+        
+        # Try path-based import first since it works when called directly
+        current_dir = os.path.dirname(__file__)
         try:
-            # Lazy load the validator
-            from gitlab_ci_validator import GitLabCISchemaValidator
-
+            sys.path.insert(0, current_dir)
+            import gitlab_ci_validator
+            GitLabCISchemaValidator = gitlab_ci_validator.GitLabCISchemaValidator
+            sys.path.pop(0)
+        except Exception as e:
+            # Try other import strategies
+            for import_strategy in [
+                lambda: __import__('huskycat.gitlab_ci_validator', fromlist=['GitLabCISchemaValidator']).GitLabCISchemaValidator,
+                lambda: __import__('src.huskycat.gitlab_ci_validator', fromlist=['GitLabCISchemaValidator']).GitLabCISchemaValidator,
+                lambda: getattr(__import__('gitlab_ci_validator'), 'GitLabCISchemaValidator')
+            ]:
+                try:
+                    GitLabCISchemaValidator = import_strategy()
+                    break
+                except (ImportError, ModuleNotFoundError, AttributeError) as e:
+                    import_error = e
+                    continue
+                
+        if GitLabCISchemaValidator is None:
+            return ValidationResult(
+                tool=self.name,
+                filepath=str(filepath),
+                success=False,
+                errors=[
+                    "GitLab CI validator not installed. Install with: pip install jsonschema pyyaml requests"
+                ],
+                duration_ms=int((time.time() - start_time) * 1000),
+            )
+        
+        try:
             validator = GitLabCISchemaValidator()
 
             # Validate the file
@@ -716,7 +753,7 @@ class GitLabCIValidator(Validator):
                 duration_ms=duration_ms,
             )
 
-        except ImportError:
+        except Exception as e:
             return ValidationResult(
                 tool=self.name,
                 filepath=str(filepath),
