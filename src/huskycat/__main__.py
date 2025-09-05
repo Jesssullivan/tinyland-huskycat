@@ -145,7 +145,7 @@ def create_parser() -> argparse.ArgumentParser:
     )
 
     # MCP server command (stdio mode only)
-    mcp_parser = subparsers.add_parser(
+    subparsers.add_parser(
         "mcp-server", help="Start MCP server for Claude Code integration (stdio mode)"
     )
 
