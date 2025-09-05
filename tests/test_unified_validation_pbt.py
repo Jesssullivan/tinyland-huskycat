@@ -149,7 +149,7 @@ class TestValidationEngineProperties:
         results = {}
         for i, msg in enumerate(messages):
             mock_result = ValidationResult(
-                line=i, column=0, message=msg, severity="warning", tool="test"
+                tool="test", filepath=f"file_{i}.py", success=False, messages=[msg], warnings=[msg]
             )
             results[f"file_{i}.py"] = [mock_result]
 
@@ -157,15 +157,17 @@ class TestValidationEngineProperties:
 
         # Properties that should always hold
         assert "total_files" in summary
-        assert "files_with_issues" in summary
-        assert "total_issues" in summary
-        assert "by_severity" in summary
-        assert "by_tool" in summary
+        assert "failed_files" in summary
+        assert "passed_files" in summary
+        assert "total_errors" in summary
+        assert "total_warnings" in summary
+        assert "success" in summary
 
         # Consistency checks
         assert summary["total_files"] == len(results)
-        assert summary["files_with_issues"] <= summary["total_files"]
-        assert summary["total_issues"] >= 0
+        assert summary["failed_files"] <= summary["total_files"]
+        assert summary["total_errors"] >= 0
+        assert summary["total_warnings"] >= 0
 
     @given(st.booleans(), st.booleans())
     @settings(max_examples=10)
@@ -194,7 +196,7 @@ class TestValidationEngineProperties:
         for filename, issues in file_issues.items():
             results[filename] = [
                 ValidationResult(
-                    line=i, column=0, message=msg, severity="warning", tool="test"
+                    tool="test", filepath=filename, success=False, messages=[msg], warnings=[msg]
                 )
                 for i, msg in enumerate(issues)
             ]
@@ -203,64 +205,76 @@ class TestValidationEngineProperties:
 
         # Calculate expected values
         expected_total_files = len(results)
-        expected_files_with_issues = sum(1 for v in results.values() if v)
-        expected_total_issues = sum(len(v) for v in results.values())
+        expected_failed_files = sum(1 for file_results in results.values() 
+                                   if any(not result.success for result in file_results))
+        expected_total_errors = sum(result.error_count for file_results in results.values() 
+                                  for result in file_results)
+        expected_total_warnings = sum(result.warning_count for file_results in results.values() 
+                                    for result in file_results)
 
         # Assert consistency
         assert summary["total_files"] == expected_total_files
-        assert summary["files_with_issues"] == expected_files_with_issues
-        assert summary["total_issues"] == expected_total_issues
+        assert summary["failed_files"] == expected_failed_files
+        assert summary["total_errors"] == expected_total_errors
+        assert summary["total_warnings"] == expected_total_warnings
 
 
 class TestValidationResultProperties:
     """Property-based tests for ValidationResult"""
 
     @given(
-        st.integers(),
-        st.integers(),
         st.text(min_size=1),
-        st.sampled_from(["error", "warning", "info"]),
         st.text(min_size=1),
+        st.booleans(),
+        st.lists(st.text(), max_size=5),
+        st.lists(st.text(), max_size=5),
+        st.lists(st.text(), max_size=5),
     )
-    def test_validation_result_creation(self, line, column, message, severity, tool):
+    def test_validation_result_creation(self, tool, filepath, success, messages, errors, warnings):
         """Test that ValidationResult can be created with any valid inputs"""
         result = ValidationResult(
-            line=line, column=column, message=message, severity=severity, tool=tool
+            tool=tool, filepath=filepath, success=success, messages=messages, errors=errors, warnings=warnings
         )
 
-        assert result.line == line
-        assert result.column == column
-        assert result.message == message
-        assert result.severity == severity
         assert result.tool == tool
+        assert result.filepath == filepath
+        assert result.success == success
+        assert result.messages == messages
+        assert result.errors == errors
+        assert result.warnings == warnings
 
     @given(
-        st.integers(),
-        st.integers(),
         st.text(min_size=1),
-        st.sampled_from(["error", "warning", "info"]),
         st.text(min_size=1),
+        st.booleans(),
+        st.lists(st.text(), max_size=5),
+        st.lists(st.text(), max_size=5),
+        st.lists(st.text(), max_size=5),
     )
-    def test_validation_result_to_dict(self, line, column, message, severity, tool):
+    def test_validation_result_to_dict(self, tool, filepath, success, messages, errors, warnings):
         """Test that to_dict method produces consistent output"""
         result = ValidationResult(
-            line=line, column=column, message=message, severity=severity, tool=tool
+            tool=tool, filepath=filepath, success=success, messages=messages, errors=errors, warnings=warnings
         )
 
         result_dict = result.to_dict()
 
         assert isinstance(result_dict, dict)
-        assert result_dict["line"] == line
-        assert result_dict["column"] == column
-        assert result_dict["message"] == message
-        assert result_dict["severity"] == severity
         assert result_dict["tool"] == tool
+        assert result_dict["filepath"] == filepath
+        assert result_dict["success"] == success
+        assert result_dict["messages"] == messages
+        assert result_dict["errors"] == errors
+        assert result_dict["warnings"] == warnings
         assert set(result_dict.keys()) == {
-            "line",
-            "column",
-            "message",
-            "severity",
             "tool",
+            "filepath",
+            "success",
+            "messages",
+            "errors",
+            "warnings",
+            "fixed",
+            "duration_ms",
         }
 
 

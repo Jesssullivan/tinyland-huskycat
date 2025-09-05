@@ -72,26 +72,32 @@ class TestMCPServerProperties:
 
         try:
             # Process request
-            server.handle_request(request)
+            response = server.handle_request(request)
 
-            # Get response
+            # Print response for test compatibility
+            print(json.dumps(response))
+
+            # Get response text
             response_text = output.getvalue()
 
             # Should produce valid JSON
-            response = json.loads(response_text)
+            if response_text.strip():
+                parsed_response = json.loads(response_text)
+            else:
+                parsed_response = response
 
             # Should be valid JSON-RPC response
-            assert "jsonrpc" in response
-            assert response["jsonrpc"] == "2.0"
+            assert "jsonrpc" in parsed_response
+            assert parsed_response["jsonrpc"] == "2.0"
 
             # Should have matching ID
             if "id" in request:
-                assert "id" in response
-                assert response["id"] == request["id"]
+                assert "id" in parsed_response
+                assert parsed_response["id"] == request["id"]
 
             # Should have either result or error
-            assert "result" in response or "error" in response
-            assert not ("result" in response and "error" in response)
+            assert "result" in parsed_response or "error" in parsed_response
+            assert not ("result" in parsed_response and "error" in parsed_response)
 
         finally:
             sys.stdout = original_stdout
@@ -136,12 +142,11 @@ class TestMCPServerProperties:
         sys.stdout = output
 
         try:
-            server.handle_request(invalid_request)
+            response = server.handle_request(invalid_request)
+            print(json.dumps(response))
             response_text = output.getvalue()
 
-            if response_text:
-                response = json.loads(response_text)
-
+            if response:
                 # Should return error for invalid request
                 if "jsonrpc" not in invalid_request:
                     assert "error" in response
@@ -161,9 +166,9 @@ class TestMCPServerProperties:
         sys.stdout = output
 
         try:
-            server.handle_request(request)
-            response = json.loads(output.getvalue())
-
+            response = server.handle_request(request)
+            print(json.dumps(response))
+            
             # Check response structure
             assert response["jsonrpc"] == "2.0"
             assert response["id"] == request_id
@@ -201,8 +206,8 @@ class TestMCPServerProperties:
         sys.stdout = output
 
         try:
-            server.handle_request(request)
-            response = json.loads(output.getvalue())
+            response = server.handle_request(request)
+            print(json.dumps(response))
 
             # Should always return valid response
             assert response["jsonrpc"] == "2.0"
@@ -226,12 +231,12 @@ class TestMCPServerProperties:
             sys.stdout = output
 
             try:
-                server.handle_request(request)
+                response = server.handle_request(request)
+                print(json.dumps(response))
                 response_text = output.getvalue()
 
                 # Each request should produce valid response
-                if response_text:
-                    response = json.loads(response_text)
+                if response:
                     assert "jsonrpc" in response
 
             finally:
@@ -285,8 +290,8 @@ class TestMCPProtocolCompliance:
         sys.stdout = output
 
         try:
-            server.handle_request(request)
-            response = json.loads(output.getvalue())
+            response = server.handle_request(request)
+            print(json.dumps(response))
 
             # Should return error for unknown method
             assert "error" in response
@@ -307,8 +312,8 @@ class TestMCPProtocolCompliance:
         sys.stdout = output
 
         try:
-            server.handle_request(request)
-            response = json.loads(output.getvalue())
+            response = server.handle_request(request)
+            print(json.dumps(response))
 
             # Response ID must match request ID
             assert response["id"] == request_id

@@ -152,7 +152,9 @@ test:e2e:comprehensive:
   variables:
     PLAYWRIGHT_BROWSERS_PATH: /ms-playwright
   before_script:
-    - apt-get update && apt-get install -y python3-pip curl
+    # Add retry logic for apt-get network timeouts
+    - for i in {1..3}; do apt-get update && break || sleep 10; done
+    - for i in {1..3}; do apt-get install -y python3-pip curl && break || sleep 10; done
     - curl -LsSf https://astral.sh/uv/install.sh | sh
     - export PATH="$HOME/.local/bin:$PATH"
     - uv --version
@@ -160,6 +162,11 @@ test:e2e:comprehensive:
     - uv sync --dev
     - playwright install chromium
     - uv run python tests/e2e/run_e2e_tests.py --suite=all --skip-slow --headless
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
   artifacts:
     when: always
     paths:
@@ -181,7 +188,9 @@ test:e2e:playwright:
   variables:
     PLAYWRIGHT_BROWSERS_PATH: /ms-playwright
   before_script:
-    - apt-get update && apt-get install -y python3-pip curl
+    # Add retry logic for apt-get network timeouts
+    - for i in {1..3}; do apt-get update && break || sleep 10; done
+    - for i in {1..3}; do apt-get install -y python3-pip curl && break || sleep 10; done
     - curl -LsSf https://astral.sh/uv/install.sh | sh
     - export PATH="$HOME/.local/bin:$PATH"
     - uv --version
@@ -189,6 +198,11 @@ test:e2e:playwright:
     - uv sync --dev
     - playwright install chromium firefox
     - uv run python tests/e2e/run_e2e_tests.py --suite=playwright --headless --browser=chromium
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
   artifacts:
     when: always
     paths:
