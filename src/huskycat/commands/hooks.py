@@ -211,7 +211,7 @@ exit 0
         # Create git wrapper script for enhanced git add with validation
         git_wrapper_dir = Path.home() / ".huskycat" / "bin"
         git_wrapper_dir.mkdir(parents=True, exist_ok=True)
-        
+
         git_add_wrapper = git_wrapper_dir / "git-add-with-validation"
         git_add_wrapper_content = """#!/bin/bash
 # HuskyCat git add wrapper with auto-fix validation
@@ -277,7 +277,12 @@ exec git add "$@"
             message="Git hooks installed successfully",
             data={
                 "hooks_dir": str(hooks_dir),
-                "hooks_installed": ["pre-commit", "pre-push", "pre-index", "commit-msg"],
+                "hooks_installed": [
+                    "pre-commit",
+                    "pre-push",
+                    "pre-index",
+                    "commit-msg",
+                ],
                 "git_wrapper": str(git_add_wrapper),
                 "setup_note": f"Add {git_wrapper_dir} to your PATH to use enhanced git-add-with-validation",
             },
