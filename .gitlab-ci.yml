@@ -100,12 +100,15 @@ validate:yaml:
 # Test stage jobs
 test:unit:
   stage: test
-  image: python:3.11-alpine
-  <<: *uv_setup
-  <<: *cache_template
+  image: $CONTAINER_REGISTRY:$CONTAINER_TAG-amd64
+  dependencies:
+    - container:build:amd64
   script:
-    - uv sync --dev
-    - uv run pytest tests/test_validation_pbt.py tests/test_unified_validation_pbt.py -v --tb=short --cov=src/ --cov-report=xml --cov-report=html --cov-report=term
+    - echo "🐳 Using HuskyCat container with pre-installed tools"
+    - which python3 && python3 --version
+    - which pytest && pytest --version
+    - cd /workspace
+    - pytest tests/test_validation_pbt.py tests/test_unified_validation_pbt.py -v --tb=short --cov=src/ --cov-report=xml --cov-report=html --cov-report=term
   coverage: '/TOTAL.*\s+(\d+)%/'
   artifacts:
     reports:
@@ -121,12 +124,13 @@ test:unit:
 
 test:e2e:deployment:
   stage: test
-  image: python:3.11-alpine
-  <<: *uv_setup
-  <<: *cache_template
+  image: $CONTAINER_REGISTRY:$CONTAINER_TAG-amd64
+  dependencies:
+    - container:build:amd64
   script:
-    - uv sync --dev
-    - uv run python tests/test_e2e_deployment.py
+    - echo "🐳 Using HuskyCat container for E2E deployment testing"
+    - cd /workspace
+    - python3 tests/test_e2e_deployment.py
   artifacts:
     when: on_failure
     paths:
@@ -194,12 +198,15 @@ test:e2e:playwright:
 
 test:mcp:server:
   stage: test
-  image: python:3.11-alpine
-  <<: *uv_setup
-  <<: *cache_template
+  image: $CONTAINER_REGISTRY:$CONTAINER_TAG-amd64
+  dependencies:
+    - container:build:amd64
   script:
-    - uv sync --dev
-    - uv run pytest tests/test_mcp_server_pbt.py -v --tb=short
+    - echo "🐳 Using HuskyCat container with pre-installed tools"
+    - which python3 && python3 --version
+    - which pytest && pytest --version
+    - cd /workspace
+    - pytest tests/test_mcp_server_pbt.py -v --tb=short
   artifacts:
     when: on_failure
     paths:
