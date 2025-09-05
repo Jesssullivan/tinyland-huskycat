@@ -13,7 +13,7 @@ import sys
 
 # Add src to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
-from unified_validation import ValidationEngine, ValidationResult
+from huskycat.unified_validation import ValidationEngine, ValidationResult
 
 
 # Custom strategies for testing
