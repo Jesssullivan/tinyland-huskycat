@@ -122,9 +122,14 @@ class Validator(ABC):
     def _execute_command(
         self, cmd: List[str], **kwargs: Any
     ) -> subprocess.CompletedProcess:
-        """Execute command in container (container-only mode)"""
-        container_cmd = self._build_container_command(cmd)
-        return subprocess.run(container_cmd, **kwargs)
+        """Execute command - directly if in container, via container if on host"""
+        if self._is_running_in_container():
+            # Direct execution when inside container
+            return subprocess.run(cmd, **kwargs)
+        else:
+            # Container execution when on host
+            container_cmd = self._build_container_command(cmd)
+            return subprocess.run(container_cmd, **kwargs)
 
     def _build_container_command(self, cmd: List[str]) -> List[str]:
         """Build container command for tool execution"""

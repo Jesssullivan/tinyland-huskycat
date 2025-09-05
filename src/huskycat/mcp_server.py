@@ -37,7 +37,13 @@ class MCPServer:
         )
 
     def _detect_container_available(self) -> bool:
-        """Detect if container runtime is available"""
+        """Detect if we're in a container or have container runtime available"""
+        # First check if we're running inside a container
+        if self._is_running_in_container():
+            logger.info("Running inside container - direct tool execution available")
+            return True
+
+        # If not in container, check for container runtime
         try:
             # Try podman first (preferred), then docker
             for runtime in ["podman", "docker"]:
@@ -57,12 +63,41 @@ class MCPServer:
         logger.warning("No container runtime detected - validation may fail")
         return False
 
+    def _is_running_in_container(self) -> bool:
+        """Detect if we're running inside a container (same logic as Validator class)"""
+        import os
+
+        # Check for container-specific environment indicators
+        return (
+            os.path.exists("/.dockerenv")  # Docker
+            or bool(os.environ.get("container"))  # Podman
+            or os.path.exists("/run/.containerenv")  # Podman
+        )
+
     def _run_container_validation(
         self, command_args: list, cwd: str = "."
     ) -> Dict[str, Any]:
-        """Run validation using the HuskyCat container"""
+        """Run validation - directly if in container, via container runtime if on host"""
         try:
-            # Try podman first, then docker
+            # If we're already inside a container, execute commands directly
+            if self._is_running_in_container():
+                logger.info(
+                    f"Running direct validation (inside container): {' '.join(command_args)}"
+                )
+
+                result = subprocess.run(
+                    command_args, cwd=cwd, capture_output=True, text=True, timeout=60
+                )
+
+                return {
+                    "success": result.returncode == 0,
+                    "stdout": result.stdout,
+                    "stderr": result.stderr,
+                    "returncode": result.returncode,
+                    "runtime": "direct",
+                }
+
+            # If on host, try to run via container runtime
             for runtime in ["podman", "docker"]:
                 try:
                     cmd = [
