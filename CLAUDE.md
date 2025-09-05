@@ -196,6 +196,38 @@ HuskyCat is a comprehensive code validation platform that includes:
 3. **Debug validation failures** instead of bypassing them
 4. **If hooks fail**, fix the issues rather than skipping verification
 
+## Auto-Fix Validation System
+
+HuskyCat now includes comprehensive auto-fix capabilities with interactive prompts:
+
+### Git Integration with Auto-Fix
+When you run `npm run dev -- setup-hooks`, HuskyCat automatically configures:
+- **Git hooks** (pre-commit, pre-push, commit-msg) for automatic validation
+- **Git alias** `git addf` for interactive auto-fix validation before staging files
+
+### Auto-Fix Workflow
+```bash
+# Interactive auto-fix before staging
+git addf src/file.py          # Validates file, prompts for auto-fix if needed
+git addf .                    # Validates all files with interactive prompts
+
+# Direct auto-fix commands
+./dist/huskycat validate --fix                    # Auto-fix without prompts
+./dist/huskycat validate --staged --interactive   # Interactive fix for staged files
+```
+
+### Supported Auto-Fix Validators
+- **Black**: Python code formatting
+- **YAMLlint**: YAML formatting (trailing spaces, newlines)
+- **Future**: autoflake, ansible-lint, ESLint (when available)
+
+### Binary-First Auto-Fix
+The auto-fix system follows the binary-first execution paradigm:
+1. `./dist/huskycat` (fastest, git hooks)
+2. `huskycat` (global installation)
+3. `uv run python3 -m src.huskycat` (development)
+4. Container fallback (comprehensive tooling)
+
 ## MCP Server Integration
 
 HuskyCat includes a **stdio-based MCP server** for Claude Code integration:
@@ -247,6 +279,12 @@ npm run dev -- validate           # Run validation on files
 npm run dev -- validate --staged  # Validate only staged git files  
 npm run dev -- validate --all     # Validate all files in repository
 npm run dev -- ci-validate FILE   # Validate CI configuration files
+
+# Auto-fix validation commands (NEW)
+npm run dev -- validate --fix         # Run validation with auto-fix
+npm run dev -- validate --staged --fix    # Auto-fix staged files
+git addf <files>                   # NEW: Git alias for interactive auto-fix before add
+git addf .                         # NEW: Validate and auto-fix all files before staging
 
 # Setup and management
 npm run dev -- install            # Install HuskyCat and dependencies
@@ -311,9 +349,18 @@ npm run validate:ci                  # Validate .gitlab-ci.yml
 npm run clean                        # Clean cache
 npm run status                       # Show status
 
+# NEW: Auto-fix validation commands
+npm run dev -- validate --fix       # Auto-fix validation issues
+git addf <files>                     # Interactive auto-fix before staging
+git addf .                          # Validate and auto-fix all files
+
 # Container operations
 npm run container:build              # Build validation container
 npm run container:test               # Test container basic functionality
+
+# Binary operations
+npm run build:binary                 # Build PyInstaller binary (now working)
+./dist/huskycat validate --staged   # Fast binary validation
 
 # Documentation
 npm run docs:build                   # Build MkDocs documentation
@@ -326,9 +373,8 @@ uv run mypy src/                         # Type checking
 ```
 
 **⚠️ Commands with issues:**
-- `npm run test:all` - Import errors
-- `npm run build:binary` - May need PyInstaller setup
-- `npm run build:upx` - Requires UPX installation
+- `npm run test:all` - Import errors (missing websockets, playwright dependencies)
+- `npm run build:upx` - UPX disabled on macOS due to signing compatibility issues
 
 ## Bootstrap Operations & Critical Paths
 

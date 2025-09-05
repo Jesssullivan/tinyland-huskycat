@@ -308,6 +308,87 @@ exec git add "$@"
         git_add_wrapper.write_text(git_add_wrapper_content)
         git_add_wrapper.chmod(0o755)
 
+        # Create git alias setup script
+        alias_setup_script = git_wrapper_dir / "setup-git-aliases.sh"
+        alias_setup_content = f"""#!/bin/bash
+# HuskyCat git aliases setup script
+# Run this script to setup git aliases for auto-fix validation
+
+echo "Setting up git aliases for HuskyCat auto-fix validation..."
+
+# Create git alias for enhanced git add
+git config --global alias.add-fix '!{git_add_wrapper} "$@" && git add "$@"'
+
+# Alternative: create a function-based alias that works better
+git config --global alias.addf '!f() {{ 
+    for file in "$@"; do
+        if [ -f "$file" ]; then
+            echo "🔍 Validating $file before adding...";
+            if [ -f "./dist/huskycat" ]; then
+                ./dist/huskycat validate "$file" || {{
+                    echo "💡 Auto-fix available for $file";
+                    echo -n "🤖 Apply auto-fix? [y/N]: ";
+                    read -r response;
+                    if [[ "$response" =~ ^[Yy]$ ]]; then
+                        ./dist/huskycat validate "$file" --fix && echo "✅ Fixed $file";
+                    else
+                        echo "❌ Skipping $file - fix manually"; exit 1;
+                    fi;
+                }};
+            elif command -v huskycat >/dev/null 2>&1; then
+                huskycat validate "$file" || {{
+                    echo "💡 Auto-fix available for $file";
+                    echo -n "🤖 Apply auto-fix? [y/N]: ";
+                    read -r response;
+                    if [[ "$response" =~ ^[Yy]$ ]]; then
+                        huskycat validate "$file" --fix && echo "✅ Fixed $file";
+                    else
+                        echo "❌ Skipping $file - fix manually"; exit 1;
+                    fi;
+                }};
+            elif command -v uv >/dev/null 2>&1 && [ -f "pyproject.toml" ]; then
+                uv run python3 -m src.huskycat validate "$file" || {{
+                    echo "💡 Auto-fix available for $file";
+                    echo -n "🤖 Apply auto-fix? [y/N]: ";
+                    read -r response;
+                    if [[ "$response" =~ ^[Yy]$ ]]; then
+                        uv run python3 -m src.huskycat validate "$file" --fix && echo "✅ Fixed $file";
+                    else
+                        echo "❌ Skipping $file - fix manually"; exit 1;
+                    fi;
+                }};
+            fi;
+        fi;
+    done;
+    git add "$@";
+}}; f'
+
+echo "✅ Git aliases configured successfully!"
+echo ""
+echo "Usage:"
+echo "  git addf <files>  # Add files with auto-fix validation"
+echo ""
+echo "Example:"
+echo "  git addf src/file1.py src/file2.py"
+echo "  git addf ."
+echo ""
+echo "To remove these aliases later:"
+echo "  git config --global --unset alias.add-fix"
+echo "  git config --global --unset alias.addf"
+"""
+
+        alias_setup_script.write_text(alias_setup_content)
+        alias_setup_script.chmod(0o755)
+
+        # Run the alias setup script automatically
+        try:
+            subprocess.run([str(alias_setup_script)], check=True, capture_output=True)
+            alias_setup_success = True
+            alias_message = "Git aliases configured automatically"
+        except subprocess.CalledProcessError:
+            alias_setup_success = False
+            alias_message = f"Run {alias_setup_script} manually to setup git aliases"
+
         return CommandResult(
             status=CommandStatus.SUCCESS,
             message="Git hooks installed successfully",
@@ -315,11 +396,18 @@ exec git add "$@"
                 "hooks_dir": str(hooks_dir),
                 "hooks_installed": [
                     "pre-commit",
-                    "pre-push",
+                    "pre-push", 
                     "pre-index",
                     "commit-msg",
                 ],
                 "git_wrapper": str(git_add_wrapper),
-                "setup_note": f"Add {git_wrapper_dir} to your PATH to use enhanced git-add-with-validation",
+                "alias_setup_script": str(alias_setup_script),
+                "aliases_configured": alias_setup_success,
+                "usage_note": alias_message,
+                "instructions": [
+                    "Use 'git addf <files>' for auto-fix validation before adding",
+                    "Use 'git addf .' to validate and add all files with auto-fix prompts",
+                    f"Manual setup: {alias_setup_script}",
+                ],
             },
         )

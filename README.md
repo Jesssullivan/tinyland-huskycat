@@ -40,11 +40,12 @@ graph LR
 - Exposes validation tools as AI-callable functions
 - Real-time code quality feedback
 
-### 🔄 **Universal Validation**
+### 🔄 **Universal Validation with Auto-Fix**
 - **Core Tools**: Black, Flake8, MyPy, Ruff
 - **Extended Tools**: yamllint, shellcheck, hadolint, eslint
 - **Security**: bandit, safety, dependency scanning
 - **GitLab CI**: Schema validation and pipeline testing
+- **Auto-Fix**: Interactive prompts for automatic issue resolution
 
 ## Quick Start
 
@@ -71,6 +72,11 @@ npm run container:build
 ./dist/huskycat validate --staged    # Validate staged files
 ./dist/huskycat setup-hooks          # Install git hooks
 ./dist/huskycat ci-validate .gitlab-ci.yml
+
+# Auto-fix validation (NEW)
+./dist/huskycat validate --fix       # Auto-fix validation issues
+git addf <files>                     # Interactive auto-fix before staging
+git addf .                          # Validate and auto-fix all files
 
 # Development mode (NPM scripts)
 npm run validate                     # Quick validation
