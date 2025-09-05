@@ -51,6 +51,7 @@ def create_parser() -> argparse.ArgumentParser:
     validate_parser.add_argument(
         "--allow-warnings",
         action="store_true",
+        dest="allow_warnings",
         help="Allow warnings to pass (treat warnings as success)",
     )
 
