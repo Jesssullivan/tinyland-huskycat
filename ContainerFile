@@ -123,7 +123,7 @@ WORKDIR /workspace
 
 # Environment variables
 ENV PATH="/usr/local/bin:/app:${PATH}"
-ENV PYTHONPATH="/app:${PYTHONPATH}"
+ENV PYTHONPATH="/app/src:${PYTHONPATH}"
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
