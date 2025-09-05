@@ -4,153 +4,140 @@ Welcome to HuskyCat, the **Universal Code Validation Platform** with integrated 
 
 ## What is HuskyCat?
 
-HuskyCat is a modern, unified validation platform that combines:
+HuskyCat is a **container-only** validation platform designed for consistent toolchains, repository isolation, and AI integration:
 
-- **Universal Code Validation**: Support for Python, JavaScript/TypeScript, YAML, Shell scripts, Dockerfiles, and more
-- **MCP Server Integration**: Direct integration with Claude Code for AI-powered development workflows
-- **Git Hooks**: Automated validation on commit with customizable rules
-- **CI/CD Integration**: Native GitLab CI/CD support with artifact publishing
-- **Container Support**: Run validation in isolated environments
-- **UV Package Manager**: Lightning-fast Python dependency management
+- **Container-Only Execution**: Complete toolchain consistency across all environments
+- **Repository Safety**: Validation tools run in isolation from your actual repository
+- **MCP Server Integration**: stdio-based server for seamless Claude Code integration
+- **Git Hooks**: Binary-first execution with container-backed validation
+- **Universal Validation**: Python, JavaScript, YAML, Shell, Docker, security scanning
+- **Auto-Fix Support**: Interactive auto-repair of validation issues
 
 ## Quick Start
 
-### Build from Source
-
+### Prerequisites & Setup
 ```bash
-git clone <repository>
-cd huskycats-bates
+# Required: Container runtime (podman or docker)
+# Install podman: brew install podman (macOS) or apt install podman (Ubuntu)
+
+# Install dependencies
 npm install
+uv sync --dev
+
+# Build container (required for all validation)
+npm run container:build
+
+# Build binary entry point
 npm run build:binary
-```
 
-### For Claude Code Integration
-
-After building, set up the MCP server:
-
-```bash
-./dist/huskycat mcp-server
-```
-
-### Setup in Your Repository
-
-```bash
-cd your-project
-./path/to/huskycat setup-hooks
+# Verify installation
+./dist/huskycat --version
+./dist/huskycat status
 ```
 
 ## Key Features
 
-### 🔍 Universal Validation
-- **Python**: Black, Flake8, MyPy, Ruff
-- **JavaScript/TypeScript**: ESLint
-- **YAML**: yamllint
-- **Shell**: shellcheck
-- **Containers**: hadolint
-- **Auto-fix**: Automatic code formatting where possible
+### 🐳 **Container-Only Execution**
+- Consistent toolchain across all environments
+- Complete isolation from host repository
+- No "tool not found" errors - ever
 
-### 🤖 MCP Server for Claude Code
-- Direct integration with Claude Code
-- Validate files and directories from within Claude
-- Support for individual validator tools
-- Staged file validation for git workflows
+### 🔒 **Repository Safety & Isolation**
+- Binary configs stored separately from repository
+- Validation tools cannot interfere with actual files
+- Read-only repository mounting for security
 
-### ⚡ Performance
-- Built with UV for ultra-fast Python package management
-- Parallel validation execution
-- Smart caching and incremental builds
-- Binary distributions for zero-dependency installation
+### 🤖 **AI Integration via MCP**
+- stdio-based MCP server for Claude Code
+- Container-backed validation tools as AI-callable functions
+- Real-time code quality feedback with full toolchain
 
-### 🔧 Developer Experience
-- Simple CLI interface
-- JSON output for programmatic use
-- Comprehensive error reporting
-- Container isolation option
+### 🔄 **Universal Validation with Auto-Fix**
+- **Core Tools**: Black, Flake8, MyPy, Ruff
+- **Extended Tools**: yamllint, shellcheck, hadolint, eslint
+- **Security**: bandit, safety, dependency scanning
+- **GitLab CI**: Schema validation and pipeline testing
+- **Auto-Fix**: Interactive prompts for automatic issue resolution
 
 ## Architecture
 
-HuskyCat uses a simplified, unified architecture:
+HuskyCat enforces container-only execution for all validation operations:
 
 ```mermaid
-graph TD
-    A[CLI Entry Point] --> B[Unified Validation Engine]
-    A --> C[MCP Server]
-    B --> D[Validator Registry]
-    D --> E[Python Validators]
-    D --> F[JavaScript Validators]
-    D --> G[YAML Validators]
-    D --> H[Container Validators]
-    D --> I[Shell Validators]
-    C --> B
-    J[Claude Code] --> C
+graph LR
+    A["🚀 Binary Entry Point"] --> B["Container Runtime"]
+    C["🛠️ NPM Scripts"] --> B
+    D["🤖 MCP Server"] --> B
+    
+    B --> E["🐳 Container Execution"]
+    E --> F["Complete Toolchain"]
+    E --> G["Repository Isolation"] 
+    E --> H["Consistent Environment"]
+    
+    style B fill:#f3e5f5
+    style E fill:#e8f5e8
+    style F fill:#fff3e0
 ```
 
 ## Getting Started
 
 Choose your installation method:
 
-=== "Build from Source (Recommended)"
+All execution modes use **container-only validation** for consistency:
+
+=== "🚀 Binary Entry Point (Recommended)"
 
     ```bash
-    git clone <repository>
-    cd huskycats-bates
-    npm install
-    npm run build:binary
-    uv sync --dev
+    ./dist/huskycat [command]            # Fast startup, container execution
     ```
+    **Best for**: Git hooks, CI/CD, production deployments
 
-=== "Development Mode"
+=== "🛠️ NPM Script Development"
 
     ```bash
-    npm run dev -- --help      # Show available commands
-    npm run validate           # Validate using Python module
-    npm run hooks:install      # Setup hooks via npm script
+    npm run dev -- [command]            # Python module via NPM
     ```
+    **Best for**: Development, testing, convenience
 
-=== "Container Build"
+=== "🤖 MCP Server Mode"
 
     ```bash
-    npm run container:build
-    podman run --rm -v "$(pwd):/workspace" huskycat:local validate --all
+    ./dist/huskycat mcp-server           # stdio JSON-RPC server
     ```
+    **Best for**: Claude Code integration, AI-powered validation
+
+**All modes provide**: Complete toolchain (Python + Node.js + Shell + Docker + Security) via container execution
 
 ## Usage Examples
 
-### Basic Validation
-
+### Core Operations
 ```bash
-# Validate current directory
-./dist/huskycat validate
+# Fast binary execution (git hooks, production)
+./dist/huskycat validate --staged    # Validate staged files
+./dist/huskycat setup-hooks          # Install git hooks
+./dist/huskycat ci-validate .gitlab-ci.yml
 
-# Validate specific file
-./dist/huskycat validate src/main.py
+# Auto-fix validation (NEW)
+./dist/huskycat validate --fix       # Auto-fix validation issues
+git addf <files>                     # Interactive auto-fix before staging
+git addf .                          # Validate and auto-fix all files
 
-# Validate all files
-./dist/huskycat validate --all
+# Development mode (NPM scripts)
+npm run validate                     # Quick validation
+npm run validate:ci                  # CI configuration
+npm run mcp:server                   # Start MCP server
 
-# Validate staged files (for git hooks)
-./dist/huskycat validate --staged
+# Container mode (comprehensive)
+npm run container:test:validate      # Full toolchain
 ```
 
-### MCP Server Usage
-
+### Claude Code Integration
 ```bash
-# Start MCP server for Claude Code (stdio mode)
+# Start MCP server (stdio protocol)
 ./dist/huskycat mcp-server
 
-# Start MCP server on specific port
-./dist/huskycat mcp-server --port 8080
-```
-
-### Git Integration
-
-```bash
-# Setup git hooks
-./dist/huskycat setup-hooks
-
-# Manual hook testing
-git add .
-git commit -m "feat: add validation"  # Hooks run automatically
+# Test connection
+echo '{"jsonrpc": "2.0", "method": "tools/list", "id": 1}' | npm run mcp:server
 ```
 
 ## Next Steps

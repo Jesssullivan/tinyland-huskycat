@@ -28,6 +28,7 @@ class ValidateCommand(BaseCommand):
         all_files: bool = False,
         fix: bool = False,
         interactive: bool = False,
+        allow_warnings: bool = False,
     ) -> CommandResult:
         """
         Execute validation on files.
@@ -54,6 +55,7 @@ class ValidateCommand(BaseCommand):
         engine = ValidationEngine(
             auto_fix=fix,
             interactive=interactive and staged,
+            allow_warnings=allow_warnings,
         )
 
         # Use the appropriate validation method
@@ -86,13 +88,17 @@ class ValidateCommand(BaseCommand):
                         [f"{filepath} ({result.tool}): {w}" for w in result.warnings]
                     )
 
-        # Determine overall status based on summary
+        # Determine overall status based on summary and allow_warnings flag
         if summary["total_errors"] > 0:
             status = CommandStatus.FAILED
             message = f"Validation failed: {summary['total_errors']} error(s), {summary['total_warnings']} warning(s)"
         elif summary["total_warnings"] > 0:
-            status = CommandStatus.WARNING
-            message = f"Validation passed with {summary['total_warnings']} warning(s)"
+            if allow_warnings:
+                status = CommandStatus.SUCCESS
+                message = f"Validation passed with {summary['total_warnings']} warning(s) (warnings allowed)"
+            else:
+                status = CommandStatus.WARNING
+                message = f"Validation passed with {summary['total_warnings']} warning(s)"
         else:
             status = CommandStatus.SUCCESS
             message = "All validations passed"

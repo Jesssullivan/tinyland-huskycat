@@ -94,7 +94,9 @@ class Validator(ABC):
                 continue
         return False
 
-    def _execute_command(self, cmd: List[str], **kwargs: Any) -> subprocess.CompletedProcess:
+    def _execute_command(
+        self, cmd: List[str], **kwargs: Any
+    ) -> subprocess.CompletedProcess:
         """Execute command in container (container-only mode)"""
         container_cmd = self._build_container_command(cmd)
         return subprocess.run(container_cmd, **kwargs)
@@ -853,9 +855,11 @@ class ValidationEngine:
         self,
         auto_fix: bool = False,
         interactive: bool = False,
+        allow_warnings: bool = False,
     ):
         self.auto_fix = auto_fix
         self.interactive = interactive
+        self.allow_warnings = allow_warnings
         self.validators = self._initialize_validators()
         self._extension_map = self._build_extension_map()
 

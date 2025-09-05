@@ -1,6 +1,6 @@
 # MCP Server Integration
 
-HuskyCat includes a built-in **Model Context Protocol (MCP) Server** that enables seamless integration with Claude Code, providing AI-powered code validation directly within your development workflow.
+HuskyCat includes a built-in **stdio-based MCP Server** with container-backed validation tools, enabling AI-powered code quality feedback through Claude Code integration.
 
 ## What is MCP?
 
@@ -14,6 +14,12 @@ The Model Context Protocol (MCP) is an open standard that allows AI assistants l
 git clone <repository>
 cd huskycats-bates
 npm install
+uv sync --dev
+
+# Build container (required for validation)
+npm run container:build
+
+# Build binary entry point  
 npm run build:binary
 ```
 
@@ -25,11 +31,13 @@ Add to Claude Code MCP configuration:
   "mcpServers": {
     "huskycat": {
       "command": "/path/to/huskycat",
-      "args": ["mcp-server", "--port=0"]
+      "args": ["mcp-server"]
     }
   }
 }
 ```
+
+**Note**: HuskyCat uses stdio protocol by default - no port needed.
 
 ### 3. Verify Installation
 
@@ -177,14 +185,22 @@ The MCP server works seamlessly with Git hooks. You can:
 2. Set up pre-push validation
 3. Integrate with CI/CD workflows
 
-### Container Integration
+### Container-Only Validation
 
-When using containers, the MCP server can run validation in isolated environments:
+The MCP server uses container-only execution for all validation:
 
 ```bash
-# Add container-based MCP server
-claude mcp add huskycat-container "podman run --rm -i -v $(pwd):/workspace -w /workspace registry.gitlab.com/tinyland/ai/huskycat:latest mcp-server"
+# All validation automatically runs in containers
+./dist/huskycat mcp-server  # Uses container internally
+
+# Verify container is working
+npm run container:test
 ```
+
+**Benefits**:
+- Consistent toolchain across environments
+- Repository isolation and safety
+- No missing tool dependencies
 
 ## Troubleshooting
 

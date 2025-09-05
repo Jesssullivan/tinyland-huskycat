@@ -4,11 +4,11 @@ This guide covers installing HuskyCat locally and in development projects.
 
 ## Prerequisites
 
-- **Python 3.8+**: Required for the core validation platform
-- **UV Package Manager**: Fast Python dependency management (`pip install uv`)
-- **Node.js and npm**: For build system and npm scripts
-- **Podman or Docker**: For containerized validation (optional)
-- **Git Repository**: The project must be a Git repository
+- **Container Runtime**: Podman or Docker (required for all validation)
+- **Python 3.8+**: For binary build and NPM mode
+- **UV Package Manager**: `pip install uv`
+- **Node.js and npm**: Build system
+- **Git Repository**: Required for hooks and staged file validation
 
 ## 🚀 Quick Start - HuskyCat Installation
 
@@ -21,10 +21,15 @@ HuskyCat provides multiple installation methods to suit different workflows.
 git clone <repository>
 cd huskycats-bates
 npm install
-npm run build:binary
 
 # Install Python dependencies
 uv sync --dev
+
+# Build container (required for all validation)
+npm run container:build
+
+# Build binary entry point
+npm run build:binary
 
 # Verify installation
 ./dist/huskycat --version
@@ -89,19 +94,20 @@ git commit -m "test: verify hooks"  # Should run validation
 # Args: ["mcp-server", "--port=0"]
 ```
 
-## Container-based Validation
+## Container-Only Execution
 
-### Build and Use Container
+All validation runs in containers for consistency and isolation:
 
 ```bash
-# Build HuskyCat container
+# Build validation container (required)
 npm run container:build
 
-# Test container
+# Test container works
 npm run container:test
 
-# Run validation in container
-podman run --rm -v "$(pwd):/workspace" huskycat:local validate --all
+# All validation commands use container automatically
+./dist/huskycat validate --all    # Uses container internally
+npm run validate                  # Uses container internally
 ```
 
 ## What Gets Configured

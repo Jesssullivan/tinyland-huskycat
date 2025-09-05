@@ -48,6 +48,11 @@ def create_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Prompt for auto-fix decisions (default for git hooks)",
     )
+    validate_parser.add_argument(
+        "--allow-warnings",
+        action="store_true",
+        help="Allow warnings to pass (treat warnings as success)",
+    )
 
     # Auto-fix command
     autofix_parser = subparsers.add_parser(

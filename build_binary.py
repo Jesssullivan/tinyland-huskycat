@@ -4,8 +4,6 @@ Binary build script for HuskyCat
 Handles PyInstaller configuration and builds standalone executable with optional macOS code signing
 """
 
-import sys
-import os
 import platform
 import argparse
 from pathlib import Path
