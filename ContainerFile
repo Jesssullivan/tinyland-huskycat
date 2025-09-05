@@ -32,6 +32,10 @@ RUN pip3 install --no-cache-dir --break-system-packages \
     yamllint \
     hypothesis \
     pytest \
+    pytest-cov \
+    pytest-asyncio \
+    pytest-timeout \
+    pytest-xdist \
     jsonschema \
     pyyaml \
     requests \
@@ -92,6 +96,7 @@ COPY --from=builder /usr/bin/pylint /usr/bin/pylint
 COPY --from=builder /usr/bin/bandit /usr/bin/bandit
 COPY --from=builder /usr/bin/ruff /usr/bin/ruff
 COPY --from=builder /usr/bin/yamllint /usr/bin/yamllint
+COPY --from=builder /usr/bin/pytest /usr/bin/pytest
 COPY --from=builder /usr/bin/shellcheck /usr/bin/shellcheck
 COPY --from=builder /usr/lib/python3.11 /usr/lib/python3.11/
 COPY --from=builder /usr/lib/node_modules /usr/lib/node_modules/
