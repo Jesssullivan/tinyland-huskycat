@@ -699,24 +699,32 @@ class GitLabCIValidator(Validator):
         # Try to import the GitLab CI validator
         GitLabCISchemaValidator = None
         import_error = None
-        
+
         # Multiple import strategies
         import sys
         import os
-        
+
         # Try path-based import first since it works when called directly
         current_dir = os.path.dirname(__file__)
         try:
             sys.path.insert(0, current_dir)
             import gitlab_ci_validator
+
             GitLabCISchemaValidator = gitlab_ci_validator.GitLabCISchemaValidator
             sys.path.pop(0)
         except Exception as e:
             # Try other import strategies
             for import_strategy in [
-                lambda: __import__('huskycat.gitlab_ci_validator', fromlist=['GitLabCISchemaValidator']).GitLabCISchemaValidator,
-                lambda: __import__('src.huskycat.gitlab_ci_validator', fromlist=['GitLabCISchemaValidator']).GitLabCISchemaValidator,
-                lambda: getattr(__import__('gitlab_ci_validator'), 'GitLabCISchemaValidator')
+                lambda: __import__(
+                    "huskycat.gitlab_ci_validator", fromlist=["GitLabCISchemaValidator"]
+                ).GitLabCISchemaValidator,
+                lambda: __import__(
+                    "src.huskycat.gitlab_ci_validator",
+                    fromlist=["GitLabCISchemaValidator"],
+                ).GitLabCISchemaValidator,
+                lambda: getattr(
+                    __import__("gitlab_ci_validator"), "GitLabCISchemaValidator"
+                ),
             ]:
                 try:
                     GitLabCISchemaValidator = import_strategy()
@@ -724,7 +732,7 @@ class GitLabCIValidator(Validator):
                 except (ImportError, ModuleNotFoundError, AttributeError) as e:
                     import_error = e
                     continue
-                
+
         if GitLabCISchemaValidator is None:
             return ValidationResult(
                 tool=self.name,
@@ -735,7 +743,7 @@ class GitLabCIValidator(Validator):
                 ],
                 duration_ms=int((time.time() - start_time) * 1000),
             )
-        
+
         try:
             validator = GitLabCISchemaValidator()
 

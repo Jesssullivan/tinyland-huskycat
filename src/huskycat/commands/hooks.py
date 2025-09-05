@@ -396,7 +396,7 @@ echo "  git config --global --unset alias.addf"
                 "hooks_dir": str(hooks_dir),
                 "hooks_installed": [
                     "pre-commit",
-                    "pre-push", 
+                    "pre-push",
                     "pre-index",
                     "commit-msg",
                 ],
