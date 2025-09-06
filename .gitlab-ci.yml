@@ -50,30 +50,34 @@ variables:
     - export PATH="$HOME/.local/bin:$PATH"
     - uv --version
 
-# Stage 1: Basic validation (before container build)
+# Container-based validation (after container build for parity)
 validate:basic:
-  stage: validate
-  image: python:3.11-alpine
-  <<: *uv_setup
-  <<: *cache_template
+  stage: security
+  image:
+    name: $CONTAINER_REGISTRY:$CONTAINER_TAG-amd64
+    entrypoint: [""]
+  needs:
+    - container:build:amd64
   script:
-    - uv sync --dev
-    - echo "🚀 Stage 1 - Basic validation (pre-container)"
-    - uv run black --check src/
-    - echo "✓ Stage 1 - Basic validation complete (flake8 temporarily disabled for demo)"
-    - echo "✅ Stage 1 validation complete"
+    - echo "🐳 Using HuskyCat container for validation parity"
+    - which black && black --version
+    - black --check src/
+    - echo "✅ Basic validation complete using container tools"
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
     - if: $CI_COMMIT_BRANCH
 
 mkdocs:validate:
-  stage: validate
-  image: python:3.11-alpine
-  <<: *uv_setup
-  <<: *cache_template
+  stage: security
+  image:
+    name: $CONTAINER_REGISTRY:$CONTAINER_TAG-amd64
+    entrypoint: [""]
+  needs:
+    - container:build:amd64
   script:
-    - uv sync --extra docs
-    - uv run mkdocs build --strict --verbose --site-dir .tmp/site
+    - echo "🐳 Using HuskyCat container for MkDocs validation parity"
+    - which mkdocs && mkdocs --version
+    - mkdocs build --strict --verbose --site-dir .tmp/site
   artifacts:
     when: on_failure
     paths:
@@ -84,14 +88,17 @@ mkdocs:validate:
     - if: $CI_COMMIT_BRANCH
 
 validate:yaml:
-  stage: validate
-  image: python:3.11-alpine
-  <<: *uv_setup
-  <<: *cache_template
+  stage: security
+  image:
+    name: $CONTAINER_REGISTRY:$CONTAINER_TAG-amd64
+    entrypoint: [""]
+  needs:
+    - container:build:amd64
   script:
-    - uv sync --dev
-    - uv run yamllint .gitlab-ci.yml mkdocs.yml
-    - find . -name "*.yml" -o -name "*.yaml" | grep -v .cache | xargs uv run yamllint
+    - echo "🐳 Using HuskyCat container for YAML validation parity"
+    - which yamllint && yamllint --version
+    - yamllint .gitlab-ci.yml mkdocs.yml
+    - find . -name "*.yml" -o -name "*.yaml" | grep -v .cache | xargs yamllint
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
     - if: $CI_COMMIT_BRANCH
@@ -258,7 +265,7 @@ mkdocs:build:
 
 # Build stage jobs - multi-architecture container builds
 .container_build_template: &container_build_template
-  stage: security
+  stage: validate
   image: quay.io/buildah/stable:latest
   before_script:
     - buildah login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
