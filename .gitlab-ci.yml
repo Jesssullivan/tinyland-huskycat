@@ -149,7 +149,7 @@ test:e2e:comprehensive:
     - export PATH="$HOME/.local/bin:$PATH"
     - uv --version
   script:
-    - uv pip install pytest pytest-playwright pytest-timeout hypothesis pyyaml requests
+    - uv pip install --system pytest pytest-playwright pytest-timeout hypothesis pyyaml requests
     - playwright install chromium
     - python tests/e2e/run_e2e_tests.py --suite=all --skip-slow --headless
   retry:
@@ -185,7 +185,7 @@ test:e2e:playwright:
     - export PATH="$HOME/.local/bin:$PATH"
     - uv --version
   script:
-    - uv pip install pytest pytest-playwright pytest-timeout hypothesis
+    - uv pip install --system pytest pytest-playwright pytest-timeout hypothesis
     - playwright install chromium firefox
     - python tests/e2e/run_e2e_tests.py --suite=playwright --headless --browser=chromium
   retry:
