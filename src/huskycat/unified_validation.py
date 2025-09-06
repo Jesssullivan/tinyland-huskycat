@@ -186,7 +186,7 @@ class BlackValidator(Validator):
 
     @property
     def name(self) -> str:
-        return "black"
+        return "python-black"
 
     @property
     def extensions(self) -> Set[str]:
@@ -447,6 +447,142 @@ class MypyValidator(Validator):
             )
 
 
+class RuffValidator(Validator):
+    """Python fast linter"""
+
+    @property
+    def name(self) -> str:
+        return "ruff"
+
+    @property
+    def extensions(self) -> Set[str]:
+        return {".py", ".pyi"}
+
+    def validate(self, filepath: Path) -> ValidationResult:
+        start_time = time.time()
+        cmd = [self.command, "check", str(filepath), "--output-format=json"]
+
+        try:
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+
+            duration_ms = int((time.time() - start_time) * 1000)
+
+            if result.returncode == 0:
+                return ValidationResult(
+                    tool=self.name,
+                    filepath=str(filepath),
+                    success=True,
+                    duration_ms=duration_ms,
+                )
+
+            # Parse JSON output
+            messages = []
+            errors = []
+            if result.stdout:
+                try:
+                    import json
+
+                    data = json.loads(result.stdout)
+                    for issue in data:
+                        msg = f"Line {issue.get('location', {}).get('row', '?')}: {issue.get('message', 'Unknown error')}"
+                        messages.append(msg)
+                        errors.append(msg)
+                except json.JSONDecodeError:
+                    errors = [result.stdout.strip()]
+                    messages = [result.stdout.strip()]
+
+            return ValidationResult(
+                tool=self.name,
+                filepath=str(filepath),
+                success=False,
+                messages=messages,
+                errors=errors,
+                duration_ms=duration_ms,
+            )
+
+        except Exception as e:
+            return ValidationResult(
+                tool=self.name,
+                filepath=str(filepath),
+                success=False,
+                errors=[str(e)],
+                duration_ms=int((time.time() - start_time) * 1000),
+            )
+
+
+class BanditValidator(Validator):
+    """Python security vulnerability scanner"""
+
+    @property
+    def name(self) -> str:
+        return "bandit"
+
+    @property
+    def extensions(self) -> Set[str]:
+        return {".py", ".pyi"}
+
+    def validate(self, filepath: Path) -> ValidationResult:
+        start_time = time.time()
+        cmd = [self.command, "-f", "json", str(filepath)]
+
+        try:
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+
+            duration_ms = int((time.time() - start_time) * 1000)
+
+            # Bandit returns 0 for no issues, 1 for issues found
+            if result.returncode == 0:
+                return ValidationResult(
+                    tool=self.name,
+                    filepath=str(filepath),
+                    success=True,
+                    duration_ms=duration_ms,
+                )
+
+            # Parse JSON output
+            messages = []
+            errors = []
+            warnings = []
+            if result.stdout:
+                try:
+                    import json
+
+                    data = json.loads(result.stdout)
+                    results = data.get("results", [])
+                    for issue in results:
+                        msg = f"Line {issue.get('line_number', '?')}: {issue.get('test_name', 'Unknown')} - {issue.get('issue_text', 'Security issue')}"
+                        messages.append(msg)
+
+                        severity = issue.get("issue_severity", "MEDIUM")
+                        if severity in ["HIGH", "CRITICAL"]:
+                            errors.append(msg)
+                        else:
+                            warnings.append(msg)
+
+                except json.JSONDecodeError:
+                    errors = [result.stdout.strip()]
+                    messages = [result.stdout.strip()]
+
+            return ValidationResult(
+                tool=self.name,
+                filepath=str(filepath),
+                success=False,
+                messages=messages,
+                errors=errors,
+                warnings=warnings,
+                duration_ms=duration_ms,
+            )
+
+        except Exception as e:
+            return ValidationResult(
+                tool=self.name,
+                filepath=str(filepath),
+                success=False,
+                errors=[str(e)],
+                duration_ms=int((time.time() - start_time) * 1000),
+            )
+
+
 # JavaScript/TypeScript Validators
 
 
@@ -455,7 +591,7 @@ class ESLintValidator(Validator):
 
     @property
     def name(self) -> str:
-        return "eslint"
+        return "js-eslint"
 
     @property
     def extensions(self) -> Set[str]:
@@ -515,6 +651,64 @@ class ESLintValidator(Validator):
                     messages=result.stdout.splitlines() if result.stdout else [],
                     duration_ms=duration_ms,
                 )
+        except Exception as e:
+            return ValidationResult(
+                tool=self.name,
+                filepath=str(filepath),
+                success=False,
+                errors=[str(e)],
+                duration_ms=int((time.time() - start_time) * 1000),
+            )
+
+
+class PrettierValidator(Validator):
+    """JavaScript/TypeScript code formatter"""
+
+    @property
+    def name(self) -> str:
+        return "js-prettier"
+
+    @property
+    def extensions(self) -> Set[str]:
+        return {".js", ".jsx", ".ts", ".tsx", ".json", ".css", ".scss", ".html", ".md"}
+
+    def validate(self, filepath: Path) -> ValidationResult:
+        start_time = time.time()
+        cmd = [self.command, "--check", str(filepath)]
+
+        try:
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+
+            duration_ms = int((time.time() - start_time) * 1000)
+
+            if result.returncode == 0:
+                return ValidationResult(
+                    tool=self.name,
+                    filepath=str(filepath),
+                    success=True,
+                    duration_ms=duration_ms,
+                )
+
+            # Prettier returns non-zero if files need formatting
+            messages = []
+            errors = []
+            if result.stdout:
+                lines = result.stdout.strip().split("\n")
+                for line in lines:
+                    if line.strip():
+                        msg = f"Code formatting: {line}"
+                        messages.append(msg)
+                        errors.append(msg)
+
+            return ValidationResult(
+                tool=self.name,
+                filepath=str(filepath),
+                success=False,
+                messages=messages,
+                errors=errors,
+                duration_ms=duration_ms,
+            )
+
         except Exception as e:
             return ValidationResult(
                 tool=self.name,
@@ -628,7 +822,7 @@ class HadolintValidator(Validator):
 
     @property
     def name(self) -> str:
-        return "hadolint"
+        return "docker-hadolint"
 
     @property
     def extensions(self) -> Set[str]:
@@ -902,7 +1096,10 @@ class ValidationEngine:
             AutoflakeValidator(self.auto_fix),
             Flake8Validator(self.auto_fix),
             MypyValidator(self.auto_fix),
+            RuffValidator(self.auto_fix),
+            BanditValidator(self.auto_fix),
             ESLintValidator(self.auto_fix),
+            PrettierValidator(self.auto_fix),
             YamlLintValidator(self.auto_fix),
             HadolintValidator(self.auto_fix),
             ShellcheckValidator(self.auto_fix),
@@ -951,14 +1148,38 @@ class ValidationEngine:
         results: List[ValidationResult] = []
 
         # Find applicable validators
-        validators = self._extension_map.get(filepath.suffix, [])
+        if tools:
+            # Filter validators by specified tool names
+            validators = []
+            for tool_name in tools:
+                found_validator = None
+                for v in self.validators:
+                    if v.name == tool_name and v.can_handle(filepath):
+                        found_validator = v
+                        break
 
-        # Also check validators with custom can_handle logic
-        for v in self.validators:
-            if v.can_handle(filepath) and v not in validators:
-                validators.append(v)
+                if found_validator:
+                    validators.append(found_validator)
+                else:
+                    # Create error result for unknown tool
+                    result = ValidationResult(
+                        tool=tool_name,
+                        filepath=str(filepath),
+                        success=False,
+                        messages=[f"Unknown tool: {tool_name}"],
+                        errors=[f"Unknown tool: {tool_name}"],
+                    )
+                    results.append(result)
+        else:
+            # Use all applicable validators
+            validators = self._extension_map.get(filepath.suffix, [])
 
-        if not validators:
+            # Also check validators with custom can_handle logic
+            for v in self.validators:
+                if v.can_handle(filepath) and v not in validators:
+                    validators.append(v)
+
+        if not validators and not tools:
             logger.warning(f"No validators found for {filepath}")
             return results
 
