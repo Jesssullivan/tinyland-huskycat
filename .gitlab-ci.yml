@@ -151,7 +151,7 @@ test:e2e:comprehensive:
   script:
     - uv pip install --system pytest pytest-playwright pytest-timeout hypothesis pyyaml requests
     - playwright install chromium
-    - python tests/e2e/run_e2e_tests.py --suite=all --skip-slow --headless
+    - python tests/e2e/run_e2e_tests.py --suite=all --skip-slow
   retry:
     max: 2
     when:
@@ -187,7 +187,7 @@ test:e2e:playwright:
   script:
     - uv pip install --system pytest pytest-playwright pytest-timeout hypothesis
     - playwright install chromium firefox
-    - python tests/e2e/run_e2e_tests.py --suite=playwright --headless --browser=chromium
+    - python tests/e2e/run_e2e_tests.py --suite=playwright --browser=chromium
   retry:
     max: 2
     when:
