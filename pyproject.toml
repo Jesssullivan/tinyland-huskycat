@@ -224,7 +224,7 @@ target-version = "py38"
 dev = [
     "autoflake>=2.3.1",
     "hypothesis>=6.138.14",
-    "playwright>=1.40.0,<1.55.0",
+    "playwright>=1.40.0,<1.54.0",
     "pyinstaller>=6.15.0",
     "pytest>=8.4.1",
     "pytest-asyncio>=1.1.0",
@@ -237,3 +237,14 @@ dev = [
     "types-requests>=2.32.4.20250809",
     "yamllint>=1.37.1",
 ]
+
+# Hypothesis settings for property-based testing
+[tool.hypothesis]
+# CI profile with reduced examples to avoid timeouts
+profiles.ci.max_examples = 10
+profiles.ci.deadline = 30000  # 30 seconds
+profiles.ci.suppress_health_check = ["too_slow"]
+
+# Dev profile for local development  
+profiles.dev.max_examples = 50
+profiles.dev.deadline = 200  # 200ms
