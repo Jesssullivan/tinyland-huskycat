@@ -149,9 +149,9 @@ test:e2e:comprehensive:
     - export PATH="$HOME/.local/bin:$PATH"
     - uv --version
   script:
-    - uv sync --dev
+    - uv pip install pytest pytest-playwright pytest-timeout hypothesis pyyaml requests
     - playwright install chromium
-    - uv run python tests/e2e/run_e2e_tests.py --suite=all --skip-slow --headless
+    - python tests/e2e/run_e2e_tests.py --suite=all --skip-slow --headless
   retry:
     max: 2
     when:
@@ -185,9 +185,9 @@ test:e2e:playwright:
     - export PATH="$HOME/.local/bin:$PATH"
     - uv --version
   script:
-    - uv sync --dev
+    - uv pip install pytest pytest-playwright pytest-timeout hypothesis
     - playwright install chromium firefox
-    - uv run python tests/e2e/run_e2e_tests.py --suite=playwright --headless --browser=chromium
+    - python tests/e2e/run_e2e_tests.py --suite=playwright --headless --browser=chromium
   retry:
     max: 2
     when:
@@ -226,24 +226,6 @@ test:mcp:server:
     paths:
       - logs/
     expire_in: 1 week
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-    - if: $CI_COMMIT_BRANCH
-
-mkdocs:build:
-  stage: test
-  image: python:3.11-alpine
-  <<: *uv_setup
-  <<: *cache_template
-  script:
-    - echo "📚 Building MkDocs site for GitLab Pages deployment"
-    - uv pip install mkdocs mkdocs-material mkdocs-mermaid2-plugin
-    - uv run mkdocs build --verbose --site-dir public
-  artifacts:
-    paths:
-      - public/
-    expire_in: 1 week
-    name: 'mkdocs-site-$CI_COMMIT_SHORT_SHA'
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
     - if: $CI_COMMIT_BRANCH
