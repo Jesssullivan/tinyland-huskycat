@@ -2,15 +2,15 @@
   "total_suites": 1,
   "passed_suites": 0,
   "failed_suites": 1,
-  "total_duration": 1.5160040855407715,
+  "total_duration": 0.7357230186462402,
   "results": {
-    "full_suite": {
+    "cicd_pipeline": {
       "success": false,
-      "duration": 1.5160040855407715,
+      "duration": 0.7357230186462402,
       "stdout": "",
-      "stderr": "ERROR: usage: __main__.py [options] [file_or_dir] [file_or_dir] [...]\n__main__.py: error: unrecognized arguments: --headless\n  inifile: /Users/jsullivan2/git/huskycats-bates/pyproject.toml\n  rootdir: /Users/jsullivan2/git/huskycats-bates\n\n",
+      "stderr": "ERROR: usage: __main__.py [options] [file_or_dir] [file_or_dir] [...]\n__main__.py: error: unrecognized arguments: --html=reports/cicd-report.html --self-contained-html\n  inifile: /Users/jsullivan2/git/huskycats-bates/pyproject.toml\n  rootdir: /Users/jsullivan2/git/huskycats-bates\n\n",
       "returncode": 4
     }
   },
-  "timestamp": "2025-09-05 16:18:23"
+  "timestamp": "2025-09-06 14:02:40"
 }

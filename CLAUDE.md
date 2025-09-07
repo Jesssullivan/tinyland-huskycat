@@ -165,8 +165,7 @@ npm run build:upx           # Create UPX-compressed binary
 npm run build:all           # Build container and UPX binary
 npm run test:unit           # Run unit tests only
 npm run test:integration    # Run integration tests only
-npm run test:e2e            # Run end-to-end tests only
-npm run test:all            # Run all tests (may have import errors)
+npm run test:all            # Run all tests (excludes removed E2E tests)
 
 # Documentation
 npm run docs:build          # Build MkDocs
@@ -324,7 +323,7 @@ glab ci lint .gitlab-ci.yml       # GitLab CI validation (requires glab CLI)
 ⚠️ **Note**: The test suite currently has several issues:
 
 **Import/Dependency Issues:**
-- Missing dependencies: `websockets`, `playwright` 
+- Missing dependencies: `websockets`
 - Module import issues: `mcp_server`, `unified_validation`
 - Several PBT (Property-Based Testing) files have broken imports
 
@@ -376,7 +375,7 @@ uv run mypy src/                         # Type checking
 ```
 
 **⚠️ Commands with issues:**
-- `npm run test:all` - Import errors (missing websockets, playwright dependencies)
+- `npm run test:all` - Import errors (missing websockets dependency)
 - `npm run build:upx` - UPX disabled on macOS due to signing compatibility issues
 
 ## Bootstrap Operations & Critical Paths

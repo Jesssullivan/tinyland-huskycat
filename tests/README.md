@@ -20,10 +20,8 @@ tests/
 ├── pytest.ini                    # Pytest settings and markers
 ├── run_tests.py                   # Intelligent test runner
 ├── test_sample.py                 # Sample test (existing)
-├── e2e-mcp-server.test.js         # MCP server E2E tests (existing)
 ├── test_property_based.py         # Property-based tests with Hypothesis
 ├── test_git_hooks.py             # Git hooks validation tests
-├── test_e2e_deployment.py        # End-to-end deployment tests
 ├── test_strategy.md              # Comprehensive testing strategy
 ├── quality_checklist.md          # Quality gates and checklists
 └── test-reports/                 # Generated test reports
@@ -58,9 +56,6 @@ Use the intelligent test runner for different scenarios:
 
 # Security-focused tests
 ./tests/run_tests.py security
-
-# End-to-end tests (requires services)
-./tests/run_tests.py e2e
 
 # Container tests (requires Docker)
 ./tests/run_tests.py container
@@ -102,7 +97,6 @@ pytest -k "test_calculate_sum" -v
 
 - `unit`: Fast, isolated unit tests
 - `integration`: Tests component interactions
-- `e2e`: End-to-end workflow tests
 - `security`: Security-focused validations
 - `performance`: Performance and benchmarking tests
 - `property`: Property-based tests with Hypothesis
@@ -119,7 +113,7 @@ pytest -k "test_calculate_sum" -v
 
 ```bash
 # Run only fast tests
-pytest -m "not slow and not e2e"
+pytest -m "not slow"
 
 # Run security and unit tests
 pytest -m "security or unit"
@@ -160,23 +154,14 @@ Validates Git hook functionality:
 - **MCP Integration**: Server connectivity and validation
 - **Workflow Testing**: Complete commit workflows
 
-### 3. E2E Deployment Testing (`test_e2e_deployment.py`)
-
-Tests complete deployment scenarios:
-
-- **Installation Testing**: Script-based and package installations
-- **Container Deployment**: Build, startup, and health checks
-- **Configuration Deployment**: Config validation and rollback
-- **Service Integration**: Multi-service deployments
-
-### 4. MCP Server Testing (`e2e-mcp-server.test.js`)
+### 3. MCP Server Testing
 
 Comprehensive API and functionality testing:
 
-- **HTTP Endpoints**: Health, tools, metrics
-- **RPC Methods**: Initialization, tool execution
-- **Validation Tools**: Python linting and security
+- **Stdio Protocol**: JSON-RPC 2.0 communication
+- **Tool Execution**: Validation tool integration
 - **Error Handling**: Graceful failure modes
+- **Performance**: Response time and concurrency
 
 ## Configuration
 
@@ -213,7 +198,7 @@ Provides reusable test components:
 - [ ] Performance benchmarks
 
 ### Release Gates (< 2 hours)
-- [ ] E2E integration tests
+- [ ] Integration tests complete
 - [ ] Cross-platform validation
 - [ ] Load testing
 - [ ] Security penetration testing

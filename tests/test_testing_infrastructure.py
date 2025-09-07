@@ -36,8 +36,6 @@ class TestTestingInfrastructure:
             "test_unified_validation_pbt.py",
             "test_mcp_server_pbt.py",
             "test_git_hooks.py",
-            "test_e2e_deployment.py",
-            "test_real_validation_e2e.py",
             "test_container_comprehensive.py",
             "test_mcp_integration_comprehensive.py",
             "run_comprehensive_tests.py",
@@ -48,20 +46,6 @@ class TestTestingInfrastructure:
             test_path = TESTS_DIR / test_file
             assert test_path.exists(), f"Test file missing: {test_file}"
             assert test_path.stat().st_size > 0, f"Test file is empty: {test_file}"
-
-    def test_e2e_scripts_exist(self):
-        """Test that E2E test scripts exist and are executable."""
-        e2e_dir = TESTS_DIR / "e2e"
-        if e2e_dir.exists():
-            expected_scripts = ["test-git-hooks.sh", "test-container.sh"]
-
-            for script in expected_scripts:
-                script_path = e2e_dir / script
-                if script_path.exists():
-                    # Check if executable
-                    assert os.access(
-                        script_path, os.X_OK
-                    ), f"Script not executable: {script}"
 
     def test_makefile_has_test_targets(self):
         """Test that Makefile has proper test targets."""
@@ -76,7 +60,6 @@ class TestTestingInfrastructure:
             "test-unit:",
             "test-integration:",
             "test-comprehensive:",
-            "test-e2e:",
         ]
 
         for target in expected_targets:

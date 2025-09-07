@@ -310,7 +310,6 @@
 #### Dynamic Testing
 - [ ] **Unit Tests**: pytest, Jest
 - [ ] **Integration Tests**: pytest, Supertest
-- [ ] **E2E Tests**: Playwright, Selenium
 - [ ] **Performance Tests**: pytest-benchmark, Artillery
 
 #### Security Testing

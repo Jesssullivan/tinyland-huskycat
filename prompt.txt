@@ -22,6 +22,9 @@ Never write new files unless absolutely needed.  Do not write new files without 
 
 Please write docs as you go in docs/ directory in mkdocs.yml friendly format.
 
+Never write new files with "-v2", "-enhanced", "-new", "_simple", "quick-" etc. always use proper semantics and file naming protocols. if you find duplicative or unclear file or function naming, fix it
+
+
 # Python:
 All our Python code should use UV package manager.  All python code should follow a proper packable factory pattern.  We use inline assertions and PBT with hypothesis for writing code.  We leverage pytest and playwright.  tests go in tests/.
 

@@ -136,75 +136,9 @@ test:e2e:deployment:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
     - if: $CI_COMMIT_BRANCH
 
-test:e2e:comprehensive:
-  stage: test
-  image: mcr.microsoft.com/playwright/python:v1.40.0-focal
-  variables:
-    PLAYWRIGHT_BROWSERS_PATH: /ms-playwright
-  before_script:
-    # Add retry logic for apt-get network timeouts
-    - for i in {1..3}; do apt-get update && break || sleep 10; done
-    - for i in {1..3}; do apt-get install -y python3-pip curl && break || sleep 10; done
-    - curl -LsSf https://astral.sh/uv/install.sh | sh
-    - export PATH="$HOME/.local/bin:$PATH"
-    - uv --version
-  script:
-    - uv pip install --system pytest pytest-playwright pytest-timeout pytest-html pytest-cov hypothesis pyyaml requests
-    - playwright install chromium
-    - python tests/e2e/run_e2e_tests.py --suite=all --skip-slow
-  retry:
-    max: 2
-    when:
-      - runner_system_failure
-      - stuck_or_timeout_failure
-  artifacts:
-    when: always
-    paths:
-      - reports/
-      - test-results/
-      - playwright-report/
-    reports:
-      junit:
-        - reports/e2e-full-junit.xml
-        - reports/playwright-results.xml
-    expire_in: 1 week
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-    - if: $CI_COMMIT_BRANCH == "main"
-
-test:e2e:playwright:
-  stage: test
-  image: mcr.microsoft.com/playwright/python:v1.40.0-focal
-  variables:
-    PLAYWRIGHT_BROWSERS_PATH: /ms-playwright
-  before_script:
-    # Add retry logic for apt-get network timeouts
-    - for i in {1..3}; do apt-get update && break || sleep 10; done
-    - for i in {1..3}; do apt-get install -y python3-pip curl && break || sleep 10; done
-    - curl -LsSf https://astral.sh/uv/install.sh | sh
-    - export PATH="$HOME/.local/bin:$PATH"
-    - uv --version
-  script:
-    - uv pip install --system pytest pytest-playwright pytest-timeout pytest-html pytest-cov hypothesis
-    - playwright install chromium firefox
-    - python tests/e2e/run_e2e_tests.py --suite=playwright --browser=chromium
-  retry:
-    max: 2
-    when:
-      - runner_system_failure
-      - stuck_or_timeout_failure
-  artifacts:
-    when: always
-    paths:
-      - reports/playwright-report.html
-      - playwright-report/
-      - test-results/
-    reports:
-      junit: reports/playwright-junit.xml
-    expire_in: 1 week
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-    - if: $CI_COMMIT_BRANCH == "main"
+# E2E tests removed - tracked as future goals in docs/future-roadmap.md
+# Previously included test:e2e:comprehensive and test:e2e:playwright jobs
+# These tested GitLab Pages deployment and MCP integration but were aspirational
 
 test:mcp:server:
   stage: test

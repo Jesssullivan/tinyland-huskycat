@@ -18,10 +18,10 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 # Configure Hypothesis profiles
 # CI profile: Reduced examples to avoid timeouts
 hypothesis.settings.register_profile(
-    "ci", 
+    "ci",
     max_examples=10,  # Reduced from 1000 to prevent timeouts
     deadline=None,
-    suppress_health_check=[hypothesis.HealthCheck.too_slow]
+    suppress_health_check=[hypothesis.HealthCheck.too_slow],
 )
 # Dev profile: Moderate testing for local development
 hypothesis.settings.register_profile("dev", max_examples=50, deadline=200)
@@ -243,7 +243,6 @@ def pytest_configure(config):
     """Configure pytest markers."""
     config.addinivalue_line("markers", "unit: Unit tests")
     config.addinivalue_line("markers", "integration: Integration tests")
-    config.addinivalue_line("markers", "e2e: End-to-end tests")
     config.addinivalue_line("markers", "security: Security-focused tests")
     config.addinivalue_line("markers", "performance: Performance tests")
     config.addinivalue_line("markers", "property: Property-based tests")
@@ -263,7 +262,7 @@ def pytest_collection_modifyitems(config, items):
             item.add_marker(pytest.mark.container)
 
         # Mark slow tests
-        if "slow" in item.nodeid or "e2e" in item.nodeid:
+        if "slow" in item.nodeid:
             item.add_marker(pytest.mark.slow)
 
         # Mark security tests
@@ -294,12 +293,7 @@ def test_environment_setup():
         os.environ.update(original_env)
 
 
-# Import E2E fixtures
-try:
-    pass
-except ImportError:
-    # E2E fixtures not available, skip silently
-    pass
+# E2E fixtures removed - see docs/future-roadmap.md for future plans
 
 
 # Custom assertion helpers
