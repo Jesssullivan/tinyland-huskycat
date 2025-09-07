@@ -116,28 +116,8 @@ test:unit:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
     - if: $CI_COMMIT_BRANCH
 
-test:e2e:deployment:
-  stage: test
-  image:
-    name: $CONTAINER_REGISTRY:$CONTAINER_TAG-amd64
-    entrypoint: [""]
-  needs:
-    - container:build:amd64
-  script:
-    - echo "🐳 Using HuskyCat container for E2E deployment testing"
-    - pwd && ls -la
-    - python3 tests/test_e2e_deployment.py
-  artifacts:
-    when: on_failure
-    paths:
-      - logs/
-    expire_in: 1 week
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-    - if: $CI_COMMIT_BRANCH
-
 # E2E tests removed - tracked as future goals in docs/future-roadmap.md
-# Previously included test:e2e:comprehensive and test:e2e:playwright jobs
+# Previously included test:e2e:comprehensive, test:e2e:playwright, and test:e2e:deployment jobs
 # These tested GitLab Pages deployment and MCP integration but were aspirational
 
 test:mcp:server:
