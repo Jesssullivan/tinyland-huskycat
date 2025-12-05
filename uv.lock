@@ -444,7 +444,10 @@ dependencies = [
 [package.optional-dependencies]
 build = [
     { name = "pyinstaller" },
-    { name = "staticx" },
+]
+build-linux = [
+    { name = "pyinstaller" },
+    { name = "staticx", marker = "sys_platform == 'linux'" },
 ]
 dev = [
     { name = "autoflake" },
@@ -512,6 +515,7 @@ requires-dist = [
     { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.0.0" },
     { name = "pydantic", specifier = ">=2.0.0" },
     { name = "pyinstaller", marker = "extra == 'build'", specifier = ">=6.0.0" },
+    { name = "pyinstaller", marker = "extra == 'build-linux'", specifier = ">=6.0.0" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=7.0.0" },
     { name = "pytest-asyncio", marker = "extra == 'dev'", specifier = ">=0.23.0" },
     { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=4.0.0" },
@@ -522,10 +526,10 @@ requires-dist = [
     { name = "requests", specifier = ">=2.31.0" },
     { name = "requests", marker = "extra == 'dev'", specifier = ">=2.31.0" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.8.0" },
-    { name = "staticx", marker = "extra == 'build'", specifier = ">=0.14.0" },
+    { name = "staticx", marker = "sys_platform == 'linux' and extra == 'build-linux'", specifier = ">=0.14.0" },
     { name = "yamllint", marker = "extra == 'dev'", specifier = ">=1.35.0" },
 ]
-provides-extras = ["dev", "build", "docs"]
+provides-extras = ["dev", "build", "build-linux", "docs"]
 
 [package.metadata.requires-dev]
 dev = [

@@ -23,7 +23,7 @@ husky:validate:
 ### Option 2: Custom Configuration
 
 ```yaml
-image: registry.gitlab.com/bates-ils/projects/trustees-portal/sid-controller/huskycats-bates/husky-lint:latest
+image: registry.gitlab.com/tinyland/ai/huskycat/validator:latest
 
 stages:
   - validate
@@ -138,7 +138,7 @@ test:pytest:
 ### 2. Node.js Project
 
 ```yaml
-image: registry.gitlab.com/bates-ils/projects/trustees-portal/sid-controller/huskycats-bates/husky-lint:latest
+image: registry.gitlab.com/tinyland/ai/huskycat/validator:latest
 
 stages:
   - install
@@ -165,7 +165,7 @@ lint:js:
 ### 3. Mixed Language Project
 
 ```yaml
-image: registry.gitlab.com/bates-ils/projects/trustees-portal/sid-controller/huskycats-bates/husky-lint:latest
+image: registry.gitlab.com/tinyland/ai/huskycat/validator:latest
 
 stages:
   - validate
@@ -293,7 +293,7 @@ After:
 # ./publish.sh v1.0.0
 
 # Then use in CI:
-image: registry.gitlab.com/bates-ils/projects/trustees-portal/sid-controller/huskycats-bates/husky-lint:latest
+image: registry.gitlab.com/tinyland/ai/huskycat/validator:latest
 
 validate:
   script:
@@ -320,12 +320,103 @@ shellcheck:
 
 After:
 ```yaml
-image: registry.gitlab.com/bates-ils/projects/trustees-portal/sid-controller/huskycats-bates/husky-lint:latest
+image: registry.gitlab.com/tinyland/ai/huskycat/validator:latest
 
 lint:all:
   script:
     - ./scripts/comprehensive-lint.sh
 ```
+
+## 🏗️ Binary Builds
+
+HuskyCat's CI pipeline builds native binaries for multiple platforms using GitLab SaaS runners.
+
+### Supported Platforms
+
+| Platform | Architecture | Base Image | Runner | Status |
+|----------|-------------|------------|--------|---------|
+| Linux | x86_64 (AMD64) | Rocky Linux 10 | GitLab SaaS AMD64 | ✅ Supported |
+| Linux | ARM64 (aarch64) | Rocky Linux 10 | GitLab SaaS ARM64 | ✅ Supported |
+| macOS | Apple Silicon (M1/M2/M3) | macOS 14 | GitLab SaaS macOS | ✅ Supported (ad-hoc signed) |
+| macOS | Intel (x86_64) | - | - | ❌ Not available |
+
+### Build Configuration
+
+**Linux AMD64:**
+```yaml
+binary:build:linux:
+  stage: package
+  image: rockylinux/rockylinux:10
+  before_script:
+    - dnf install -y epel-release
+    - dnf install -y git curl gcc python3 python3-pip zlib-devel upx
+    - curl -LsSf https://astral.sh/uv/install.sh | sh
+  script:
+    - uv sync --extra build
+    - uv run pyinstaller --onefile --name huskycat-linux-amd64 huskycat_main.py
+    - upx --best --lzma dist/bin/huskycat-linux-amd64
+  artifacts:
+    paths:
+      - dist/bin/huskycat-linux-amd64
+```
+
+**Linux ARM64:**
+```yaml
+binary:build:linux-arm64:
+  stage: package
+  image: rockylinux/rockylinux:10
+  tags:
+    - saas-linux-medium-arm64
+  before_script:
+    - dnf install -y epel-release
+    - dnf install -y git curl gcc python3 python3-pip zlib-devel upx
+  script:
+    - uv sync --extra build
+    - uv run pyinstaller --onefile --name huskycat-linux-arm64 huskycat_main.py
+```
+
+**macOS ARM64 with Signing:**
+```yaml
+sign:darwin-arm64:
+  extends: .macos_saas_runners
+  stage: sign
+  script:
+    # Create temporary keychain
+    - security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_NAME"
+    - security import certificate.p12 -k "$KEYCHAIN_NAME"
+
+    # Check certificate type and sign or fallback
+    - |
+      APP_CERT_COUNT=$(security find-identity -v "$KEYCHAIN_NAME" | grep -c "Developer ID Application" || true)
+      if [ "$APP_CERT_COUNT" -eq 0 ]; then
+        codesign --force --sign - dist/bin/huskycat-darwin-arm64  # Ad-hoc signing
+      else
+        codesign --force --options runtime --sign "$APPLE_DEVELOPER_ID_APPLICATION" dist/bin/huskycat-darwin-arm64
+      fi
+    - codesign --verify --verbose dist/bin/huskycat-darwin-arm64
+```
+
+### Key Features
+
+1. **Rocky Linux 10** - Latest RHEL-compatible base (supported through May 2035)
+2. **Native Compilation** - No cross-compilation, native runners for each architecture
+3. **UPX Compression** - Reduces binary size by ~60%
+4. **macOS Code Signing** - Ad-hoc signing with fallback when Developer ID Application cert not available
+5. **Automatic Releases** - Binaries attached to GitLab releases on tags
+
+### Download Binaries
+
+Pre-built binaries are available from GitLab releases:
+
+```bash
+# Latest release (permalink)
+curl -L -o huskycat https://gitlab.com/tinyland/ai/huskycat/-/releases/permalink/latest/downloads/huskycat-linux-amd64
+chmod +x huskycat
+```
+
+See [Binary Downloads Guide](binary-downloads.md) for detailed instructions.
+
+---
 
 ## 🎉 Benefits
 

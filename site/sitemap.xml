@@ -2,46 +2,78 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://tinyland.gitlab.io/ai/huskycat/</loc>
-         <lastmod>2025-09-05</lastmod>
+         <lastmod>2025-12-05</lastmod>
+    </url>
+    <url>
+         <loc>https://tinyland.gitlab.io/ai/huskycat/SPRINT_PLAN/</loc>
+         <lastmod>2025-12-05</lastmod>
+    </url>
+    <url>
+         <loc>https://tinyland.gitlab.io/ai/huskycat/binary-downloads/</loc>
+         <lastmod>2025-12-05</lastmod>
+    </url>
+    <url>
+         <loc>https://tinyland.gitlab.io/ai/huskycat/cli-reference/</loc>
+         <lastmod>2025-12-05</lastmod>
     </url>
     <url>
          <loc>https://tinyland.gitlab.io/ai/huskycat/configuration/</loc>
-         <lastmod>2025-09-05</lastmod>
+         <lastmod>2025-12-05</lastmod>
+    </url>
+    <url>
+         <loc>https://tinyland.gitlab.io/ai/huskycat/future-roadmap/</loc>
+         <lastmod>2025-12-05</lastmod>
+    </url>
+    <url>
+         <loc>https://tinyland.gitlab.io/ai/huskycat/github-actions/</loc>
+         <lastmod>2025-12-05</lastmod>
     </url>
     <url>
          <loc>https://tinyland.gitlab.io/ai/huskycat/gitlab-auto-devops-complete/</loc>
-         <lastmod>2025-09-05</lastmod>
+         <lastmod>2025-12-05</lastmod>
     </url>
     <url>
          <loc>https://tinyland.gitlab.io/ai/huskycat/gitlab-ci-cd/</loc>
-         <lastmod>2025-09-05</lastmod>
+         <lastmod>2025-12-05</lastmod>
     </url>
     <url>
          <loc>https://tinyland.gitlab.io/ai/huskycat/installation/</loc>
-         <lastmod>2025-09-05</lastmod>
+         <lastmod>2025-12-05</lastmod>
     </url>
     <url>
          <loc>https://tinyland.gitlab.io/ai/huskycat/macos-code-signing/</loc>
-         <lastmod>2025-09-05</lastmod>
-    </url>
-    <url>
-         <loc>https://tinyland.gitlab.io/ai/huskycat/mcp-architecture/</loc>
-         <lastmod>2025-09-05</lastmod>
+         <lastmod>2025-12-05</lastmod>
     </url>
     <url>
          <loc>https://tinyland.gitlab.io/ai/huskycat/mcp-tool-api/</loc>
-         <lastmod>2025-09-05</lastmod>
+         <lastmod>2025-12-05</lastmod>
+    </url>
+    <url>
+         <loc>https://tinyland.gitlab.io/ai/huskycat/troubleshooting/</loc>
+         <lastmod>2025-12-05</lastmod>
     </url>
     <url>
          <loc>https://tinyland.gitlab.io/ai/huskycat/api/mcp-tools/</loc>
-         <lastmod>2025-09-05</lastmod>
+         <lastmod>2025-12-05</lastmod>
     </url>
     <url>
          <loc>https://tinyland.gitlab.io/ai/huskycat/architecture/simplified-architecture/</loc>
-         <lastmod>2025-09-05</lastmod>
+         <lastmod>2025-12-05</lastmod>
     </url>
     <url>
          <loc>https://tinyland.gitlab.io/ai/huskycat/features/mcp-server/</loc>
-         <lastmod>2025-09-05</lastmod>
+         <lastmod>2025-12-05</lastmod>
+    </url>
+    <url>
+         <loc>https://tinyland.gitlab.io/ai/huskycat/proposals/documentation-overhaul-2025/</loc>
+         <lastmod>2025-12-05</lastmod>
+    </url>
+    <url>
+         <loc>https://tinyland.gitlab.io/ai/huskycat/proposals/git-tracked-hooks/</loc>
+         <lastmod>2025-12-05</lastmod>
+    </url>
+    <url>
+         <loc>https://tinyland.gitlab.io/ai/huskycat/proposals/llm-friendly-docs-ci/</loc>
+         <lastmod>2025-12-05</lastmod>
     </url>
 </urlset>

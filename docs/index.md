@@ -4,40 +4,58 @@ Welcome to HuskyCat, the **Universal Code Validation Platform** with integrated 
 
 ## What is HuskyCat?
 
-HuskyCat is a **container-only** validation platform designed for consistent toolchains, repository isolation, and AI integration:
+HuskyCat is a **container-based** validation platform designed for consistent toolchains, repository isolation, and AI integration:
 
-- **Container-Only Execution**: Complete toolchain consistency across all environments
+- **Container-Based Execution**: Automatic container detection with toolchain consistency across all environments
+- **Pre-Built Binaries**: Download and run immediately on Linux (AMD64/ARM64) and macOS (Apple Silicon)
 - **Repository Safety**: Validation tools run in isolation from your actual repository
 - **MCP Server Integration**: stdio-based server for seamless Claude Code integration
-- **Git Hooks**: Binary-first execution with container-backed validation
+- **Git Hooks**: Fast validation with automatic container orchestration
 - **Universal Validation**: Python, JavaScript, YAML, Shell, Docker, security scanning
 - **Auto-Fix Support**: Interactive auto-repair of validation issues
 
 ## Quick Start
 
-### Prerequisites & Setup
+### Option 1: Pre-Built Binary (Fastest)
+
 ```bash
-# Required: Container runtime (podman or docker)
-# Install podman: brew install podman (macOS) or apt install podman (Ubuntu)
+# Download for your platform (Linux AMD64 example)
+curl -L -o ~/.local/bin/huskycat https://gitlab.com/tinyland/ai/huskycat/-/releases/permalink/latest/downloads/huskycat-linux-amd64
+chmod +x ~/.local/bin/huskycat
+
+# Install container runtime (required)
+brew install podman  # macOS
+# or: sudo dnf install podman  # Rocky Linux
+
+# Verify installation
+huskycat --version
+huskycat status
+```
+
+See **[Binary Downloads](binary-downloads.md)** for all platforms and detailed instructions.
+
+### Option 2: Build from Source
+
+```bash
+# Clone repository
+git clone https://gitlab.com/tinyland/ai/huskycat.git
+cd huskycat
 
 # Install dependencies
 npm install
 uv sync --dev
 
-# Build container (required for all validation)
-npm run container:build
-
-# Build binary entry point
+# Build binary
 npm run build:binary
 
-# Verify installation
+# Verify
 ./dist/huskycat --version
-./dist/huskycat status
 ```
 
 ## Key Features
 
-### 🐳 **Container-Only Execution**
+### 🐳 **Container-Based Execution**
+- Automatic detection: containers on host, direct execution in CI
 - Consistent toolchain across all environments
 - Complete isolation from host repository
 - No "tool not found" errors - ever
@@ -61,7 +79,7 @@ npm run build:binary
 
 ## Architecture
 
-HuskyCat enforces container-only execution for all validation operations:
+HuskyCat uses container-based execution with automatic environment detection:
 
 ```mermaid
 graph LR
@@ -142,11 +160,30 @@ echo '{"jsonrpc": "2.0", "method": "tools/list", "id": 1}' | npm run mcp:server
 
 ## Next Steps
 
-- [Installation Guide](installation.md) - Detailed installation instructions
-- [Configuration](configuration.md) - Customize validation rules
-- [MCP Server](features/mcp-server.md) - Claude Code integration
-- [MCP Tools API](api/mcp-tools.md) - MCP server tools reference
-- [GitLab CI/CD](gitlab-ci-cd.md) - GitLab integration guide
+### Getting Started
+- **[Binary Downloads](binary-downloads.md)** - Download pre-built binaries (recommended)
+- **[Installation Guide](installation.md)** - Build from source and setup
+- **[CLI Reference](cli-reference.md)** - Complete command reference
+
+### Integration
+- **[GitLab CI/CD](gitlab-ci-cd.md)** - GitLab pipeline integration
+- **[GitHub Actions](github-actions.md)** - GitHub workflow integration
+- **[MCP Server](features/mcp-server.md)** - Claude Code integration
+
+### Reference
+- **[Configuration](configuration.md)** - Customize validation rules
+- **[MCP Tools API](api/mcp-tools.md)** - MCP server tools reference
+- **[Troubleshooting](troubleshooting.md)** - Common issues and solutions
+
+## For AI Agents & LLMs
+
+HuskyCat documentation is available in LLM-friendly formats for easy ingestion by AI agents:
+
+- **llms.txt**: [https://tinyland.gitlab.io/ai/huskycat/llms.txt](https://tinyland.gitlab.io/ai/huskycat/llms.txt) - Plain text format
+- **llms.json**: [https://tinyland.gitlab.io/ai/huskycat/llms.json](https://tinyland.gitlab.io/ai/huskycat/llms.json) - Structured JSON
+- **llms-full.md**: [https://tinyland.gitlab.io/ai/huskycat/llms-full.md](https://tinyland.gitlab.io/ai/huskycat/llms-full.md) - Single markdown file
+
+These files are automatically generated from the documentation source and updated with every commit to main.
 
 ## Support
 

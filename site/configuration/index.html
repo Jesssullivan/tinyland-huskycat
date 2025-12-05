@@ -13,10 +13,10 @@
         <link rel="canonical" href="https://tinyland.gitlab.io/ai/huskycat/configuration/">
       
       
-        <link rel="prev" href="../installation/">
+        <link rel="prev" href="../binary-downloads/">
       
       
-        <link rel="next" href="../features/mcp-server/">
+        <link rel="next" href="../cli-reference/">
       
       
       <link rel="icon" href="../assets/images/favicon.png">
@@ -265,6 +265,47 @@
   
   
   
+    <li class="md-tabs__item">
+      <a href="../cli-reference/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  CLI Reference
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../gitlab-ci-cd/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  CI/CD Integration
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
     
     
       <li class="md-tabs__item">
@@ -309,36 +350,14 @@
   
   
   
-    
-    
-      <li class="md-tabs__item">
-        <a href="../gitlab-ci-cd/" class="md-tabs__link">
-          
-  
-  
-    
-  
-  GitLab Integration
-
-        </a>
-      </li>
-    
-  
-
-      
-        
-  
-  
-  
-  
     <li class="md-tabs__item">
-      <a href="../mcp-architecture/" class="md-tabs__link">
+      <a href="../troubleshooting/" class="md-tabs__link">
         
   
   
     
   
-  MCP Architecture
+  Troubleshooting
 
       </a>
     </li>
@@ -429,6 +448,8 @@
       
         
       
+        
+      
     
     
     
@@ -481,6 +502,29 @@
   
   <span class="md-ellipsis">
     Installation
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../binary-downloads/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Binary Downloads
     
   </span>
   
@@ -612,6 +656,108 @@
   <a href="#huskycat-container-configuration" class="md-nav__link">
     <span class="md-ellipsis">
       HuskyCat Container Configuration
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#product-modes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Product Modes
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Product Modes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mode-overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      Mode Overview
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mode-detection" class="md-nav__link">
+    <span class="md-ellipsis">
+      Mode Detection
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mode-specific-behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      Mode-Specific Behavior
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Mode-Specific Behavior">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#git-hooks-mode-mode-git_hooks" class="md-nav__link">
+    <span class="md-ellipsis">
+      Git Hooks Mode (--mode git_hooks)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ci-mode-mode-ci" class="md-nav__link">
+    <span class="md-ellipsis">
+      CI Mode (--mode ci)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cli-mode-mode-cli" class="md-nav__link">
+    <span class="md-ellipsis">
+      CLI Mode (--mode cli)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pipeline-mode-mode-pipeline-or-json" class="md-nav__link">
+    <span class="md-ellipsis">
+      Pipeline Mode (--mode pipeline or --json)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mcp-mode-mode-mcp" class="md-nav__link">
+    <span class="md-ellipsis">
+      MCP Mode (--mode mcp)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#auto-fix-confidence-tiers" class="md-nav__link">
+    <span class="md-ellipsis">
+      Auto-Fix Confidence Tiers
     </span>
   </a>
   
@@ -779,6 +925,157 @@
   
   
   
+    <li class="md-nav__item">
+      <a href="../cli-reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    CLI Reference
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    CI/CD Integration
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            CI/CD Integration
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gitlab-ci-cd/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    GitLab CI/CD
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../github-actions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    GitHub Actions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gitlab-auto-devops-complete/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Auto-DevOps
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
     
     
       
@@ -799,10 +1096,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
         
           
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
             
   
   
@@ -815,8 +1112,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_3">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
             Features
           </label>
@@ -878,10 +1175,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
         
           
-          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
             
   
   
@@ -894,8 +1191,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_4">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
             <span class="md-nav__icon md-icon"></span>
             API Reference
           </label>
@@ -937,117 +1234,13 @@
   
   
   
-    
-    
-      
-        
-      
-        
-      
-    
-    
-    
-      
-      
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-          
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
-        
-          
-          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
-            
-  
-  
-  <span class="md-ellipsis">
-    GitLab Integration
-    
-  </span>
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5">
-            <span class="md-nav__icon md-icon"></span>
-            GitLab Integration
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
     <li class="md-nav__item">
-      <a href="../gitlab-ci-cd/" class="md-nav__link">
+      <a href="../troubleshooting/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    CI/CD
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../gitlab-auto-devops-complete/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Auto-DevOps
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../mcp-architecture/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    MCP Architecture
+    Troubleshooting
     
   </span>
   
@@ -1181,7 +1374,148 @@
 <a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>--all<span class="w">          </span><span class="c1"># Validate all files</span>
 <a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>--staged<span class="w">       </span><span class="c1"># Validate only staged files (default)</span>
 <a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>--verbose,<span class="w"> </span>-v<span class="w">  </span><span class="c1"># Verbose output</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>--mode<span class="w"> </span>MODE<span class="w">    </span><span class="c1"># Override auto-detected product mode</span>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>--json<span class="w">         </span><span class="c1"># Force JSON output (sets pipeline mode)</span>
 </code></pre></div></p>
+<h2 id="product-modes">Product Modes<a class="headerlink" href="#product-modes" title="Permanent link">&para;</a></h2>
+<p>HuskyCat operates in 5 distinct product modes, each optimized for different use cases:</p>
+<h3 id="mode-overview">Mode Overview<a class="headerlink" href="#mode-overview" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>Output Format</th>
+<th>Interactive</th>
+<th>Auto-Fix</th>
+<th>Tools</th>
+<th>Use Case</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>git_hooks</code></td>
+<td>Minimal</td>
+<td>No</td>
+<td>SAFE only</td>
+<td>Fast subset</td>
+<td>Pre-commit/pre-push</td>
+</tr>
+<tr>
+<td><code>ci</code></td>
+<td>JUnit XML</td>
+<td>No</td>
+<td>Never</td>
+<td>All</td>
+<td>Pipeline integration</td>
+</tr>
+<tr>
+<td><code>cli</code></td>
+<td>Human/Colored</td>
+<td>Yes</td>
+<td>SAFE+LIKELY</td>
+<td>Configured</td>
+<td>Interactive terminal</td>
+</tr>
+<tr>
+<td><code>pipeline</code></td>
+<td>JSON</td>
+<td>No</td>
+<td>Never</td>
+<td>All</td>
+<td>Machine-readable</td>
+</tr>
+<tr>
+<td><code>mcp</code></td>
+<td>JSON-RPC</td>
+<td>No</td>
+<td>Never</td>
+<td>All</td>
+<td>AI assistant integration</td>
+</tr>
+</tbody>
+</table>
+<h3 id="mode-detection">Mode Detection<a class="headerlink" href="#mode-detection" title="Permanent link">&para;</a></h3>
+<p>HuskyCat automatically detects the appropriate mode:</p>
+<ol>
+<li><strong>Explicit override</strong>: <code>--mode git_hooks</code> or <code>HUSKYCAT_MODE=ci</code></li>
+<li><strong>MCP invocation</strong>: <code>mcp-server</code> command</li>
+<li><strong>CI environment</strong>: <code>CI=true</code>, <code>GITLAB_CI</code>, <code>GITHUB_ACTIONS</code></li>
+<li><strong>Git hooks</strong>: Multiple <code>GIT_*</code> environment variables</li>
+<li><strong>Pipeline context</strong>: Non-interactive stdin</li>
+<li><strong>Default</strong>: CLI mode (interactive terminal)</li>
+</ol>
+<h3 id="mode-specific-behavior">Mode-Specific Behavior<a class="headerlink" href="#mode-specific-behavior" title="Permanent link">&para;</a></h3>
+<h4 id="git-hooks-mode-mode-git_hooks">Git Hooks Mode (<code>--mode git_hooks</code>)<a class="headerlink" href="#git-hooks-mode-mode-git_hooks" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>Output</strong>: Minimal (errors only)</li>
+<li><strong>Fail-fast</strong>: Yes (stop on first error)</li>
+<li><strong>Tools</strong>: Fast subset (<code>python-black</code>, <code>ruff</code>, <code>mypy</code>, <code>flake8</code>)</li>
+<li><strong>Auto-fix</strong>: Only SAFE fixes (formatting)</li>
+</ul>
+<h4 id="ci-mode-mode-ci">CI Mode (<code>--mode ci</code>)<a class="headerlink" href="#ci-mode-mode-ci" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>Output</strong>: JUnit XML for CI artifacts</li>
+<li><strong>Fail-fast</strong>: No (run all validators)</li>
+<li><strong>Tools</strong>: All available</li>
+<li><strong>Auto-fix</strong>: Never (read-only)</li>
+</ul>
+<h4 id="cli-mode-mode-cli">CLI Mode (<code>--mode cli</code>)<a class="headerlink" href="#cli-mode-mode-cli" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>Output</strong>: Human-readable with colors</li>
+<li><strong>Interactive</strong>: Yes (prompts for uncertain fixes)</li>
+<li><strong>Tools</strong>: Configured via <code>.huskycat.yaml</code></li>
+<li><strong>Auto-fix</strong>: SAFE and LIKELY fixes</li>
+</ul>
+<h4 id="pipeline-mode-mode-pipeline-or-json">Pipeline Mode (<code>--mode pipeline</code> or <code>--json</code>)<a class="headerlink" href="#pipeline-mode-mode-pipeline-or-json" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>Output</strong>: JSON for toolchain integration</li>
+<li><strong>Interactive</strong>: No</li>
+<li><strong>Tools</strong>: All available</li>
+<li><strong>Auto-fix</strong>: Never (read-only)</li>
+</ul>
+<h4 id="mcp-mode-mode-mcp">MCP Mode (<code>--mode mcp</code>)<a class="headerlink" href="#mcp-mode-mode-mcp" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>Output</strong>: JSON-RPC 2.0</li>
+<li><strong>Transport</strong>: stdio (stdin/stdout)</li>
+<li><strong>Tools</strong>: All available via MCP tools</li>
+<li><strong>Auto-fix</strong>: Never (Claude decides)</li>
+</ul>
+<h3 id="auto-fix-confidence-tiers">Auto-Fix Confidence Tiers<a class="headerlink" href="#auto-fix-confidence-tiers" title="Permanent link">&para;</a></h3>
+<p>HuskyCat uses a three-tier confidence system for auto-fix decisions:</p>
+<table>
+<thead>
+<tr>
+<th>Tier</th>
+<th>Behavior</th>
+<th>Example Tools</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>SAFE</strong></td>
+<td>Always safe, formatting only</td>
+<td><code>python-black</code>, <code>js-prettier</code>, <code>yamllint</code></td>
+</tr>
+<tr>
+<td><strong>LIKELY</strong></td>
+<td>Usually safe, style fixes</td>
+<td><code>autoflake</code>, <code>ruff</code>, <code>js-eslint</code></td>
+</tr>
+<tr>
+<td><strong>UNCERTAIN</strong></td>
+<td>Needs human review</td>
+<td>Semantic changes</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Mode-specific auto-fix behavior</strong>:
+- <strong>Git Hooks</strong>: Only apply SAFE fixes automatically
+- <strong>CLI</strong>: Apply SAFE and LIKELY; prompt for UNCERTAIN
+- <strong>CI/Pipeline/MCP</strong>: Never auto-fix (report only)</p>
+<p><strong>File references</strong>:
+- Mode detection: <code>src/huskycat/core/mode_detector.py</code>
+- Adapters: <code>src/huskycat/core/adapters/*.py</code>
+- FixConfidence: <code>src/huskycat/core/adapters/base.py:27-51</code></p>
 <h3 id="git-hook-configuration">Git Hook Configuration<a class="headerlink" href="#git-hook-configuration" title="Permanent link">&para;</a></h3>
 <h4 id="pre-commit-hook">Pre-commit Hook<a class="headerlink" href="#pre-commit-hook" title="Permanent link">&para;</a></h4>
 <p>Container-only validation runs:

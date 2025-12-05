@@ -61,12 +61,15 @@ nav:
   - Home: index.md
   - Getting Started:
       - Installation: installation.md
+      - Binary Downloads: binary-downloads.md
       - Configuration: configuration.md
+  - CLI Reference: cli-reference.md
+  - CI/CD Integration:
+      - GitLab CI/CD: gitlab-ci-cd.md
+      - GitHub Actions: github-actions.md
+      - Auto-DevOps: gitlab-auto-devops-complete.md
   - Features:
       - MCP Server: features/mcp-server.md
   - API Reference:
       - MCP Tools: api/mcp-tools.md
-  - GitLab Integration:
-      - CI/CD: gitlab-ci-cd.md
-      - Auto-DevOps: gitlab-auto-devops-complete.md
-  - MCP Architecture: mcp-architecture.md
+  - Troubleshooting: troubleshooting.md

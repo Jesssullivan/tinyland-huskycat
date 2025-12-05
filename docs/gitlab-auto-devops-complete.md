@@ -8,7 +8,7 @@ This comprehensive guide covers integrating HuskyCats Bates with GitLab Auto Dev
 
 ```yaml
 # .gitlab-ci.yml
-image: registry.gitlab.com/bates-ils/projects/trustees-portal/sid-controller/huskycats-bates/husky-lint:latest
+image: registry.gitlab.com/tinyland/ai/huskycat/validator:latest
 
 variables:
   # Auto DevOps configuration
@@ -106,7 +106,7 @@ include:
 # Override Auto DevOps test stage with HuskyCats
 test:
   stage: test
-  image: registry.gitlab.com/bates-ils/projects/trustees-portal/sid-controller/huskycats-bates/husky-lint:latest
+  image: registry.gitlab.com/tinyland/ai/huskycat/validator:latest
   script:
     - echo "🐱 HuskyCats Auto DevOps Validation Suite"
     
@@ -188,7 +188,7 @@ stages:
 # Quick validation for fast feedback
 quick-validate:
   stage: quick-check
-  image: registry.gitlab.com/bates-ils/projects/trustees-portal/sid-controller/huskycats-bates/husky-lint:latest
+  image: registry.gitlab.com/tinyland/ai/huskycat/validator:latest
   script:
     - echo "⚡ Quick HuskyCats validation for fast feedback"
     - python3 /workspace/scripts/validate-gitlab-ci-schema.py
@@ -207,7 +207,7 @@ quick-validate:
 # Comprehensive validation for main branches
 comprehensive-validate:
   stage: comprehensive-validate
-  image: registry.gitlab.com/bates-ils/projects/trustees-portal/sid-controller/huskycats-bates/husky-lint:latest
+  image: registry.gitlab.com/tinyland/ai/huskycat/validator:latest
   script:
     - echo "🔍 Comprehensive HuskyCats validation suite"
     - /workspace/scripts/comprehensive-lint.sh --all
@@ -249,7 +249,7 @@ include:
 # Development environment - basic validation
 validate:development:
   stage: test
-  image: registry.gitlab.com/bates-ils/projects/trustees-portal/sid-controller/huskycats-bates/husky-lint:latest
+  image: registry.gitlab.com/tinyland/ai/huskycat/validator:latest
   script:
     - /workspace/scripts/comprehensive-lint.sh --basic
   environment:
@@ -260,7 +260,7 @@ validate:development:
 # Staging environment - comprehensive validation
 validate:staging:
   stage: test
-  image: registry.gitlab.com/bates-ils/projects/trustees-portal/sid-controller/huskycats-bates/husky-lint:latest
+  image: registry.gitlab.com/tinyland/ai/huskycat/validator:latest
   script:
     - /workspace/scripts/comprehensive-lint.sh --all
     - /workspace/scripts/auto-devops-validation.sh
@@ -272,7 +272,7 @@ validate:staging:
 # Production environment - full validation + security audit
 validate:production:
   stage: test
-  image: registry.gitlab.com/bates-ils/projects/trustees-portal/sid-controller/huskycats-bates/husky-lint:latest
+  image: registry.gitlab.com/tinyland/ai/huskycat/validator:latest
   script:
     - /workspace/scripts/comprehensive-lint.sh --all --strict
     - /workspace/scripts/auto-devops-validation.sh --strict
@@ -705,7 +705,7 @@ include:
 # Validate each service
 validate:service-a:
   stage: test
-  image: registry.gitlab.com/bates-ils/projects/trustees-portal/sid-controller/huskycats-bates/husky-lint:latest
+  image: registry.gitlab.com/tinyland/ai/huskycat/validator:latest
   script:
     - cd services/service-a
     - /workspace/scripts/comprehensive-lint.sh
@@ -716,7 +716,7 @@ validate:service-a:
 
 validate:service-b:
   stage: test
-  image: registry.gitlab.com/bates-ils/projects/trustees-portal/sid-controller/huskycats-bates/husky-lint:latest
+  image: registry.gitlab.com/tinyland/ai/huskycat/validator:latest
   script:
     - cd services/service-b
     - /workspace/scripts/comprehensive-lint.sh
@@ -760,7 +760,7 @@ include:
 # Comprehensive validation before blue-green deploy
 validate:production:
   stage: test
-  image: registry.gitlab.com/bates-ils/projects/trustees-portal/sid-controller/huskycats-bates/husky-lint:latest
+  image: registry.gitlab.com/tinyland/ai/huskycat/validator:latest
   script:
     - echo "🔍 Production validation suite"
     - /workspace/scripts/comprehensive-lint.sh --all --strict
@@ -822,7 +822,7 @@ Create reusable templates in `.gitlab/ci/` directory:
 ```yaml
 # .gitlab/ci/huskycats-validation.yml
 .husky-base:
-  image: registry.gitlab.com/bates-ils/projects/trustees-portal/sid-controller/huskycats-bates/husky-lint:latest
+  image: registry.gitlab.com/tinyland/ai/huskycat/validator:latest
   before_script:
     - chmod +x /workspace/scripts/*.sh
 

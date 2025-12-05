@@ -2,6 +2,42 @@
 
 This guide covers installing HuskyCat locally and in development projects.
 
+## 🚀 Quick Start: Pre-Built Binaries (Recommended)
+
+The fastest way to get started is using pre-built binaries from GitLab releases.
+
+### Download and Install
+
+**Linux (AMD64):**
+```bash
+curl -L -o ~/.local/bin/huskycat https://gitlab.com/tinyland/ai/huskycat/-/releases/permalink/latest/downloads/huskycat-linux-amd64
+chmod +x ~/.local/bin/huskycat
+```
+
+**Linux (ARM64):**
+```bash
+curl -L -o ~/.local/bin/huskycat https://gitlab.com/tinyland/ai/huskycat/-/releases/permalink/latest/downloads/huskycat-linux-arm64
+chmod +x ~/.local/bin/huskycat
+```
+
+**macOS (Apple Silicon):**
+```bash
+mkdir -p ~/.local/bin
+curl -L -o ~/.local/bin/huskycat https://gitlab.com/tinyland/ai/huskycat/-/releases/permalink/latest/downloads/huskycat-darwin-arm64
+chmod +x ~/.local/bin/huskycat
+```
+
+### Verify Installation
+
+```bash
+huskycat --version
+huskycat status
+```
+
+For detailed download instructions, platform-specific notes, and troubleshooting, see **[Binary Downloads Guide](binary-downloads.md)**.
+
+---
+
 ## Prerequisites
 
 - **Container Runtime**: Podman or Docker (required for all validation)
@@ -10,11 +46,11 @@ This guide covers installing HuskyCat locally and in development projects.
 - **Node.js and npm**: Build system
 - **Git Repository**: Required for hooks and staged file validation
 
-## 🚀 Quick Start - HuskyCat Installation
+## Alternative: Build from Source
 
-HuskyCat provides multiple installation methods to suit different workflows.
+For development or platforms without pre-built binaries:
 
-### Method 1: Build from Source (Recommended)
+### Build from Source
 
 ```bash
 # Clone and build HuskyCat
@@ -36,7 +72,7 @@ npm run build:binary
 ./dist/huskycat status
 ```
 
-### Method 2: Development Mode
+### Development Mode
 
 ```bash
 # For active development on HuskyCat itself
@@ -124,21 +160,44 @@ This command:
 2. Configures the correct binary path
 3. Sets up stdio transport
 
-## Container-Only Execution
+## Container-Based Execution
 
-All validation runs in containers for consistency and isolation:
+HuskyCat uses containers for all validation to ensure consistency and isolation. The execution mode is automatically detected:
+
+### Automatic Container Detection
+
+**On Host Machine:**
+- Requires Podman or Docker installed
+- Commands automatically wrapped in container execution
+- Tools run in isolated environment
+
+**Inside Container (CI/CD):**
+- Detects container environment automatically
+- Runs tools directly (no nested containers)
+- Optimized for pipeline performance
+
+### Setup
 
 ```bash
-# Build validation container (required)
+# Build validation container (required for host execution)
 npm run container:build
 
 # Test container works
 npm run container:test
 
-# All validation commands use container automatically
-./dist/huskycat validate --all    # Uses container internally
-npm run validate                  # Uses container internally
+# All validation commands use appropriate execution mode
+./dist/huskycat validate --all    # Auto-detects: container or direct
+npm run validate                  # Auto-detects: container or direct
 ```
+
+### Container Detection
+
+HuskyCat automatically detects if it's running inside a container by checking:
+- `/.dockerenv` file (Docker)
+- `container` environment variable (Podman)
+- `/run/.containerenv` file (Podman)
+
+If no container runtime is detected on the host, HuskyCat will show an error and installation instructions for Podman or Docker.
 
 ## What Gets Configured
 
@@ -244,10 +303,10 @@ Add these helpful scripts:
    ```bash
    # This means architecture mismatch. Use the platform flag:
    docker run --rm --platform linux/amd64 -v "$(pwd):/workspace" \
-     registry.gitlab.com/jsullivan2_bates/pubcontainers/husky-lint:latest
-   
-   # Or use the install script which auto-detects:
-   curl -fsSL https://gitlab.com/jsullivan2_bates/pubcontainers/-/raw/main/install.sh | bash
+     registry.gitlab.com/tinyland/ai/huskycat/validator:latest
+
+   # Or build the container locally:
+   npm run container:build
    ```
 
 2. **Check your system architecture**
@@ -258,7 +317,7 @@ Add these helpful scripts:
    # arm64 or aarch64 = use linux/arm64
    
    # Check Docker image architecture
-   docker inspect registry.gitlab.com/bates-ils/projects/trustees-portal/sid-controller/huskycats-bates/husky-lint:latest | grep Architecture
+   docker inspect registry.gitlab.com/tinyland/ai/huskycat/validator:latest | grep Architecture
    ```
 
 ### Common Issues
