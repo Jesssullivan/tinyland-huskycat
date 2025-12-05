@@ -49,20 +49,25 @@ main() {
     # ------------------------------------------------------------------------
     log_step "Running HuskyCat full codebase validation..."
 
-    local huskycat_cmd="uv run python -m src.huskycat validate --all"
+    local huskycat_args="--all"
 
     if is_auto_approve; then
-        huskycat_cmd="$huskycat_cmd --fix"
+        huskycat_args="$huskycat_args --fix"
         log_info "Auto-fix mode enabled (HUSKYCAT_AUTO_APPROVE=1)"
     elif is_interactive; then
-        huskycat_cmd="$huskycat_cmd --interactive"
+        huskycat_args="$huskycat_args --interactive"
     fi
 
-    log_step "Running: $huskycat_cmd"
+    log_step "Running: uv run python -m src.huskycat validate $huskycat_args"
 
-    if ! $huskycat_cmd; then
-        local validation_exit=$?
-        log_error "HuskyCat validation failed"
+    # Run validation and capture exit code properly
+    set +e
+    uv run python -m src.huskycat validate $huskycat_args
+    local validation_exit=$?
+    set -e
+
+    if [[ $validation_exit -ne 0 ]]; then
+        log_error "HuskyCat validation failed (exit code: $validation_exit)"
 
         # Check if files were modified
         if [[ -n "$(git status --porcelain 2>/dev/null)" ]]; then
@@ -85,9 +90,14 @@ main() {
     if [[ -f ".gitlab-ci.yml" ]]; then
         log_step "Validating GitLab CI configuration with HuskyCat..."
 
-        if ! uv run python -m src.huskycat ci-validate .gitlab-ci.yml 2>&1; then
+        set +e
+        uv run python -m src.huskycat ci-validate .gitlab-ci.yml
+        local ci_exit=$?
+        set -e
+
+        if [[ $ci_exit -ne 0 ]]; then
             log_error "GitLab CI configuration validation failed"
-            exit_code=1
+            exit_code=$ci_exit
         else
             log_info "HuskyCat CI: Configuration valid"
         fi
