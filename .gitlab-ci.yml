@@ -266,7 +266,7 @@ package:python:
 
 binary:build:linux:
   stage: package
-  image: rockylinux:9  # Rocky Linux 9 (10 not yet available)
+  image: rockylinux:10  # Rocky Linux 10 (released June 2025)
   needs:
     - job: validate:complete
       optional: true
@@ -299,7 +299,7 @@ binary:build:linux:
 # Linux ARM64 binary build (Rocky Linux 10)
 binary:build:linux-arm64:
   stage: package
-  image: rockylinux:9  # Rocky Linux 9 (10 not yet available)
+  image: rockylinux:10  # Rocky Linux 10 (released June 2025)
   tags:
     - saas-linux-medium-arm64  # GitLab SaaS ARM64 runner
   needs:
