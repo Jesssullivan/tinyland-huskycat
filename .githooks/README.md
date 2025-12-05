@@ -1,6 +1,14 @@
 # HuskyCat Git Hooks
 
-This directory contains git-tracked hooks for the HuskyCat repository. These hooks enforce code quality standards and are an essential part of the development workflow.
+This directory contains git-tracked hooks for the HuskyCat repository. These hooks enforce code quality standards using **HuskyCat's own validation engine** - true "eat your own dogfood" paradigm.
+
+## Key Principle: Eat Your Own Dogfood
+
+These hooks use `huskycat validate` commands, NOT direct tool invocations like `black` or `ruff`. This ensures:
+
+1. **We test our own code** on every commit/push
+2. **Consistency** between hook behavior and HuskyCat's validation
+3. **Dogfooding** forces us to fix issues in our validation engine
 
 ## Prerequisites
 
@@ -12,7 +20,7 @@ uv sync --dev
 
 # Verify setup
 uv run python --version
-uv run black --version
+uv run python -m src.huskycat --help
 ```
 
 ## Setup
@@ -45,13 +53,9 @@ This is also done automatically by `npm install` (via postinstall script).
 │  │                        PRE-COMMIT HOOK                            │  │
 │  │                                                                   │  │
 │  │   1. Verify UV venv active                                        │  │
-│  │   2. Get staged Python files                                      │  │
-│  │   3. Run Black (format check)                                     │  │
-│  │      └── If fail: prompt auto-fix? → apply & re-stage             │  │
-│  │   4. Run Ruff (lint check)                                        │  │
-│  │      └── If fail: prompt auto-fix? → apply & re-stage             │  │
-│  │   5. Run Flake8 (additional lint)                                 │  │
-│  │      └── If fail: manual fix required                             │  │
+│  │   2. Check for staged Python files                                │  │
+│  │   3. Run: huskycat validate --staged [--fix|--interactive]        │  │
+│  │      └── Uses HuskyCat's validation engine (Black, Ruff, etc.)    │  │
 │  │                                                                   │  │
 │  └───────────────────────────────────────────────────────────────────┘  │
 │                                  │                                      │
@@ -79,10 +83,10 @@ This is also done automatically by `npm install` (via postinstall script).
 │  │                         PRE-PUSH HOOK                             │  │
 │  │                                                                   │  │
 │  │   1. Verify UV venv active                                        │  │
-│  │   2. Black --check src/ tests/  (full codebase)                   │  │
-│  │   3. Ruff check src/ tests/     (full codebase)                   │  │
-│  │   4. Flake8 src/ tests/         (full codebase)                   │  │
-│  │   5. glab ci lint .gitlab-ci.yml (if glab available)              │  │
+│  │   2. Run: huskycat validate --all [--fix|--interactive]           │  │
+│  │      └── Full codebase validation with HuskyCat                   │  │
+│  │   3. Run: huskycat ci-validate .gitlab-ci.yml                     │  │
+│  │      └── GitLab CI configuration validation                       │  │
 │  │                                                                   │  │
 │  └───────────────────────────────────────────────────────────────────┘  │
 │                                  │                                      │
@@ -95,9 +99,9 @@ This is also done automatically by `npm install` (via postinstall script).
 
 | Hook | Trigger | What it does |
 |------|---------|--------------|
-| `pre-commit` | Before commit is created | Validates staged Python files with Black, Ruff, Flake8 |
+| `pre-commit` | Before commit is created | `huskycat validate --staged` on Python files |
 | `commit-msg` | After commit message entered | Validates conventional commit format |
-| `pre-push` | Before push to remote | Full codebase validation + CI config check |
+| `pre-push` | Before push to remote | `huskycat validate --all` + `huskycat ci-validate` |
 
 ## Environment Variables
 
@@ -134,10 +138,11 @@ HUSKYCAT_AUTO_APPROVE=1 git commit -m "feat: new feature"
 
 ### Fix issues manually before commit
 ```bash
-# Format code
-uv run black src/ tests/
+# Use HuskyCat to fix issues
+uv run python -m src.huskycat validate --staged --fix
 
-# Fix lint issues
+# Or run individual tools
+uv run black src/ tests/
 uv run ruff check --fix src/ tests/
 
 # Then commit
@@ -145,19 +150,20 @@ git add -u
 git commit -m "style: fix formatting"
 ```
 
-## Interactive Auto-Fix Flow
+## HuskyCat Commands Used
 
-When validation fails, hooks will prompt:
+The hooks use these HuskyCat commands:
 
+```bash
+# Pre-commit (staged files only)
+uv run python -m src.huskycat validate --staged
+uv run python -m src.huskycat validate --staged --fix           # with auto-fix
+uv run python -m src.huskycat validate --staged --interactive   # with prompts
+
+# Pre-push (full codebase)
+uv run python -m src.huskycat validate --all
+uv run python -m src.huskycat ci-validate .gitlab-ci.yml
 ```
-[WARN] Black found issues
-Apply Black auto-fix? [y/N]: y
-[STEP] Applying Black fixes...
-[OK] Black: Fixes applied
-[OK] Fixed files re-staged
-```
-
-In non-interactive mode (CI, scripts), auto-fix is skipped unless `HUSKYCAT_AUTO_APPROVE=1`.
 
 ## File Structure
 
@@ -166,8 +172,8 @@ In non-interactive mode (CI, scripts), auto-fix is skipped unless `HUSKYCAT_AUTO
 ├── README.md           # This file
 ├── _/
 │   └── common.sh       # Shared utilities (colors, logging, helpers)
-├── pre-commit          # Staged file validation
-├── pre-push            # Full codebase validation
+├── pre-commit          # Staged file validation with HuskyCat
+├── pre-push            # Full codebase validation with HuskyCat
 └── commit-msg          # Commit message format validation
 ```
 
@@ -205,14 +211,23 @@ chmod +x .githooks/*
 chmod +x .githooks/_/*
 ```
 
+### HuskyCat validation errors
+```bash
+# Run validation manually to see details
+uv run python -m src.huskycat validate --staged
+
+# Try with auto-fix
+uv run python -m src.huskycat validate --staged --fix
+```
+
 ## Design Principles
 
-1. **UV-Only Execution**: No binary fallback, no container fallback. Forces "eat your own dogfood" from day one.
+1. **Eat Your Own Dogfood**: Hooks use `huskycat validate`, not direct tool invocations. This tests our validation engine on every commit.
 
-2. **Git-Tracked**: All hooks are version-controlled. Changes to hooks are reviewed like any other code change.
+2. **UV-Only Execution**: No binary fallback, no container fallback. UV venv is required.
 
-3. **Interactive by Default**: Prompts for auto-fix when issues found. Supports non-interactive mode for CI.
+3. **Git-Tracked**: All hooks are version-controlled. Changes are reviewed like any other code.
 
-4. **Fail-Fast**: Stops on first failure category (formatting, then linting).
+4. **Interactive by Default**: Prompts for auto-fix when issues found. Supports non-interactive mode for CI.
 
 5. **Clear Escape Hatches**: `SKIP_HOOKS=1` or `--no-verify` when needed.
