@@ -355,19 +355,18 @@ binary:build:darwin-arm64:
       if [ -n "$APPLE_CERTIFICATE_BASE64" ] && [ -n "$APPLE_CERTIFICATE_PASSWORD" ]; then
         echo "🔐 Setting up code signing..."
 
-        # Download Apple CA certificates
-        curl -fsSL -o DeveloperIDG2CA.cer "https://www.apple.com/certificateauthority/DeveloperIDG2CA.cer"
-        curl -fsSL -o AppleWWDRCAG2.cer "https://www.apple.com/certificateauthority/AppleWWDRCAG2.cer"
-
         # Create and configure keychain
         security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_NAME"
         security default-keychain -s "$KEYCHAIN_NAME"
         security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_NAME"
         security set-keychain-settings -lut 3600 "$KEYCHAIN_NAME"
 
-        # Import certificates
+        # Import Apple CA certificates from CI variables (faster, no network dependency)
+        echo "$APPLE_DEVELOPER_ID_CA_G2" | base64 -d > DeveloperIDG2CA.cer
+        echo "$APPLE_WWDR_CA_G2" | base64 -d > AppleWWDRCAG2.cer
         security import DeveloperIDG2CA.cer -k "$KEYCHAIN_NAME" -T /usr/bin/codesign -T /usr/bin/productsign
         security import AppleWWDRCAG2.cer -k "$KEYCHAIN_NAME" -T /usr/bin/codesign -T /usr/bin/productsign
+        rm DeveloperIDG2CA.cer AppleWWDRCAG2.cer
 
         # Import signing certificate
         echo "$APPLE_CERTIFICATE_BASE64" | base64 -d > certificate.p12
@@ -446,14 +445,16 @@ binary:build:darwin-amd64:
     - |
       if [ -n "$APPLE_CERTIFICATE_BASE64" ] && [ -n "$APPLE_CERTIFICATE_PASSWORD" ]; then
         echo "🔐 Setting up code signing..."
-        curl -fsSL -o DeveloperIDG2CA.cer "https://www.apple.com/certificateauthority/DeveloperIDG2CA.cer"
-        curl -fsSL -o AppleWWDRCAG2.cer "https://www.apple.com/certificateauthority/AppleWWDRCAG2.cer"
         security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_NAME"
         security default-keychain -s "$KEYCHAIN_NAME"
         security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_NAME"
         security set-keychain-settings -lut 3600 "$KEYCHAIN_NAME"
+        # Import Apple CA certificates from CI variables
+        echo "$APPLE_DEVELOPER_ID_CA_G2" | base64 -d > DeveloperIDG2CA.cer
+        echo "$APPLE_WWDR_CA_G2" | base64 -d > AppleWWDRCAG2.cer
         security import DeveloperIDG2CA.cer -k "$KEYCHAIN_NAME" -T /usr/bin/codesign
         security import AppleWWDRCAG2.cer -k "$KEYCHAIN_NAME" -T /usr/bin/codesign
+        rm DeveloperIDG2CA.cer AppleWWDRCAG2.cer
         echo "$APPLE_CERTIFICATE_BASE64" | base64 -d > certificate.p12
         security import certificate.p12 -k "$KEYCHAIN_NAME" -P "$APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
         rm certificate.p12

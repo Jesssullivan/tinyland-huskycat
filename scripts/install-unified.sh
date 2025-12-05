@@ -69,16 +69,33 @@ main() {
     mkdir -p "$BIN_DIR"
     
     # Download binary
-    log_info "Downloading HuskyCat binary..."
-    BINARY_URL="https://gitlab.com/tinyland/ai/huskycat/-/releases/permalink/latest/downloads/huskycat-${PLATFORM}-${ARCH}"
-    
+    log_info "Downloading HuskyCat binary for ${PLATFORM}-${ARCH}..."
+
+    # Determine binary job name based on platform/arch
+    case "${PLATFORM}-${ARCH}" in
+        linux-amd64) BINARY_JOB="binary:build:linux" ;;
+        linux-arm64) BINARY_JOB="binary:build:linux-arm64" ;;
+        darwin-arm64) BINARY_JOB="binary:build:darwin-arm64" ;;
+        darwin-amd64) BINARY_JOB="binary:build:darwin-amd64" ;;
+        *) log_error "Unsupported platform: ${PLATFORM}-${ARCH}" ;;
+    esac
+
+    # GitLab artifact URL (uses latest tag or version)
+    if [ "$VERSION" = "latest" ]; then
+        BINARY_URL="https://gitlab.com/tinyland/ai/huskycat/-/jobs/artifacts/main/raw/dist/bin/huskycat-${PLATFORM}-${ARCH}?job=${BINARY_JOB}"
+    else
+        BINARY_URL="https://gitlab.com/tinyland/ai/huskycat/-/jobs/artifacts/${VERSION}/raw/dist/bin/huskycat-${PLATFORM}-${ARCH}?job=${BINARY_JOB}"
+    fi
+
+    log_info "URL: $BINARY_URL"
+
     if command -v curl &> /dev/null; then
         curl -fsSL "$BINARY_URL" -o "$BIN_DIR/huskycat" || {
-            log_error "Failed to download binary"
+            log_error "Failed to download binary. Check if a release exists for ${VERSION}"
         }
     elif command -v wget &> /dev/null; then
         wget -q "$BINARY_URL" -O "$BIN_DIR/huskycat" || {
-            log_error "Failed to download binary"
+            log_error "Failed to download binary. Check if a release exists for ${VERSION}"
         }
     else
         log_error "Neither curl nor wget found"
