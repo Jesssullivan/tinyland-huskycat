@@ -1,0 +1,150 @@
+#!/usr/bin/env bash
+# .githooks/pre-push - Full validation before push
+#
+# REQUIREMENT: UV venv must be active for development in this repository.
+#
+# This hook runs more comprehensive checks than pre-commit since pushing
+# affects the remote repository and CI pipeline.
+#
+# Features:
+#   - Full codebase validation (not just staged files)
+#   - GitLab CI configuration validation (if glab available)
+#   - Interactive auto-fix prompts
+#   - Auto-approve mode: HUSKYCAT_AUTO_APPROVE=1 or AUTO_FIX=1
+#   - Skip hooks: SKIP_HOOKS=1 git push (or git push --no-verify)
+
+set -euo pipefail
+
+# Get the directory where this script lives
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Source shared utilities
+source "${SCRIPT_DIR}/_/common.sh"
+
+# ============================================================================
+# MAIN
+# ============================================================================
+
+main() {
+    log_header "HuskyCat Pre-Push Hook"
+
+    # Check if hooks should be skipped
+    if should_skip_hooks; then
+        log_warn "Hooks skipped (SKIP_HOOKS=1)"
+        exit 0
+    fi
+
+    # Verify UV environment is set up
+    if ! verify_uv_environment; then
+        log_error "UV environment not ready. Run: uv sync --dev"
+        exit 1
+    fi
+
+    local exit_code=0
+
+    # ------------------------------------------------------------------------
+    # 1. BLACK - Full Codebase Formatting Check
+    # ------------------------------------------------------------------------
+    log_step "Checking Black formatting on src/ and tests/..."
+    if ! uv_run black --check --diff src/ tests/ 2>&1; then
+        log_warn "Black found formatting issues"
+
+        if is_auto_approve || ask_yes_no "Apply Black formatting fixes?"; then
+            log_step "Applying Black fixes..."
+            uv_run black src/ tests/
+            log_info "Black fixes applied"
+            log_warn "Files modified - please commit changes before pushing"
+            echo ""
+            echo "  Run: git add -u && git commit --amend --no-edit && git push"
+            echo ""
+            exit 1
+        else
+            log_error "Black formatting required before push"
+            exit_code=1
+        fi
+    else
+        log_info "Black: All files properly formatted"
+    fi
+
+    [[ $exit_code -ne 0 ]] && exit $exit_code
+
+    # ------------------------------------------------------------------------
+    # 2. RUFF - Full Codebase Linting
+    # ------------------------------------------------------------------------
+    log_step "Running Ruff on src/ and tests/..."
+    if ! uv_run ruff check src/ tests/ 2>&1; then
+        log_warn "Ruff found issues"
+
+        if is_auto_approve || ask_yes_no "Apply Ruff auto-fixes?"; then
+            log_step "Applying Ruff fixes..."
+            uv_run ruff check --fix src/ tests/
+            log_info "Ruff fixes applied"
+
+            # Check if there are still unfixable issues
+            if ! uv_run ruff check src/ tests/ 2>&1; then
+                log_error "Ruff still has issues that require manual fixes"
+                exit_code=1
+            else
+                log_warn "Files modified - please commit changes before pushing"
+                echo ""
+                echo "  Run: git add -u && git commit --amend --no-edit && git push"
+                echo ""
+                exit 1
+            fi
+        else
+            log_error "Ruff issues must be fixed before push"
+            exit_code=1
+        fi
+    else
+        log_info "Ruff: All files pass"
+    fi
+
+    [[ $exit_code -ne 0 ]] && exit $exit_code
+
+    # ------------------------------------------------------------------------
+    # 3. FLAKE8 - Additional Linting
+    # ------------------------------------------------------------------------
+    log_step "Running Flake8 on src/ and tests/..."
+    if ! uv_run flake8 src/ tests/ 2>&1; then
+        log_error "Flake8 found issues (manual fix required)"
+        exit_code=1
+    else
+        log_info "Flake8: All files pass"
+    fi
+
+    [[ $exit_code -ne 0 ]] && exit $exit_code
+
+    # ------------------------------------------------------------------------
+    # 4. GITLAB CI VALIDATION (if glab available)
+    # ------------------------------------------------------------------------
+    if [[ -f ".gitlab-ci.yml" ]]; then
+        if command -v glab &> /dev/null; then
+            log_step "Validating GitLab CI configuration..."
+            if ! glab ci lint .gitlab-ci.yml 2>&1; then
+                log_error "GitLab CI configuration is invalid"
+                exit_code=1
+            else
+                log_info "GitLab CI: Configuration valid"
+            fi
+        else
+            log_warn "glab not available, skipping CI validation"
+            echo "  Install: brew install glab (macOS) or see https://gitlab.com/gitlab-org/cli"
+        fi
+    fi
+
+    # ------------------------------------------------------------------------
+    # SUMMARY
+    # ------------------------------------------------------------------------
+    if [[ $exit_code -eq 0 ]]; then
+        log_header "Pre-Push Passed"
+        log_info "All validations passed! Proceeding with push..."
+    else
+        log_header "Pre-Push Failed"
+        log_error "Fix issues above or use: SKIP_HOOKS=1 git push"
+    fi
+
+    exit $exit_code
+}
+
+# Run main
+main "$@"

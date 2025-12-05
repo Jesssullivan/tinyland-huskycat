@@ -1,0 +1,116 @@
+#!/usr/bin/env bash
+# .githooks/pre-commit - Validate and auto-fix staged files before commit
+#
+# REQUIREMENT: UV venv must be active for development in this repository.
+#
+# Features:
+#   - Interactive auto-fix prompts when issues found
+#   - Auto-approve mode: HUSKYCAT_AUTO_APPROVE=1 or AUTO_FIX=1
+#   - Skip hooks: SKIP_HOOKS=1 git commit (or git commit --no-verify)
+#
+# Tools run (in order):
+#   1. Black - Python code formatting
+#   2. Ruff - Fast Python linting
+#   3. Flake8 - Additional Python linting (E501 length check skipped)
+
+set -euo pipefail
+
+# Get the directory where this script lives
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Source shared utilities
+source "${SCRIPT_DIR}/_/common.sh"
+
+# ============================================================================
+# MAIN
+# ============================================================================
+
+main() {
+    log_header "HuskyCat Pre-Commit Hook"
+
+    # Check if hooks should be skipped
+    if should_skip_hooks; then
+        log_warn "Hooks skipped (SKIP_HOOKS=1)"
+        exit 0
+    fi
+
+    # Verify UV environment is set up
+    if ! verify_uv_environment; then
+        log_error "UV environment not ready. Run: uv sync --dev"
+        exit 1
+    fi
+
+    # Get staged Python files
+    local staged_py
+    staged_py=$(staged_files "py")
+
+    if [[ -z "$staged_py" ]]; then
+        log_info "No Python files staged, skipping validation"
+        exit 0
+    fi
+
+    # Convert to array for proper handling
+    local -a py_files
+    mapfile -t py_files <<< "$staged_py"
+
+    log_step "Validating ${#py_files[@]} Python file(s)..."
+
+    local exit_code=0
+
+    # ------------------------------------------------------------------------
+    # 1. BLACK - Code Formatting
+    # ------------------------------------------------------------------------
+    if ! run_with_autofix "Black" \
+        "uv_run black --check --diff" \
+        "uv_run black" \
+        "${py_files[@]}"; then
+        exit_code=1
+    fi
+
+    # If Black failed and user declined fix, stop here
+    [[ $exit_code -ne 0 ]] && exit $exit_code
+
+    # ------------------------------------------------------------------------
+    # 2. RUFF - Fast Linting
+    # ------------------------------------------------------------------------
+    if ! run_with_autofix "Ruff" \
+        "uv_run ruff check" \
+        "uv_run ruff check --fix" \
+        "${py_files[@]}"; then
+        exit_code=1
+    fi
+
+    # If Ruff failed and user declined fix, stop here
+    [[ $exit_code -ne 0 ]] && exit $exit_code
+
+    # ------------------------------------------------------------------------
+    # 3. FLAKE8 - Additional Linting (no auto-fix available)
+    # ------------------------------------------------------------------------
+    log_step "Running Flake8..."
+    if ! uv_run flake8 "${py_files[@]}" 2>&1; then
+        log_error "Flake8 found issues (no auto-fix available)"
+        echo ""
+        echo "  Fix manually and re-stage files"
+        echo "  To skip: SKIP_HOOKS=1 git commit"
+        echo ""
+        exit_code=1
+    else
+        log_info "Flake8: All files pass"
+    fi
+
+    # ------------------------------------------------------------------------
+    # SUMMARY
+    # ------------------------------------------------------------------------
+    if [[ $exit_code -eq 0 ]]; then
+        log_header "Pre-Commit Passed"
+        log_info "All validations passed!"
+    else
+        log_header "Pre-Commit Failed"
+        log_error "Fix issues above or use: SKIP_HOOKS=1 git commit"
+    fi
+
+    exit $exit_code
+}
+
+# Run main
+main "$@"

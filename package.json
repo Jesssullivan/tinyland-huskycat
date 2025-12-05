@@ -4,6 +4,7 @@
   "private": true,
   "description": "Container-Only Universal Code Validation Platform with MCP Server",
   "scripts": {
+    "postinstall": "git config core.hooksPath .githooks || true",
     "dev": "uv run python3 -m src.huskycat",
     "validate": "uv run python3 -m src.huskycat validate",
     "validate:fix": "uv run python3 -m src.huskycat validate --fix",
@@ -36,8 +37,5 @@
     "release:prepare": "npm run build:all && npm run ci:validate",
     "pages:deploy": "mkdocs gh-deploy"
   },
-  "devDependencies": {
-    "husky": "9.0.11",
-    "lint-staged": "^15.5.2"
-  }
+  "devDependencies": {}
 }
