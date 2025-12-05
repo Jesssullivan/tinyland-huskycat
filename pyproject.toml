@@ -56,7 +56,10 @@ dev = [
 ]
 build = [
     "pyinstaller>=6.0.0",
-    "staticx>=0.14.0",
+]
+build-linux = [
+    "pyinstaller>=6.0.0",
+    "staticx>=0.14.0; sys_platform == 'linux'",
 ]
 docs = [
     "mkdocs>=1.5.0",
