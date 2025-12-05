@@ -19,7 +19,7 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
-from ..core.base import BaseCommand, CommandResult, CommandStatus  # noqa: TID252
+from ..core.base import BaseCommand, CommandResult, CommandStatus
 
 
 class SetupHooksCommand(BaseCommand):
@@ -33,7 +33,7 @@ class SetupHooksCommand(BaseCommand):
     def description(self) -> str:
         return "Configure git to use tracked hooks in .githooks/"
 
-    def execute(self, **kwargs: Any) -> CommandResult:  # noqa: ARG002, ANN401
+    def execute(self, **kwargs: Any) -> CommandResult:
         """
         Set git core.hooksPath to .githooks directory.
 
@@ -49,7 +49,7 @@ class SetupHooksCommand(BaseCommand):
         # Verify we're in a git repository
         try:
             result = subprocess.run(
-                ["git", "rev-parse", "--git-dir"],  # noqa: S607
+                ["git", "rev-parse", "--git-dir"],
                 capture_output=True,
                 text=True,
                 check=True,
@@ -99,7 +99,7 @@ class SetupHooksCommand(BaseCommand):
         # Set core.hooksPath to use tracked hooks
         try:
             subprocess.run(
-                ["git", "config", "core.hooksPath", ".githooks"],  # noqa: S607
+                ["git", "config", "core.hooksPath", ".githooks"],
                 check=True,
                 capture_output=True,
             )
@@ -127,7 +127,7 @@ class SetupHooksCommand(BaseCommand):
         # Check UV availability
         try:
             subprocess.run(
-                ["uv", "--version"],  # noqa: S607
+                ["uv", "--version"],
                 check=True,
                 capture_output=True,
             )

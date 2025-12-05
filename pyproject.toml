@@ -171,13 +171,33 @@ exclude = [
 ]
 
 [tool.ruff]
-# Enable pycodestyle (`E`) and Pyflakes (`F`) codes by default.
-select = ["E", "F", "I", "N", "W", "UP", "YTT", "ANN", "S", "BLE", "FBT", "B", "A", "COM", "C4", "DTZ", "T10", "DJ", "EM", "EXE", "ISC", "ICN", "G", "INP", "PIE", "T20", "PYI", "PT", "Q", "RSE", "RET", "SLF", "SIM", "TID", "TCH", "ARG", "PTH", "ERA", "PD", "PGH", "PL", "TRY", "RUF"]
-ignore = ["ANN101", "ANN102", "S101"]
+line-length = 88
+target-version = "py38"
+
+[tool.ruff.lint]
+# Enable comprehensive rule sets
+select = ["E", "F", "I", "N", "W", "UP", "YTT", "ANN", "S", "BLE", "B", "A", "COM", "C4", "DTZ", "T10", "DJ", "EM", "EXE", "ISC", "ICN", "G", "INP", "PIE", "T20", "PYI", "PT", "Q", "RSE", "RET", "SLF", "SIM", "TID", "TCH", "ARG", "PTH", "ERA", "PD", "PGH", "PL", "TRY", "RUF"]
+
+# Reasonable ignores for this codebase
+ignore = [
+    "ANN101",   # Missing type annotation for self (deprecated)
+    "ANN102",   # Missing type annotation for cls (deprecated)
+    "ANN401",   # Dynamically typed expressions (Any) - needed for **kwargs
+    "S101",     # Assert usage - needed for tests
+    "S607",     # Starting process with partial path - needed for git/uv subprocess calls
+    "TID252",   # Relative imports - standard pattern for packages
+    "ARG002",   # Unused method argument - needed for interface compliance
+    "FBT001",   # Boolean positional arg - common pattern for force/fix flags
+    "FBT002",   # Boolean default arg - common pattern
+    "COM812",   # Trailing comma - conflicts with formatter sometimes
+]
 
 # Allow autofix for all enabled rules (when `--fix`) is provided.
 fixable = ["ALL"]
 unfixable = []
+
+# Allow unused variables when underscore-prefixed.
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 
 # Exclude a variety of commonly ignored directories.
 exclude = [
@@ -208,18 +228,9 @@ exclude = [
     ".nx"
 ]
 
-# Same as Black.
-line-length = 88
-
-# Allow unused variables when underscore-prefixed.
-dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
-
-# Assume Python 3.8
-target-version = "py38"
-
-[tool.ruff.per-file-ignores]
+[tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401"]
-"test_*.py" = ["S101"]
+"test_*.py" = ["S101", "PLR2004"]  # Allow assert and magic values in tests
 
 [dependency-groups]
 dev = [
