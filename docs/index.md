@@ -71,11 +71,15 @@ npm run build:binary
 - Real-time code quality feedback with full toolchain
 
 ### 🔄 **Universal Validation with Auto-Fix**
-- **Core Tools**: Black, Flake8, MyPy, Ruff
-- **Extended Tools**: yamllint, shellcheck, hadolint, eslint
+- **Python**: Black, Ruff, IsSort, Flake8, MyPy, Autoflake
+- **JavaScript/TypeScript**: Prettier, ESLint
+- **Web**: HTML, CSS, Markdown (Prettier)
+- **Data Formats**: JSON, YAML, TOML (yamllint, taplo)
+- **Infrastructure-as-Code**: Ansible (ansible-lint), Terraform (terraform fmt)
+- **Specialized**: Chapel (custom formatter), Shell (shellcheck), Docker (hadolint)
 - **Security**: bandit, safety, dependency scanning
 - **GitLab CI**: Schema validation and pipeline testing
-- **Auto-Fix**: Interactive prompts for automatic issue resolution
+- **Auto-Fix**: 10 validators with interactive auto-repair (95% language coverage)
 
 ## Architecture
 

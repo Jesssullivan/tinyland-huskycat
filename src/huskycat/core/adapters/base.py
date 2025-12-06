@@ -174,7 +174,10 @@ class ModeAdapter(ABC):
         for filepath, file_results in results.items():
             output["results"][filepath] = []
             for result in file_results:
-                if hasattr(result, "to_dict"):
+                # Result could be either a ValidationResult object or already a dict
+                if isinstance(result, dict):
+                    output["results"][filepath].append(result)
+                elif hasattr(result, "to_dict"):
                     output["results"][filepath].append(result.to_dict())
                 else:
                     output["results"][filepath].append(
@@ -234,9 +237,13 @@ class ModeAdapter(ABC):
                 "results": {
                     filepath: [
                         (
-                            result.to_dict()
-                            if hasattr(result, "to_dict")
-                            else {"tool": getattr(result, "tool", "unknown")}
+                            result  # Already a dict
+                            if isinstance(result, dict)
+                            else (
+                                result.to_dict()
+                                if hasattr(result, "to_dict")
+                                else {"tool": getattr(result, "tool", "unknown")}
+                            )
                         )
                         for result in file_results
                     ]

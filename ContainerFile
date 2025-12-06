@@ -29,7 +29,9 @@ RUN pip3 install --no-cache-dir --break-system-packages \
     pylint \
     bandit \
     ruff \
+    isort \
     yamllint \
+    ansible-lint \
     hypothesis \
     pytest \
     pytest-cov \
@@ -72,6 +74,17 @@ WORKDIR /tmp
 RUN curl -L https://github.com/hadolint/hadolint/releases/latest/download/hadolint-Linux-x86_64 -o /usr/local/bin/hadolint && \
     chmod +x /usr/local/bin/hadolint
 
+# Install Rust tools (TOML formatter)
+RUN cargo install taplo-cli --locked
+
+# Install Terraform
+RUN TERRAFORM_VERSION=1.9.8 && \
+    wget https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip && \
+    unzip terraform_${TERRAFORM_VERSION}_linux_amd64.zip && \
+    mv terraform /usr/local/bin/ && \
+    rm terraform_${TERRAFORM_VERSION}_linux_amd64.zip && \
+    chmod +x /usr/local/bin/terraform
+
 # Production stage
 FROM alpine:3.19
 
@@ -98,12 +111,15 @@ COPY --from=builder /usr/bin/mypy /usr/bin/mypy
 COPY --from=builder /usr/bin/pylint /usr/bin/pylint
 COPY --from=builder /usr/bin/bandit /usr/bin/bandit
 COPY --from=builder /usr/bin/ruff /usr/bin/ruff
+COPY --from=builder /usr/bin/isort /usr/bin/isort
 COPY --from=builder /usr/bin/yamllint /usr/bin/yamllint
+COPY --from=builder /usr/bin/ansible-lint /usr/bin/ansible-lint
 COPY --from=builder /usr/bin/pytest /usr/bin/pytest
 COPY --from=builder /usr/bin/shellcheck /usr/bin/shellcheck
+COPY --from=builder /root/.cargo/bin/taplo /usr/local/bin/taplo
 COPY --from=builder /usr/lib/python3.11 /usr/lib/python3.11/
 COPY --from=builder /usr/lib/node_modules /usr/lib/node_modules/
-# Copy Go tools (currently empty directory) 
+# Copy Go tools (currently empty directory)
 COPY --from=builder /go/bin /tmp/go-tools
 
 # Copy application files

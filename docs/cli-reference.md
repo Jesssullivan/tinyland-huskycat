@@ -490,6 +490,36 @@ HuskyCat includes these validators:
 | `js-eslint` | ESLint | Linting | ✅ Partial |
 | `js-prettier` | Prettier | Code formatting | ✅ Yes |
 
+### Chapel
+
+| Validator | Tool | Purpose | Auto-Fix |
+|-----------|------|---------|----------|
+| `chapel` | ChapelFormatter | Code formatting | ✅ Yes |
+
+**Note**: Chapel formatter is a lightweight, custom implementation that provides whitespace cleanup and basic syntax formatting without requiring the Chapel compiler. It uses regex-based pattern matching for safe, deterministic formatting.
+
+**Supported features**:
+- ✅ Whitespace normalization (trailing spaces, tabs, final newline)
+- ✅ Operator spacing (=, +, -, *, /, ==, !=, <, >, &&, ||)
+- ✅ Keyword spacing (if, for, while, proc)
+- ✅ Brace and comma spacing
+- ✅ Type annotation formatting (var x: int)
+- ✅ 2-space indentation (brace-based)
+
+**Limitations**:
+- ❌ No semantic analysis (type checking)
+- ❌ No import sorting
+- ❌ Basic indentation (complex nested expressions may need manual adjustment)
+
+**Example**:
+```bash
+# Format Chapel files
+huskycat validate --fix src/**/*.chpl
+
+# Check Chapel formatting without fixing
+huskycat validate src/**/*.chpl
+```
+
 ### Configuration Files
 
 | Validator | Tool | Purpose | Auto-Fix |

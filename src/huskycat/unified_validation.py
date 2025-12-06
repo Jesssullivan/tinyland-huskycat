@@ -462,6 +462,10 @@ class RuffValidator(Validator):
         start_time = time.time()
         cmd = [self.command, "check", str(filepath), "--output-format=json"]
 
+        # Add --fix flag if auto-fixing is enabled
+        if self.auto_fix:
+            cmd.insert(2, "--fix")
+
         try:
             result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
 
@@ -472,6 +476,7 @@ class RuffValidator(Validator):
                     tool=self.name,
                     filepath=str(filepath),
                     success=True,
+                    fixed=self.auto_fix,
                     duration_ms=duration_ms,
                 )
 
@@ -497,8 +502,309 @@ class RuffValidator(Validator):
                 success=False,
                 messages=messages,
                 errors=errors,
+                fixed=self.auto_fix and result.returncode == 0,
                 duration_ms=duration_ms,
             )
+
+        except Exception as e:
+            return ValidationResult(
+                tool=self.name,
+                filepath=str(filepath),
+                success=False,
+                errors=[str(e)],
+                duration_ms=int((time.time() - start_time) * 1000),
+            )
+
+
+class IsortValidator(Validator):
+    """Python import sorting and organization"""
+
+    @property
+    def name(self) -> str:
+        return "isort"
+
+    @property
+    def extensions(self) -> Set[str]:
+        return {".py", ".pyi"}
+
+    def validate(self, filepath: Path) -> ValidationResult:
+        start_time = time.time()
+
+        # First check what isort would fix (dry run)
+        check_cmd = [
+            self.command,
+            "--check-only",
+            "--diff",
+            str(filepath),
+        ]
+
+        try:
+            result = self._execute_command(
+                check_cmd, capture_output=True, text=True, timeout=30
+            )
+            duration_ms = int((time.time() - start_time) * 1000)
+
+            if result.returncode == 0:
+                # Imports are already sorted
+                return ValidationResult(
+                    tool=self.name,
+                    filepath=str(filepath),
+                    success=True,
+                    messages=["Imports are properly sorted"],
+                    duration_ms=duration_ms,
+                )
+            else:
+                # Imports need sorting
+                if self.auto_fix:
+                    # Apply fixes (isort modifies in-place by default)
+                    fix_cmd = [
+                        self.command,
+                        str(filepath),
+                    ]
+                    fix_result = self._execute_command(
+                        fix_cmd, capture_output=True, text=True, timeout=30
+                    )
+
+                    if fix_result.returncode == 0:
+                        return ValidationResult(
+                            tool=self.name,
+                            filepath=str(filepath),
+                            success=True,
+                            messages=["Sorted and organized imports"],
+                            fixed=True,
+                            duration_ms=duration_ms,
+                        )
+                    else:
+                        return ValidationResult(
+                            tool=self.name,
+                            filepath=str(filepath),
+                            success=False,
+                            errors=["Failed to sort imports"],
+                            messages=(
+                                fix_result.stderr.splitlines()
+                                if fix_result.stderr
+                                else []
+                            ),
+                            duration_ms=duration_ms,
+                        )
+                else:
+                    # Just report issues without fixing
+                    diff_lines = result.stdout.splitlines() if result.stdout else []
+                    return ValidationResult(
+                        tool=self.name,
+                        filepath=str(filepath),
+                        success=False,
+                        errors=["Imports are not properly sorted"],
+                        messages=diff_lines[:10] if diff_lines else ["Run with --fix to sort imports"],
+                        duration_ms=duration_ms,
+                    )
+        except Exception as e:
+            return ValidationResult(
+                tool=self.name,
+                filepath=str(filepath),
+                success=False,
+                errors=[str(e)],
+                duration_ms=int((time.time() - start_time) * 1000),
+            )
+
+
+# TOML Formatter
+
+
+class TaploValidator(Validator):
+    """TOML file formatter using taplo"""
+
+    @property
+    def name(self) -> str:
+        return "taplo"
+
+    @property
+    def extensions(self) -> Set[str]:
+        return {".toml"}
+
+    def validate(self, filepath: Path) -> ValidationResult:
+        start_time = time.time()
+
+        # First check what taplo would format (dry run with --check)
+        check_cmd = [
+            self.command,
+            "fmt",
+            "--check",
+            str(filepath),
+        ]
+
+        try:
+            result = self._execute_command(
+                check_cmd, capture_output=True, text=True, timeout=30
+            )
+            duration_ms = int((time.time() - start_time) * 1000)
+
+            if result.returncode == 0:
+                # File is already formatted
+                return ValidationResult(
+                    tool=self.name,
+                    filepath=str(filepath),
+                    success=True,
+                    messages=["TOML file is properly formatted"],
+                    duration_ms=duration_ms,
+                )
+            else:
+                # File needs formatting
+                if self.auto_fix:
+                    # Apply formatting
+                    fix_cmd = [
+                        self.command,
+                        "fmt",
+                        str(filepath),
+                    ]
+                    fix_result = self._execute_command(
+                        fix_cmd, capture_output=True, text=True, timeout=30
+                    )
+
+                    if fix_result.returncode == 0:
+                        return ValidationResult(
+                            tool=self.name,
+                            filepath=str(filepath),
+                            success=True,
+                            messages=["Formatted TOML file"],
+                            fixed=True,
+                            duration_ms=duration_ms,
+                        )
+                    else:
+                        # Formatting failed
+                        error_output = fix_result.stderr if fix_result.stderr else fix_result.stdout
+                        errors = [line.strip() for line in error_output.splitlines() if line.strip()] if error_output else ["Failed to format TOML file"]
+                        return ValidationResult(
+                            tool=self.name,
+                            filepath=str(filepath),
+                            success=False,
+                            errors=errors[:10],  # Limit to first 10 errors
+                            messages=["Failed to format TOML file"],
+                            duration_ms=duration_ms,
+                        )
+                else:
+                    # Just report that formatting is needed
+                    output = result.stdout if result.stdout else result.stderr
+                    messages = []
+                    if output:
+                        # taplo --check shows which files need formatting
+                        messages = [line.strip() for line in output.splitlines() if line.strip()][:5]
+
+                    if not messages:
+                        messages = ["TOML file needs formatting. Run with --fix to format."]
+
+                    return ValidationResult(
+                        tool=self.name,
+                        filepath=str(filepath),
+                        success=False,
+                        errors=["TOML file is not properly formatted"],
+                        messages=messages,
+                        duration_ms=duration_ms,
+                    )
+
+        except Exception as e:
+            return ValidationResult(
+                tool=self.name,
+                filepath=str(filepath),
+                success=False,
+                errors=[str(e)],
+                duration_ms=int((time.time() - start_time) * 1000),
+            )
+
+
+# Terraform Formatter
+
+
+class TerraformValidator(Validator):
+    """Terraform configuration file formatter using terraform fmt"""
+
+    @property
+    def name(self) -> str:
+        return "terraform"
+
+    @property
+    def extensions(self) -> Set[str]:
+        return {".tf", ".tfvars"}
+
+    def validate(self, filepath: Path) -> ValidationResult:
+        start_time = time.time()
+
+        # First check what terraform would format (dry run with -check)
+        check_cmd = [
+            self.command,
+            "fmt",
+            "-check",
+            str(filepath),
+        ]
+
+        try:
+            result = self._execute_command(
+                check_cmd, capture_output=True, text=True, timeout=30
+            )
+            duration_ms = int((time.time() - start_time) * 1000)
+
+            if result.returncode == 0:
+                # File is already formatted
+                return ValidationResult(
+                    tool=self.name,
+                    filepath=str(filepath),
+                    success=True,
+                    messages=["Terraform file is properly formatted"],
+                    duration_ms=duration_ms,
+                )
+            else:
+                # File needs formatting
+                if self.auto_fix:
+                    # Apply formatting
+                    fix_cmd = [
+                        self.command,
+                        "fmt",
+                        str(filepath),
+                    ]
+                    fix_result = self._execute_command(
+                        fix_cmd, capture_output=True, text=True, timeout=30
+                    )
+
+                    if fix_result.returncode == 0:
+                        return ValidationResult(
+                            tool=self.name,
+                            filepath=str(filepath),
+                            success=True,
+                            messages=["Formatted Terraform file"],
+                            fixed=True,
+                            duration_ms=duration_ms,
+                        )
+                    else:
+                        # Formatting failed
+                        error_output = fix_result.stderr if fix_result.stderr else fix_result.stdout
+                        errors = [line.strip() for line in error_output.splitlines() if line.strip()] if error_output else ["Failed to format Terraform file"]
+                        return ValidationResult(
+                            tool=self.name,
+                            filepath=str(filepath),
+                            success=False,
+                            errors=errors[:10],  # Limit to first 10 errors
+                            messages=["Failed to format Terraform file"],
+                            duration_ms=duration_ms,
+                        )
+                else:
+                    # Just report that formatting is needed
+                    # terraform fmt -check outputs the filename if it needs formatting
+                    output = result.stdout if result.stdout else result.stderr
+                    messages = []
+                    if output:
+                        messages = [line.strip() for line in output.splitlines() if line.strip()][:5]
+
+                    if not messages:
+                        messages = ["Terraform file needs formatting. Run with --fix to format."]
+
+                    return ValidationResult(
+                        tool=self.name,
+                        filepath=str(filepath),
+                        success=False,
+                        errors=["Terraform file is not properly formatted"],
+                        messages=messages,
+                        duration_ms=duration_ms,
+                    )
 
         except Exception as e:
             return ValidationResult(
@@ -674,7 +980,12 @@ class PrettierValidator(Validator):
 
     def validate(self, filepath: Path) -> ValidationResult:
         start_time = time.time()
-        cmd = [self.command, "--check", str(filepath)]
+
+        # Use --write for auto-fix, --check for validation only
+        if self.auto_fix:
+            cmd = [self.command, "--write", str(filepath)]
+        else:
+            cmd = [self.command, "--check", str(filepath)]
 
         try:
             result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
@@ -686,6 +997,7 @@ class PrettierValidator(Validator):
                     tool=self.name,
                     filepath=str(filepath),
                     success=True,
+                    fixed=self.auto_fix,
                     duration_ms=duration_ms,
                 )
 
@@ -708,6 +1020,225 @@ class PrettierValidator(Validator):
                 errors=errors,
                 duration_ms=duration_ms,
             )
+
+        except Exception as e:
+            return ValidationResult(
+                tool=self.name,
+                filepath=str(filepath),
+                success=False,
+                errors=[str(e)],
+                duration_ms=int((time.time() - start_time) * 1000),
+            )
+
+
+# Chapel Validator
+
+
+class ChapelValidator(Validator):
+    """Chapel code formatter (custom implementation, no compiler required)"""
+
+    @property
+    def name(self) -> str:
+        return "chapel"
+
+    @property
+    def extensions(self) -> Set[str]:
+        return {".chpl"}
+
+    def validate(self, filepath: Path) -> ValidationResult:
+        start_time = time.time()
+
+        try:
+            # Import Chapel formatter
+            from huskycat.formatters.chapel import ChapelFormatter
+
+            # Read file
+            with open(filepath, "r", encoding="utf-8") as f:
+                original_code = f.read()
+
+            # Format code
+            formatter = ChapelFormatter()
+            formatted_code = formatter.format(original_code)
+
+            duration_ms = int((time.time() - start_time) * 1000)
+
+            # Check if formatting changed anything
+            if formatted_code == original_code:
+                return ValidationResult(
+                    tool=self.name,
+                    filepath=str(filepath),
+                    success=True,
+                    duration_ms=duration_ms,
+                )
+
+            # If auto-fix enabled, write the formatted code
+            if self.auto_fix:
+                with open(filepath, "w", encoding="utf-8") as f:
+                    f.write(formatted_code)
+
+                return ValidationResult(
+                    tool=self.name,
+                    filepath=str(filepath),
+                    success=True,
+                    fixed=True,
+                    messages=["Chapel code formatted"],
+                    duration_ms=duration_ms,
+                )
+            else:
+                # Report formatting issues without fixing
+                issues = formatter.check_formatting(original_code)
+                return ValidationResult(
+                    tool=self.name,
+                    filepath=str(filepath),
+                    success=False,
+                    errors=issues,
+                    messages=[f"Chapel formatting issues found: {len(issues)}"],
+                    duration_ms=duration_ms,
+                )
+
+        except Exception as e:
+            return ValidationResult(
+                tool=self.name,
+                filepath=str(filepath),
+                success=False,
+                errors=[f"Chapel validation error: {str(e)}"],
+                duration_ms=int((time.time() - start_time) * 1000),
+            )
+
+
+# Ansible Validator
+
+
+class AnsibleLintValidator(Validator):
+    """Ansible playbook and role linter with auto-fix support"""
+
+    @property
+    def name(self) -> str:
+        return "ansible-lint"
+
+    @property
+    def extensions(self) -> Set[str]:
+        # Return empty set - use can_handle() method to detect Ansible files
+        return set()
+
+    def can_handle(self, filepath: Path) -> bool:
+        """Check if file is an Ansible file (playbook, role, task, etc.)"""
+        # Only handle files in ansible-specific directories or with ansible patterns
+        path_str = str(filepath).lower()
+        ansible_indicators = [
+            "/playbooks/",
+            "/roles/",
+            "/tasks/",
+            "/handlers/",
+            "/vars/",
+            "/defaults/",
+            "/meta/",
+            "playbook",
+            "site.yml",
+            "site.yaml",
+        ]
+        return any(indicator in path_str for indicator in ansible_indicators)
+
+    def validate(self, filepath: Path) -> ValidationResult:
+        start_time = time.time()
+
+        # ansible-lint command
+        check_cmd = [
+            self.command,
+            "--nocolor",
+            "--parseable",
+            str(filepath),
+        ]
+
+        try:
+            result = self._execute_command(
+                check_cmd, capture_output=True, text=True, timeout=60
+            )
+            duration_ms = int((time.time() - start_time) * 1000)
+
+            if result.returncode == 0:
+                # No issues found
+                return ValidationResult(
+                    tool=self.name,
+                    filepath=str(filepath),
+                    success=True,
+                    messages=["Ansible playbook/role passed all checks"],
+                    duration_ms=duration_ms,
+                )
+            else:
+                # Parse ansible-lint output (ansible-lint writes to stderr)
+                issues = []
+                output = result.stderr if result.stderr else result.stdout
+                if output:
+                    # Filter to only the actual lint violations (lines with file:line:col format)
+                    issues = [
+                        line.strip()
+                        for line in output.splitlines()
+                        if line.strip()
+                        and not line.startswith("WARNING")
+                        and not line.startswith("#")
+                        and not line.startswith("Read")
+                        and not line.startswith("Failed:")
+                        and ":" in line
+                    ]
+
+                if self.auto_fix:
+                    # Try to fix issues
+                    fix_cmd = [
+                        self.command,
+                        "--fix",
+                        "--nocolor",
+                        str(filepath),
+                    ]
+                    fix_result = self._execute_command(
+                        fix_cmd, capture_output=True, text=True, timeout=60
+                    )
+
+                    if fix_result.returncode == 0:
+                        return ValidationResult(
+                            tool=self.name,
+                            filepath=str(filepath),
+                            success=True,
+                            messages=["Fixed Ansible lint issues"],
+                            fixed=True,
+                            duration_ms=duration_ms,
+                        )
+                    else:
+                        # Some issues couldn't be fixed
+                        remaining_issues = []
+                        fix_output = fix_result.stderr if fix_result.stderr else fix_result.stdout
+                        if fix_output:
+                            # Filter to only the actual lint violations
+                            remaining_issues = [
+                                line.strip()
+                                for line in fix_output.splitlines()
+                                if line.strip()
+                                and not line.startswith("WARNING")
+                                and not line.startswith("#")
+                                and not line.startswith("Read")
+                                and not line.startswith("Failed:")
+                                and ":" in line
+                            ]
+
+                        return ValidationResult(
+                            tool=self.name,
+                            filepath=str(filepath),
+                            success=False,
+                            errors=remaining_issues or issues,
+                            messages=["Some issues could not be auto-fixed"],
+                            fixed=len(remaining_issues) < len(issues),
+                            duration_ms=duration_ms,
+                        )
+                else:
+                    # Just report issues
+                    return ValidationResult(
+                        tool=self.name,
+                        filepath=str(filepath),
+                        success=False,
+                        errors=issues[:20],  # Limit to first 20 issues
+                        messages=[f"Found {len(issues)} Ansible lint issues. Run with --fix to auto-fix."],
+                        duration_ms=duration_ms,
+                    )
 
         except Exception as e:
             return ValidationResult(
@@ -1097,9 +1628,14 @@ class ValidationEngine:
             Flake8Validator(self.auto_fix),
             MypyValidator(self.auto_fix),
             RuffValidator(self.auto_fix),
+            IsortValidator(self.auto_fix),
+            TaploValidator(self.auto_fix),
+            TerraformValidator(self.auto_fix),
             BanditValidator(self.auto_fix),
             ESLintValidator(self.auto_fix),
             PrettierValidator(self.auto_fix),
+            ChapelValidator(self.auto_fix),
+            AnsibleLintValidator(self.auto_fix),
             YamlLintValidator(self.auto_fix),
             HadolintValidator(self.auto_fix),
             ShellcheckValidator(self.auto_fix),
@@ -1268,7 +1804,7 @@ class ValidationEngine:
 
     def _count_fixable_issues(self, results: Dict[str, List[ValidationResult]]) -> int:
         """Count how many issues could potentially be auto-fixed"""
-        fixable_tools = {"black", "autoflake", "yamllint", "eslint"}
+        fixable_tools = {"black", "autoflake", "ruff", "isort", "taplo", "terraform", "yamllint", "eslint", "js-prettier", "chapel"}
         count = 0
 
         for filepath, file_results in results.items():
