@@ -59,7 +59,7 @@ class TestBootstrapGitOps:
                 "run",
                 "python",
                 "-m",
-                "src.huskycat",
+                "huskycat",
             ] + args
             # Copy existing environment and update with our custom variables
             env = os.environ.copy()
@@ -502,7 +502,7 @@ class TestBootstrapEdgeCases:
         """Run HuskyCat command."""
         if huskycat_exec.name == "UV_RUN_MODE":
             project_root = Path(__file__).parent.parent.parent
-            cmd = ["uv", "run", "python", "-m", "src.huskycat"] + args
+            cmd = ["uv", "run", "python", "-m", "huskycat"] + args
             # Copy existing environment and update with our custom variables
             env = os.environ.copy()
             env["PYTHONPATH"] = str(project_root / "src")
