@@ -1,45 +1,63 @@
 # HuskyCat - Universal Code Validation Platform
 
-A **container-only** validation platform designed for consistent toolchains, repository isolation, and AI integration through MCP server protocol.
+A multi-modal validation platform designed for consistent toolchains, flexible execution models, and AI integration through MCP server protocol.
+
+See [Architecture Documentation](docs/architecture/) for complete technical details with code references.
 
 ## Architecture Overview
 
-HuskyCat enforces container-only execution for all validation operations:
+HuskyCat supports **three execution models** (see [docs/architecture/execution-models.md](docs/architecture/execution-models.md)):
 
 ```mermaid
-graph LR
-    A[" Binary Entry Point"] --> B["Container Runtime"]
-    C[" NPM Scripts"] --> B
-    D[" MCP Server"] --> B
-    
-    B --> E[" Container Execution"]
-    E --> F["Complete Toolchain"]
-    E --> G["Repository Isolation"] 
-    E --> H["Consistent Environment"]
-    
-    style B fill:#f3e5f5
-    style E fill:#e8f5e8
-    style F fill:#fff3e0
+graph TB
+    A["User Entry Points"] --> B["Binary Execution"]
+    A --> C["Container Execution"]
+    A --> D["UV Development"]
+
+    B --> E["PyInstaller Single-File"]
+    B --> F["Optional Container Delegation"]
+
+    C --> G["Alpine Multi-Arch Container"]
+    C --> H["Complete Toolchain"]
+
+    D --> I["npm Scripts + UV"]
+    D --> J["Development Mode"]
+
+    style B fill:#e8f5e8
+    style C fill:#f3e5f5
+    style D fill:#fff3e0
 ```
+
+**Execution Models**:
+- **Binary**: PyInstaller single-file, optional container delegation (`unified_validation.py:85-170`)
+- **Container**: Alpine-based multi-arch images with complete toolchain
+- **UV Development**: npm scripts for local development
+
+**Product Modes** (see [docs/architecture/product-modes.md](docs/architecture/product-modes.md)):
+- **Git Hooks**: Fast subset validation (<5s), fail-fast behavior
+- **CI**: Comprehensive validation, JUnit XML output
+- **CLI**: Interactive, colored output, auto-fix prompts
+- **Pipeline**: JSON output for machine processing
+- **MCP Server**: JSON-RPC 2.0 for AI integration
 
 ## Key Features
 
-###  **Container-Only Execution**
-- Consistent toolchain across all environments
-- Complete isolation from host repository
-- No "tool not found" errors - ever
+### Multi-Modal Execution
+- Three execution models: Binary, Container, UV Development
+- Flexible container delegation when runtime available
+- No hard container dependency for basic operations
 
-###  **Repository Safety & Isolation**
-- Binary configs stored separately from repository
-- Validation tools cannot interfere with actual files
-- Read-only repository mounting for security
+### Repository Safety & Isolation
+- Binary configs stored separately from repository (`~/.huskycat/`)
+- Optional container isolation for maximum security
+- Read-only repository mounting when using containers
 
-###  **AI Integration via MCP**
+### AI Integration via MCP
 - stdio-based MCP server for Claude Code
-- Container-backed validation tools as AI-callable functions
-- Real-time code quality feedback with full toolchain
+- Validation tools exposed as AI-callable functions
+- Real-time code quality feedback
 
-###  **Universal Validation with Auto-Fix**
+### Universal Validation with Auto-Fix
 - **Core Tools**: Black, Flake8, MyPy, Ruff
 - **Extended Tools**: yamllint, shellcheck, hadolint, eslint
 - **Security**: bandit, safety, dependency scanning
@@ -50,14 +68,14 @@ graph LR
 
 ### 1. Prerequisites & Setup
 ```bash
-# Required: Container runtime (podman or docker)
+# Optional: Container runtime (podman or docker) for container execution
 # Install podman: brew install podman (macOS) or apt install podman (Ubuntu)
 
 # Install dependencies
 npm install
 uv sync --dev
 
-# Build container (required for all validation)
+# Optional: Build container for container-based execution
 npm run container:build
 
 # Build binary entry point
@@ -70,23 +88,23 @@ npm run build:binary
 
 ### 2. Core Operations
 ```bash
-# Fast binary execution (git hooks, production)
+# Binary execution (recommended for git hooks)
 ./dist/huskycat validate --staged    # Validate staged files
 ./dist/huskycat setup-hooks          # Install git hooks
 ./dist/huskycat ci-validate .gitlab-ci.yml
 
-# Auto-fix validation (NEW)
+# Auto-fix validation
 ./dist/huskycat validate --fix       # Auto-fix validation issues
 git addf <files>                     # Interactive auto-fix before staging
-git addf .                          # Validate and auto-fix all files
+git addf .                           # Validate and auto-fix all files
 
-# Development mode (NPM scripts)
+# Development mode (NPM scripts + UV)
 npm run validate                     # Quick validation
 npm run validate:ci                  # CI configuration
 npm run mcp:server                   # Start MCP server
 
-# Container mode (comprehensive)
-npm run container:test:validate      # Full toolchain
+# Container mode (when runtime available)
+npm run container:validate           # Container-based validation
 ```
 
 ### 3. Claude Code Integration
@@ -98,35 +116,53 @@ npm run container:test:validate      # Full toolchain
 echo '{"jsonrpc": "2.0", "method": "tools/list", "id": 1}' | npm run mcp:server
 ```
 
-## Execution Modes
+## Execution Models
 
-All execution modes use **container-only validation** for consistency:
+See [docs/architecture/execution-models.md](docs/architecture/execution-models.md) for complete details with code references.
 
-###  Binary Entry Point (Recommended)
+### Binary Execution (Recommended)
 ```bash
-./dist/huskycat [command]            # Fast startup, container execution
+./dist/huskycat [command]            # PyInstaller single-file
 ```
+**Implementation**: `huskycat_main.py:1-27` → `__main__.py:1-50`
 **Best for**: Git hooks, CI/CD, production deployments
+**Container**: Optional delegation when runtime available (`unified_validation.py:85-109`)
 
-###  NPM Script Development
+### Container Execution
 ```bash
-npm run dev -- [command]            # Python module via NPM
+npm run container:validate           # Alpine-based multi-arch
 ```
+**Implementation**: `ContainerFile:1-153`, `.gitlab-ci.yml:158-218`
+**Best for**: Maximum isolation, consistent toolchain
+**Architectures**: amd64, arm64 multi-arch support
+
+### UV Development Mode
+```bash
+npm run dev -- [command]             # UV + npm scripts
+```
+**Implementation**: `package.json:8-38`
 **Best for**: Development, testing, convenience
+**Requirement**: UV package manager, Python 3.8+
 
-###  MCP Server Mode
-```bash
-./dist/huskycat mcp-server           # stdio JSON-RPC server
-```
-**Best for**: Claude Code integration, AI-powered validation
+## Product Modes
 
-**All modes provide**: Complete toolchain (Python + Node.js + Shell + Docker + Security) via container execution
+See [docs/architecture/product-modes.md](docs/architecture/product-modes.md) for complete comparison matrix.
+
+| Mode | Output | Tools | Interactive | Use Case |
+|------|--------|-------|-------------|----------|
+| **Git Hooks** | Minimal | Fast subset (4) | Auto-detect TTY | Pre-commit validation |
+| **CI** | JUnit XML | All (15+) | Never | Pipeline integration |
+| **CLI** | Rich colored | Configurable | Yes | Manual validation |
+| **Pipeline** | JSON | All | Never | Script integration |
+| **MCP Server** | JSON-RPC 2.0 | All | Never | AI integration |
+
+**Mode Detection**: `mode_detector.py:30-82` (priority: flag → env → command → git → CI → TTY → default)
 
 ## Available Commands
 
 | Command | Description | Options |
 |---------|-------------|---------|
-| `validate` | Run validation on files | `--staged`, `--all`, `[files...]` |
+| `validate` | Run validation on files | `--staged`, `--all`, `--fix`, `[files...]` |
 | `install` | Install HuskyCat and dependencies | `--dev`, `--global` |
 | `setup-hooks` | Setup git hooks for automatic validation | `--force` |
 | `update-schemas` | Update validation schemas from official sources | `--force` |
@@ -139,21 +175,23 @@ npm run dev -- [command]            # Python module via NPM
 ## Requirements
 
 ### Core Requirements
-- **Container Runtime**: Podman or Docker (required)
-- **Python 3.8+**: For binary build and NPM mode
+- **Python 3.8+**: For UV development mode and binary build
 - **UV package manager**: `pip install uv`
 - **Node.js and npm**: Build system
 
-### Optional Requirements  
+### Optional Requirements
+- **Container Runtime**: Podman or Docker (for container execution mode)
 - **PyInstaller + UPX**: Binary compression
 - **Git**: For hooks and staged file validation
 
-### Tool Availability
-| Component | Tools Available |
-|-----------|----------------|
-| **Container** |  Complete toolchain (Python + Node.js + Shell + Docker + Security) |
-| **Binary Entry Point** |  Fast startup, delegates to container |
-| **Repository** |  Read-only, isolated from validation tools |
+### Execution Model Requirements
+| Model | Python | UV | Container Runtime | Build Tools |
+|-------|--------|-----|-------------------|-------------|
+| **Binary** | Build only | No | Optional | PyInstaller |
+| **Container** | No | No | Required | Podman/Docker |
+| **UV Development** | Yes | Yes | Optional | npm |
+
+See [docs/installation.md](docs/installation.md) for detailed installation instructions.
 
 ## Installation
 
@@ -165,12 +203,17 @@ npm run dev -- [command]            # Python module via NPM
    npm run build:binary
    ```
 
-2. **Install Python dependencies**:
+2. **Install Python dependencies** (for UV development mode):
    ```bash
    uv sync --dev
    ```
 
-3. **Verify installation**:
+3. **Optional: Build container** (for container execution):
+   ```bash
+   npm run container:build
+   ```
+
+4. **Verify installation**:
    ```bash
    ./dist/huskycat --version
    ./dist/huskycat status
@@ -178,77 +221,136 @@ npm run dev -- [command]            # Python module via NPM
 
 ## Architecture Deep Dive
 
-### Container-Only Execution Flow
-HuskyCat enforces container-only validation for consistency and isolation:
+See [docs/architecture/](docs/architecture/) for comprehensive documentation with code references.
+
+### Execution Flow
+HuskyCat uses flexible execution routing based on available runtime:
 
 ```python
-# All commands flow through HuskyCatFactory -> Container
-factory = HuskyCatFactory(config_dir=~/.huskycat)
-result = factory.execute_command("validate", files=["src/"])
-# Automatically routes to container execution
+# unified_validation.py:85-170
+def is_available(self) -> bool:
+    """Check validator availability in current context"""
+    if self._is_running_in_container():
+        return tool_exists_locally()
+    else:
+        return container_runtime_exists()
+
+def _execute_command(self, cmd: List[str], **kwargs):
+    """Route execution: direct or container-delegated"""
+    if self._is_running_in_container():
+        return subprocess.run(cmd, **kwargs)
+    else:
+        container_cmd = self._build_container_command(cmd)
+        return subprocess.run(container_cmd, **kwargs)
 ```
 
-### Repository Safety & Binary Isolation
-- **Binary**: Lightweight entry point, configs stored in ~/.huskycat
-- **Container**: Complete toolchain, repository mounted read-only
-- **ValidationEngine**: Container-only execution, no local tool dependencies
-- **Safety**: Tools cannot modify repository files directly
+### Mode Detection Priority
+```python
+# mode_detector.py:30-82
+def detect_mode() -> ProductMode:
+    """Priority: flag → env → command → git → CI → TTY → default"""
+    if "--mode" in sys.argv:
+        return ProductMode(parse_flag())
+    if env_mode := os.getenv("HUSKYCAT_MODE"):
+        return ProductMode(env_mode)
+    if "mcp-server" in sys.argv:
+        return ProductMode.MCP
+    # ... continues through priority list
+```
+
+### Adapter Pattern
+Five mode-specific adapters in `src/huskycat/core/adapters/`:
+- `git_hooks.py` - Fast subset, minimal output
+- `ci.py` - JUnit XML, comprehensive tools
+- `cli.py` - Interactive, colored output
+- `pipeline.py` - JSON output, machine-readable
+- `mcp.py` - JSON-RPC 2.0, AI integration
+
+Factory pattern routes commands: `factory.py:1-200` → adapter selection
 
 ### MCP Server Protocol
 Uses stdio-based JSON-RPC 2.0 for Claude Code integration:
 ```json
 {"jsonrpc": "2.0", "method": "tools/call", "params": {
-  "name": "validate", 
+  "name": "validate",
   "arguments": {"path": "src/", "fix": false}
 }}
 ```
 
+**Implementation**: `mcp_server.py:1-150` - stdio transport with validation backend
+
 ### Performance Characteristics
-- **Binary Entry Point**: ~100ms startup, delegates to container
-- **NPM Scripts**: ~200ms startup (Python import overhead), delegates to container
+- **Binary Entry Point**: ~100ms startup
+- **NPM Scripts**: ~200ms startup (Python import overhead)
 - **Container Execution**: ~1-3s per validation (comprehensive tooling)
-- **MCP Server**: Persistent process, container-backed responses
+- **MCP Server**: Persistent process, sub-second responses
 
 ## Implementation Details
 
-### Critical Files for Container-Only Architecture:
-- `src/huskycat/__main__.py` - CLI entry point (binary-first)
-- `src/huskycat/core/factory.py` - Unified command factory
-- `src/huskycat/unified_validation.py` - Container-only validation engine
-- `src/huskycat/mcp_server.py` - MCP stdio server with container backend
-- `ContainerFile` - Complete toolchain container definition
+### Critical Files:
+- **Entry Points**:
+  - `huskycat_main.py:1-27` - Binary wrapper
+  - `src/huskycat/__main__.py:1-50` - CLI interface
+- **Core Architecture**:
+  - `src/huskycat/core/mode_detector.py:30-82` - Mode detection
+  - `src/huskycat/core/factory.py:1-200` - Command factory
+  - `src/huskycat/core/adapters/*.py` - Mode-specific adapters (5 files)
+- **Validation Engine**:
+  - `src/huskycat/unified_validation.py:85-170` - Execution routing
+- **Integration**:
+  - `src/huskycat/mcp_server.py:1-150` - MCP stdio server
+- **Distribution**:
+  - `ContainerFile:1-153` - Alpine multi-arch container
+  - `.gitlab-ci.yml:158-218` - Container builds
+  - `.gitlab-ci.yml:268-298` - Binary builds
 
 ### Current Status:
- **Container-Only Execution**: All validators use container execution  
- **Repository Isolation**: Read-only mounting, binary config separation  
- **Test Suite**: Some property-based tests have import issues  
- **Validation Strictness**: MyPy errors block git push (use --no-verify temporarily)  
+- **Execution Models**: Binary, Container, UV Development all operational
+- **Product Modes**: All 5 modes implemented with adapters (Sprint 0 complete)
+- **Multi-Arch Support**: amd64 and arm64 container builds passing
+- **Test Suite**: Unit tests passing, E2E tests operational
+- **CI Pipeline**: 22/22 jobs passing
 
 ## Documentation
 
-Visit [huskycat.pages.io](https://huskycat.pages.io) for complete documentation.
+Visit [docs/](docs/) for complete documentation:
+- [Architecture Overview](docs/architecture/)
+  - [Execution Models](docs/architecture/execution-models.md) - Binary, Container, UV modes
+  - [Product Modes](docs/architecture/product-modes.md) - 5 modes with code references
+- [Installation Guide](docs/installation.md)
+- [User Guide](docs/user-guide/)
+- [Development Guide](docs/development/)
 
-**For Developers**: See `/Users/jsullivan2/git/huskycats-bates/CLAUDE.md` for detailed architecture notes and `/Users/jsullivan2/git/huskycats-bates/ARCHITECTURE_GAPS.md` for implementation gap analysis.
+**For Developers**: See `CLAUDE.md` for Claude Code instructions and `docs/SPRINT_PLAN.md` for development roadmap.
 
 ## Quick Architecture Reference
 
-```mermaid  
+```mermaid
 sequenceDiagram
     participant U as User/Git Hook
     participant B as Binary
+    participant D as ModeDetector
     participant F as Factory
+    participant A as Adapter
     participant V as ValidationEngine
-    participant C as Container
-    
+    participant E as Executor (Direct or Container)
+
     U->>B: ./dist/huskycat validate --staged
+    B->>D: detect_mode()
+    D->>D: Priority: flag → env → git → TTY
+    D->>B: ProductMode.GIT_HOOKS
     B->>F: HuskyCatFactory.execute_command()
-    F->>V: ValidationEngine.validate_staged_files()
-    V->>C: Container execution (ONLY mode)
-    C->>C: Run black, flake8, mypy, ruff, etc.
-    C->>V: Return validation results
-    V->>F: CommandResult
-    F->>B: Formatted output
+    F->>A: GitHooksAdapter.validate()
+    A->>V: ValidationEngine.validate_staged_files()
+    V->>V: Check execution context
+    V->>E: Direct OR Container-delegated
+    E->>E: Run black, ruff, mypy (fast subset)
+    E->>V: Return validation results
+    V->>A: ValidationResult
+    A->>F: Format output (minimal, fail-fast)
+    F->>B: CommandResult
     B->>U: Exit code + messages
-    
-    Note over B,C: Container-only execution for consistency
+
+    Note over D,A: Mode-specific adapter selected
+    Note over V,E: Execution routing based on context
 ```
