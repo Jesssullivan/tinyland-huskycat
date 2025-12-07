@@ -161,7 +161,8 @@ container:build:amd64:
     PLATFORM: linux/amd64
     ARCH: amd64
   script:
-    - buildah build --platform=$PLATFORM -f ContainerFile -t $CONTAINER_REGISTRY:$CONTAINER_TAG-$ARCH .
+    - echo "Building container for $PLATFORM with layer caching..."
+    - buildah build --platform=$PLATFORM --layers -f ContainerFile -t $CONTAINER_REGISTRY:$CONTAINER_TAG-$ARCH .
     - buildah push $CONTAINER_REGISTRY:$CONTAINER_TAG-$ARCH
   artifacts:
     reports:
@@ -177,7 +178,8 @@ container:build:arm64:
     PLATFORM: linux/arm64
     ARCH: arm64
   script:
-    - buildah build --platform=$PLATFORM -f ContainerFile -t $CONTAINER_REGISTRY:$CONTAINER_TAG-$ARCH .
+    - echo "Building container for $PLATFORM with layer caching..."
+    - buildah build --platform=$PLATFORM --layers -f ContainerFile -t $CONTAINER_REGISTRY:$CONTAINER_TAG-$ARCH .
     - buildah push $CONTAINER_REGISTRY:$CONTAINER_TAG-$ARCH
   artifacts:
     reports:
