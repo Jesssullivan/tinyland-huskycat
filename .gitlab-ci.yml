@@ -31,19 +31,7 @@ variables:
   SAST_EXCLUDED_PATHS: 'spec, test, tests, tmp, .cache, .hypothesis'
   DS_EXCLUDED_PATHS: 'spec, test, tests, tmp, .cache, .hypothesis'
 
-# Global cache configuration
-.cache_template: &cache_template
-  cache:
-    key:
-      files:
-        - pyproject.toml
-        - uv.lock
-      prefix: $CI_JOB_NAME
-    paths:
-      - .cache/uv
-      - .cache/pip
-      - .venv/
-    policy: pull-push
+# Global cache configuration - inline for package:python job
 
 .uv_setup: &uv_setup
   before_script:
@@ -250,7 +238,17 @@ package:python:
   stage: package
   image: python:3.11-alpine
   <<: *uv_setup
-  <<: *cache_template
+  cache:
+    key:
+      files:
+        - pyproject.toml
+        - uv.lock
+      prefix: $CI_JOB_NAME
+    paths:
+      - .cache/uv
+      - .cache/pip
+      - .venv/
+    policy: pull-push
   script:
     - uv sync --dev
     - uv build

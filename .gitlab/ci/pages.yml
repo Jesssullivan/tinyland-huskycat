@@ -61,7 +61,7 @@ pages:
         <p>Binary releases and installation scripts for HuskyCat.</p>
 
         <h2>Quick Install</h2>
-        <div class="install-cmd">curl -sSL https://huskycat.pages.io/install.sh | bash</div>
+        <div class="install-cmd">curl -sSL https://tinyland.gitlab.io/ai/huskycat/install.sh | bash</div>
 
         <h2>Binary Releases</h2>
         <ul class="downloads">
@@ -97,7 +97,7 @@ pages:
       fi
 
       BINARY_NAME="huskycat-${OS}-${ARCH}"
-      DOWNLOAD_URL="https://huskycat.pages.io/downloads/${BINARY_NAME}"
+      DOWNLOAD_URL="https://tinyland.gitlab.io/ai/huskycat/downloads/${BINARY_NAME}"
 
       # Download binary
       echo "Downloading $BINARY_NAME..."
@@ -128,4 +128,4 @@ pages:
 
   environment:
     name: production
-    url: https://huskycat.pages.io
+    url: https://tinyland.gitlab.io/ai/huskycat

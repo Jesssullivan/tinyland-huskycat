@@ -396,22 +396,23 @@ validate:artifacts:
       echo "Verifying GitLab Pages deployment..."
       PAGES_URL="https://tinyland.gitlab.io/ai/huskycat"
 
-      if curl -s -o /dev/null -w "%{http_code}" "$PAGES_URL" | grep -q "200\|301\|302"; then
+      HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$PAGES_URL")
+      if echo "$HTTP_CODE" | grep -q "200\|301\|302"; then
         echo "✅ GitLab Pages accessible"
       else
-        echo "❌ GitLab Pages not accessible"
+        echo "❌ GitLab Pages not accessible (HTTP $HTTP_CODE)"
         exit 1
       fi
 
     # Check downloadable artifacts
     - |
       echo "Verifying downloadable artifacts..."
-      ARTIFACTS=(
-        "$PAGES_URL/downloads/"
-        "$PAGES_URL/install.sh"
-      )
+      ARTIFACTS="
+        $PAGES_URL/downloads/
+        $PAGES_URL/install.sh
+      "
 
-      for artifact in "${ARTIFACTS[@]}"; do
+      for artifact in $ARTIFACTS; do
         echo "Checking $artifact..."
         curl -s -o /dev/null -w "%{http_code}" "$artifact" || true
       done
