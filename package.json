@@ -2,7 +2,7 @@
   "name": "huskycat",
   "version": "2.0.0",
   "private": true,
-  "description": "Container-Only Universal Code Validation Platform with MCP Server",
+  "description": "Universal Code Validation Platform with Multi-Mode Execution and MCP Server Integration",
   "scripts": {
     "postinstall": "git config core.hooksPath .githooks || true",
     "dev": "uv run python3 -m src.huskycat",
