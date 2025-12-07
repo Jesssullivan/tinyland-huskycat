@@ -107,10 +107,11 @@ class TestBootstrapGitOps:
             f"Bootstrap failed:\nstdout: {result.stdout}\nstderr: {result.stderr}"
         )
 
-        # Verify output mentions GitOps repository
+        # Verify output mentions GitOps repository (check stderr for CI mode logs)
+        combined_output = result.stdout + result.stderr
         assert (
-            "GitOps" in result.stdout or "gitops" in result.stdout.lower()
-        ), f"Output should mention GitOps: {result.stdout}"
+            "GitOps" in combined_output or "gitops" in combined_output.lower()
+        ), f"Output should mention GitOps:\nstdout: {result.stdout}\nstderr: {result.stderr}"
 
         # Verify hooks installed
         hooks_dir = repo / ".git" / "hooks"
@@ -123,8 +124,9 @@ class TestBootstrapGitOps:
             hook_path = hooks_dir / hook
             assert hook_path.stat().st_mode & 0o111, f"{hook} not executable"
 
-        # Verify detected features are mentioned in output
-        output_lower = result.stdout.lower()
+        # Verify detected features are mentioned in output (check combined output for CI mode)
+        combined_output = result.stdout + result.stderr
+        output_lower = combined_output.lower()
         assert "gitlab ci" in output_lower or "gitlab-ci" in output_lower
         assert "helm" in output_lower
         assert "kubernetes" in output_lower or "k8s" in output_lower
@@ -155,8 +157,9 @@ class TestBootstrapGitOps:
         # Assert success
         assert result.returncode == 0, f"Bootstrap failed: {result.stderr}"
 
-        # Verify GitOps detected
-        output_lower = result.stdout.lower()
+        # Verify GitOps detected (check combined output for CI mode)
+        combined_output = result.stdout + result.stderr
+        output_lower = combined_output.lower()
         assert "gitops" in output_lower or "helm" in output_lower
 
         # Verify Terraform NOT detected
@@ -185,7 +188,8 @@ class TestBootstrapGitOps:
 
         assert result.returncode == 0, f"Bootstrap failed: {result.stderr}"
 
-        output_lower = result.stdout.lower()
+        combined_output = result.stdout + result.stderr
+        output_lower = combined_output.lower()
         assert "gitops" in output_lower or "kubernetes" in output_lower or "k8s" in output_lower
 
         # Cleanup
@@ -239,8 +243,9 @@ class TestBootstrapGitOps:
         assert (hooks_dir / "pre-push").exists()
         assert (hooks_dir / "commit-msg").exists()
 
-        # Should NOT mention GitOps (not a GitOps repo)
-        output_lower = result.stdout.lower()
+        # Should NOT mention GitOps (not a GitOps repo) - check combined output for CI mode
+        combined_output = result.stdout + result.stderr
+        output_lower = combined_output.lower()
         # Allow "gitops" in context of "no gitops detected" messages
         if "gitops" in output_lower:
             assert (
