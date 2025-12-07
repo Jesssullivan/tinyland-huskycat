@@ -21,7 +21,7 @@ test:e2e:bootstrap:gitops:
   variables:
     PYTHONPATH: "$CI_PROJECT_DIR/src"
   script:
-    - echo "=== E2E Test: Bootstrap on GitOps Repository ==="
+    - 'echo "=== E2E Test: Bootstrap on GitOps Repository ==="'
     - uv sync --dev
     - uv run pytest tests/e2e/test_bootstrap_gitops.py::TestBootstrapGitOps::test_bootstrap_full_gitops_repo -v -s
   artifacts:
@@ -43,7 +43,7 @@ test:e2e:bootstrap:types:
   variables:
     PYTHONPATH: "$CI_PROJECT_DIR/src"
   script:
-    - echo "=== E2E Test: Bootstrap on Different Repository Types ==="
+    - 'echo "=== E2E Test: Bootstrap on Different Repository Types ==="'
     - uv sync --dev
     - uv run pytest tests/e2e/test_bootstrap_gitops.py::TestBootstrapGitOps::test_bootstrap_helm_only_repo -v -s
     - uv run pytest tests/e2e/test_bootstrap_gitops.py::TestBootstrapGitOps::test_bootstrap_k8s_only_repo -v -s
@@ -67,7 +67,7 @@ test:e2e:hooks:execution:
   variables:
     PYTHONPATH: "$CI_PROJECT_DIR/src"
   script:
-    - echo "=== E2E Test: Hook Execution ==="
+    - 'echo "=== E2E Test: Hook Execution ==="'
     - uv sync --dev
     # Test valid cases
     - uv run pytest tests/e2e/test_bootstrap_gitops.py::TestBootstrapGitOps::test_hook_execution_pre_commit_valid -v -s
@@ -94,7 +94,7 @@ test:e2e:fast:mode:
   variables:
     PYTHONPATH: "$CI_PROJECT_DIR/src"
   script:
-    - echo "=== E2E Test: Fast Mode in Hooks ==="
+    - 'echo "=== E2E Test: Fast Mode in Hooks ==="'
     - uv sync --dev
     - uv run pytest tests/e2e/test_bootstrap_gitops.py::TestBootstrapGitOps::test_gitops_fast_mode_in_hooks -v -s
     - uv run pytest tests/e2e/test_bootstrap_gitops.py::TestBootstrapGitOps::test_gitlab_ci_validation_in_hooks -v -s
@@ -117,7 +117,7 @@ test:e2e:edge:cases:
   variables:
     PYTHONPATH: "$CI_PROJECT_DIR/src"
   script:
-    - echo "=== E2E Test: Edge Cases ==="
+    - 'echo "=== E2E Test: Edge Cases ==="'
     - uv sync --dev
     - uv run pytest tests/e2e/test_bootstrap_gitops.py::TestBootstrapEdgeCases::test_bootstrap_non_git_directory -v -s
     - uv run pytest tests/e2e/test_bootstrap_gitops.py::TestBootstrapEdgeCases::test_bootstrap_empty_git_repo -v -s
@@ -143,7 +143,7 @@ test:e2e:binary:integration:
     - git config --global user.name "CI Test"
     - git config --global user.email "ci@test.com"
   script:
-    - echo "=== E2E Test: Binary Integration ==="
+    - 'echo "=== E2E Test: Binary Integration ==="'
     # Install binary
     - mkdir -p ~/.local/bin
     - cp dist/bin/huskycat-linux-amd64 ~/.local/bin/huskycat
@@ -170,7 +170,7 @@ test:e2e:binary:integration:
     - test -f .git/hooks/pre-push || exit 1
     - test -f .git/hooks/commit-msg || exit 1
     - test -x .git/hooks/pre-commit || exit 1
-    - echo "✅ Binary bootstrap test passed!"
+    - 'echo "✅ Binary bootstrap test passed!"'
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
     - if: $CI_COMMIT_TAG
@@ -185,7 +185,7 @@ test:e2e:comprehensive:
   variables:
     PYTHONPATH: "$CI_PROJECT_DIR/src"
   script:
-    - echo "=== E2E Test: Comprehensive Test Suite ==="
+    - 'echo "=== E2E Test: Comprehensive Test Suite ==="'
     - uv sync --dev
     - uv run pytest tests/e2e/ -v -s --tb=short
   coverage: '/TOTAL.*\s+(\d+)%/'
