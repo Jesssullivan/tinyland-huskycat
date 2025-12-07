@@ -1,5 +1,6 @@
 """E2E tests for HuskyCat bootstrap on GitOps repositories."""
 
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -60,24 +61,26 @@ class TestBootstrapGitOps:
                 "-m",
                 "src.huskycat",
             ] + args
+            # Copy existing environment and update with our custom variables
+            env = os.environ.copy()
+            env["PYTHONPATH"] = str(project_root / "src")
             return subprocess.run(
                 cmd,
                 cwd=cwd,
                 capture_output=True,
                 text=True,
                 check=check,
-                env={"PYTHONPATH": str(project_root / "src")},
+                env=env,
             )
-        else:
-            # Binary mode
-            cmd = [str(huskycat_exec)] + args
-            return subprocess.run(
-                cmd,
-                cwd=cwd,
-                capture_output=True,
-                text=True,
-                check=check,
-            )
+        # Binary mode
+        cmd = [str(huskycat_exec)] + args
+        return subprocess.run(
+            cmd,
+            cwd=cwd,
+            capture_output=True,
+            text=True,
+            check=check,
+        )
 
     def test_bootstrap_full_gitops_repo(
         self,
@@ -274,7 +277,7 @@ def hello() -> str:
         # Try to commit (should succeed)
         result = subprocess.run(
             ["git", "commit", "-m", "feat: add test file"],
-            cwd=repo,
+            check=False, cwd=repo,
             capture_output=True,
             text=True,
         )
@@ -308,7 +311,7 @@ def hello() -> str:
         # Try to commit (should fail)
         result = subprocess.run(
             ["git", "commit", "-m", "feat: add bad file"],
-            cwd=repo,
+            check=False, cwd=repo,
             capture_output=True,
             text=True,
         )
@@ -342,7 +345,7 @@ def hello() -> str:
         # Try to commit with invalid message format
         result = subprocess.run(
             ["git", "commit", "-m", "Added new file"],  # Invalid format
-            cwd=repo,
+            check=False, cwd=repo,
             capture_output=True,
             text=True,
         )
@@ -376,7 +379,7 @@ def hello() -> str:
         # Try to commit with valid message format
         result = subprocess.run(
             ["git", "commit", "-m", "feat: add test file"],  # Valid format
-            cwd=repo,
+            check=False, cwd=repo,
             capture_output=True,
             text=True,
         )
@@ -500,23 +503,25 @@ class TestBootstrapEdgeCases:
         if huskycat_exec.name == "UV_RUN_MODE":
             project_root = Path(__file__).parent.parent.parent
             cmd = ["uv", "run", "python", "-m", "src.huskycat"] + args
+            # Copy existing environment and update with our custom variables
+            env = os.environ.copy()
+            env["PYTHONPATH"] = str(project_root / "src")
             return subprocess.run(
                 cmd,
                 cwd=cwd,
                 capture_output=True,
                 text=True,
                 check=check,
-                env={"PYTHONPATH": str(project_root / "src")},
+                env=env,
             )
-        else:
-            cmd = [str(huskycat_exec)] + args
-            return subprocess.run(
-                cmd,
-                cwd=cwd,
-                capture_output=True,
-                text=True,
-                check=check,
-            )
+        cmd = [str(huskycat_exec)] + args
+        return subprocess.run(
+            cmd,
+            cwd=cwd,
+            capture_output=True,
+            text=True,
+            check=check,
+        )
 
     def test_bootstrap_non_git_directory(
         self,
