@@ -6,6 +6,7 @@ include:
   - template: Security/Dependency-Scanning.gitlab-ci.yml
   - local: '/.gitlab/ci/scheduled-updates.yml'
   - local: '/.gitlab/ci/pages.yml'
+  - local: '/.gitlab/ci/e2e-tests.yml'
 
 stages:
   - validate

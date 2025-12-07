@@ -170,6 +170,12 @@ def create_parser() -> argparse.ArgumentParser:
         dest="strict_mode",
         help="Enable strict validation mode",
     )
+    autodevops_parser.add_argument(
+        "--fast",
+        action="store_true",
+        dest="fast_mode",
+        help="Fast mode for git hooks (skip slow operations like helm template, kubectl --dry-run)",
+    )
 
     # MCP server command (stdio mode only)
     subparsers.add_parser(

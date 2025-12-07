@@ -1,17 +1,26 @@
 """
-Bootstrap command for Claude Code integration.
-Non-destructively sets up .mcp.json and .claude/ configuration.
+Bootstrap command for HuskyCat integration.
+
+Supports two bootstrap modes:
+1. Git Hooks Bootstrap: Sets up git hooks for code validation (default)
+2. MCP Bootstrap: Sets up Claude Code MCP integration (with --mcp flag)
+
+The command auto-detects repository type and configures appropriate validations.
 """
 
 import json
+import logging
 from pathlib import Path
 from typing import Dict, Any
 
 from ..core.base import BaseCommand, CommandResult, CommandStatus
+from ..core.hook_generator import HookGenerator
+
+logger = logging.getLogger(__name__)
 
 
 class BootstrapCommand(BaseCommand):
-    """Command to bootstrap Claude Code MCP integration."""
+    """Command to bootstrap HuskyCat (Git Hooks or MCP integration)."""
 
     @property
     def name(self) -> str:
@@ -19,17 +28,157 @@ class BootstrapCommand(BaseCommand):
 
     @property
     def description(self) -> str:
-        return "Bootstrap Claude Code MCP integration"
+        return "Bootstrap HuskyCat with git hooks and GitOps validation"
 
-    def execute(self, force: bool = False) -> CommandResult:
+    def execute(
+        self,
+        force: bool = False,
+        mcp: bool = False,
+        skip_install: bool = False,
+    ) -> CommandResult:
         """
-        Bootstrap Claude Code integration files.
+        Bootstrap HuskyCat for repository.
 
         Args:
             force: Overwrite existing configuration files
+            mcp: Bootstrap MCP integration instead of git hooks
+            skip_install: Skip binary installation (hooks only)
 
         Returns:
             CommandResult with bootstrap status
+        """
+        # Choose bootstrap mode
+        if mcp:
+            return self._bootstrap_mcp_integration(force)
+        else:
+            return self._bootstrap_gitops_hooks(force, skip_install)
+    def _bootstrap_gitops_hooks(
+        self, force: bool, skip_install: bool
+    ) -> CommandResult:
+        """Bootstrap git hooks and GitOps validation.
+
+        Args:
+            force: Force overwrite existing hooks
+            skip_install: Skip binary installation
+
+        Returns:
+            CommandResult
+        """
+        logger.info("🚀 Bootstrapping HuskyCat...")
+
+        repo_path = Path.cwd()
+
+        # Step 1: Check if in git repository
+        if not (repo_path / ".git").exists():
+            return CommandResult(
+                status=CommandStatus.FAILED,
+                message="Not a git repository",
+                errors=[
+                    "Current directory is not a git repository",
+                    "Hint: Run 'git init' first",
+                ],
+            )
+
+        # Step 2: Detect repository type
+        logger.info("Step 1: Analyzing repository...")
+        generator = HookGenerator(repo_path)
+        repo_info = generator.detect_repo_type()
+        is_gitops = repo_info["gitops"]
+
+        # Report findings
+        features = []
+        if repo_info["gitlab_ci"]:
+            features.append("GitLab CI")
+        if repo_info["github_actions"]:
+            features.append("GitHub Actions")
+        if repo_info["helm_chart"]:
+            features.append("Helm")
+        if repo_info["k8s_manifests"]:
+            features.append("Kubernetes")
+        if repo_info["terraform"]:
+            features.append("Terraform")
+        if repo_info["ansible"]:
+            features.append("Ansible")
+
+        logger.info("Repository type detection:")
+        if features:
+            logger.info(f"  Detected: {', '.join(features)}")
+        else:
+            logger.info("  No special features detected (standard code repo)")
+
+        if is_gitops:
+            logger.info("  🎯 GitOps repository - enabling IaC validation!")
+
+        # Step 3: Install git hooks
+        logger.info("Step 2: Setting up git hooks...")
+
+        try:
+            count = generator.install_all_hooks(force=force)
+        except Exception as e:
+            return CommandResult(
+                status=CommandStatus.FAILED,
+                message=f"Failed to install hooks: {e}",
+                errors=[str(e)],
+            )
+
+        if count == 0:
+            return CommandResult(
+                status=CommandStatus.WARNING,
+                message="No hooks were installed (use --force to overwrite)",
+                warnings=["Hooks may already exist - use --force to regenerate"],
+            )
+
+        # Step 4: Success message
+        logger.info("")
+        logger.info("✅ Bootstrap complete!")
+        logger.info("")
+        logger.info("HuskyCat is now configured for:")
+
+        if repo_info["gitlab_ci"]:
+            logger.info("  ✓ GitLab CI validation (pre-push)")
+        if is_gitops:
+            logger.info("  ✓ Auto-DevOps validation (pre-push)")
+            if repo_info["helm_chart"]:
+                logger.info("    - Helm chart validation")
+            if repo_info["k8s_manifests"]:
+                logger.info("    - Kubernetes manifest validation")
+        if repo_info["terraform"]:
+            logger.info("  ✓ Terraform formatting (pre-commit)")
+        if repo_info["ansible"]:
+            logger.info("  ✓ Ansible linting (pre-commit)")
+
+        logger.info("")
+        logger.info("Try it out:")
+        logger.info("  git add . && git commit -m 'test: HuskyCat validation'")
+
+        # Build warnings
+        warnings = []
+        if not generator.binary_path:
+            warnings.append("Binary not detected - hooks will use UV fallback")
+            warnings.append("For best performance, install binary: huskycat install")
+
+        status = CommandStatus.WARNING if warnings else CommandStatus.SUCCESS
+
+        return CommandResult(
+            status=status,
+            message=f"✅ Bootstrap complete ({count} hooks installed)",
+            warnings=warnings if warnings else None,
+            data={
+                "hooks_installed": count,
+                "binary_path": str(generator.binary_path) if generator.binary_path else None,
+                "gitops_enabled": is_gitops,
+                "features_detected": features,
+            },
+        )
+
+    def _bootstrap_mcp_integration(self, force: bool) -> CommandResult:
+        """Bootstrap MCP integration for Claude Code.
+
+        Args:
+            force: Force overwrite existing configuration
+
+        Returns:
+            CommandResult
         """
         try:
             results = []
@@ -60,7 +209,7 @@ class BootstrapCommand(BaseCommand):
                 status=status,
                 message=message,
                 warnings=warnings,
-                data={"results": results},
+                data={"results": results, "mode": "mcp"},
             )
 
         except Exception as e:
