@@ -197,7 +197,7 @@ build:binary:darwin-arm64:
 
 # Binary size verification job
 verify:binary-size:
-  stage: test
+  stage: package
   image: alpine:latest
   needs:
     - job: build:binary:linux-amd64

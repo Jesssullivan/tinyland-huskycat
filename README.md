@@ -263,6 +263,38 @@ npm run build:fat
 ./dist/huskycat status
 ```
 
+#### Option C: Development Setup (HuskyCat Contributors)
+
+This repository dogfoods HuskyCat's own validation using tracked git hooks:
+
+```bash
+# 1. Clone and setup
+git clone https://gitlab.com/jsullivan2/huskycats-bates.git
+cd huskycats-bates
+uv sync --dev
+
+# 2. Verify hooks are configured
+git config --local --get core.hooksPath
+# Should output: .githooks
+
+# 3. Enable non-blocking mode (optional, recommended)
+git config --local huskycat.nonblocking true
+
+# 4. Test hooks with a commit
+echo "# test" >> README.md
+git add README.md
+git commit -m "test: verify hooks work"
+# Should see: ⚡ Non-blocking validation mode enabled
+# Should see: 🚀 Launching background validation...
+# Commit proceeds immediately, validation runs in background
+```
+
+See [docs/dogfooding.md](docs/dogfooding.md) for detailed information on:
+- Switching between tracked hooks and binary hooks
+- Troubleshooting non-blocking mode
+- Testing workflows
+- Architecture details
+
 ### 2. Enable Non-Blocking Git Hooks
 
 Add to `.huskycat.yaml`:

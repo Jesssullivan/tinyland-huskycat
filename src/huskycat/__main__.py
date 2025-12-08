@@ -10,6 +10,7 @@ HuskyCat operates in 5 distinct product modes:
 """
 
 import sys
+import os
 import argparse
 from pathlib import Path
 
@@ -226,7 +227,10 @@ def main() -> int:
         mode_override = "pipeline"
 
     mode = detect_mode(override=mode_override)
-    adapter = get_adapter(mode)
+
+    # Check for non-blocking hooks feature flag
+    use_nonblocking = os.environ.get('HUSKYCAT_NONBLOCKING', '0') == '1'
+    adapter = get_adapter(mode, use_nonblocking=use_nonblocking)
 
     # Log mode detection in verbose mode
     verbose = getattr(args, "verbose", False)
