@@ -6,18 +6,13 @@ pages:
   before_script:
     # Install mkdocs and dependencies
     - pip install --no-cache-dir mkdocs mkdocs-material mkdocs-mermaid2-plugin pyyaml
-    # Create public directory for pages
-    - mkdir -p public
   script:
-    # Build documentation
-    - mkdocs build --site-dir site
+    # Build documentation directly to public directory
+    - mkdocs build --site-dir public
 
     # Generate LLM-friendly documentation formats
     - echo "Generating LLM-friendly documentation formats..."
     - python scripts/generate-llms-docs.py
-
-    # Move site to public for Pages deployment
-    - mv site public
 
     # Create downloads directory
     - mkdir -p public/downloads
