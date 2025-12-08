@@ -1164,14 +1164,14 @@ For Darwin code signing, configure these in GitLab CI/CD settings:
 
 ## Implementation Checklist
 
-### Sprint 0 (Architecture Foundation)
-- [ ] Create `ProductMode` enum in `src/huskycat/core/mode_detector.py`
-- [ ] Implement `detect_mode()` function
-- [ ] Create base `ModeAdapter` abstract class
-- [ ] Create adapter interfaces for all five modes
-- [ ] Wire mode detection into `__main__.py` entry point
-- [ ] Add `HUSKYCAT_MODE` environment variable override
-- [ ] Add unit tests for mode detection
+### Sprint 0 (Architecture Foundation) - COMPLETE
+- [x] Create `ProductMode` enum in `src/huskycat/core/mode_detector.py` (line 30-82)
+- [x] Implement `detect_mode()` function (mode_detector.py:30-82)
+- [x] Create base `ModeAdapter` abstract class (core/adapters/base.py:1-333)
+- [x] Create adapter interfaces for all five modes (core/adapters/*.py - 5 files)
+- [x] Wire mode detection into `__main__.py` entry point (__main__.py:1-50)
+- [x] Add `HUSKYCAT_MODE` environment variable override (mode_detector.py:35-37)
+- [x] Add unit tests for mode detection (tests/test_mode_detection.py)
 
 ### Sprint 1 (Critical Fixes)
 - [ ] Fix pyproject.toml entry point
