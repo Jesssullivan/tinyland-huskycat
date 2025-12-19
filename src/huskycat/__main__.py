@@ -212,6 +212,7 @@ def main() -> int:
     """Main entry point for HuskyCat CLI."""
     # Ensure embedded tools are available (for fat binary)
     from .core.tool_extractor import ensure_tools
+
     ensure_tools()
 
     parser = create_parser()
@@ -229,7 +230,7 @@ def main() -> int:
     mode = detect_mode(override=mode_override)
 
     # Check for non-blocking hooks feature flag
-    use_nonblocking = os.environ.get('HUSKYCAT_NONBLOCKING', '0') == '1'
+    use_nonblocking = os.environ.get("HUSKYCAT_NONBLOCKING", "0") == "1"
     adapter = get_adapter(mode, use_nonblocking=use_nonblocking)
 
     # Log mode detection in verbose mode

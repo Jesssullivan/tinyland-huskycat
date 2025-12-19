@@ -94,7 +94,11 @@ class Validator(ABC):
         if mode == "bundled":
             # Check extracted tools directory
             tool_path = self._get_bundled_tool_path()
-            return tool_path is not None and tool_path.exists() and os.access(tool_path, os.X_OK)
+            return (
+                tool_path is not None
+                and tool_path.exists()
+                and os.access(tool_path, os.X_OK)
+            )
 
         if mode == "local":
             # Check PATH for local tools
@@ -126,7 +130,7 @@ class Validator(ABC):
             return "container"
 
         # Check if running from PyInstaller bundle
-        if getattr(sys, 'frozen', False):
+        if getattr(sys, "frozen", False):
             # PyInstaller bundle - check if tools were extracted
             bundled_path = Path.home() / ".huskycat" / "tools"
             if bundled_path.exists():
@@ -213,7 +217,9 @@ class Validator(ABC):
         container_cmd = self._build_container_command(cmd)
         return subprocess.run(container_cmd, **kwargs)
 
-    def _execute_bundled(self, cmd: List[str], **kwargs: Any) -> subprocess.CompletedProcess:
+    def _execute_bundled(
+        self, cmd: List[str], **kwargs: Any
+    ) -> subprocess.CompletedProcess:
         """Execute using bundled tools
 
         Args:
@@ -233,7 +239,9 @@ class Validator(ABC):
 
         return subprocess.run(bundled_cmd, **kwargs)
 
-    def _execute_local(self, cmd: List[str], **kwargs: Any) -> subprocess.CompletedProcess:
+    def _execute_local(
+        self, cmd: List[str], **kwargs: Any
+    ) -> subprocess.CompletedProcess:
         """Execute using local tools in PATH
 
         Args:

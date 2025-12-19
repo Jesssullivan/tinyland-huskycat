@@ -131,7 +131,9 @@ class NonBlockingGitHooksAdapter(ModeAdapter):
         # The commit proceeds while validation runs in background
         return pid
 
-    def _run_validation_child_wrapper(self, files: List[str], tools: Dict[str, Callable]):
+    def _run_validation_child_wrapper(
+        self, files: List[str], tools: Dict[str, Callable]
+    ):
         """
         Wrapper to bridge ProcessManager's string command interface to our method.
 
@@ -171,7 +173,9 @@ class NonBlockingGitHooksAdapter(ModeAdapter):
         print("-" * 60)
 
         # Progress callback for ParallelExecutor
-        def on_progress(tool_name: str, status: str, errors: int = 0, warnings: int = 0):
+        def on_progress(
+            tool_name: str, status: str, errors: int = 0, warnings: int = 0
+        ):
             """Update TUI when tool status changes."""
             # Map status string to ToolState enum
             status_map = {
@@ -309,7 +313,9 @@ class NonBlockingGitHooksAdapter(ModeAdapter):
             tools.update(
                 {
                     "yamllint": lambda: self._placeholder_tool("yamllint", yaml_files),
-                    "gitlab-ci": lambda: self._placeholder_tool("gitlab-ci", yaml_files),
+                    "gitlab-ci": lambda: self._placeholder_tool(
+                        "gitlab-ci", yaml_files
+                    ),
                 }
             )
 
@@ -327,7 +333,9 @@ class NonBlockingGitHooksAdapter(ModeAdapter):
 
         # Chapel tools
         if any(f.endswith(".chpl") for f in files):
-            tools["chapel-format"] = lambda: self._placeholder_tool("chapel-format", files)
+            tools["chapel-format"] = lambda: self._placeholder_tool(
+                "chapel-format", files
+            )
 
         return tools
 

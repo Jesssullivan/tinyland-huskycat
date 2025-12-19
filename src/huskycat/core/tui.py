@@ -177,7 +177,11 @@ class ValidationTUI:
             if state == ToolState.RUNNING and tool.state == ToolState.PENDING:
                 tool.start()
             elif state in (ToolState.SUCCESS, ToolState.FAILED):
-                tool.complete(success=(state == ToolState.SUCCESS), errors=errors, warnings=warnings)
+                tool.complete(
+                    success=(state == ToolState.SUCCESS),
+                    errors=errors,
+                    warnings=warnings,
+                )
             else:
                 tool.state = state
 
@@ -248,8 +252,12 @@ class ValidationTUI:
                     tool.update_duration()
 
                 status_text = self._format_status(tool.state)
-                time_text = self._format_time(tool.duration) if tool.duration > 0 else "-"
-                errors_text = str(tool.errors) if tool.state != ToolState.PENDING else "-"
+                time_text = (
+                    self._format_time(tool.duration) if tool.duration > 0 else "-"
+                )
+                errors_text = (
+                    str(tool.errors) if tool.state != ToolState.PENDING else "-"
+                )
                 warnings_text = (
                     str(tool.warnings) if tool.state != ToolState.PENDING else "-"
                 )
@@ -398,6 +406,7 @@ def validation_tui(tool_names: List[str], refresh_rate: float = 0.1):
 
 
 # Utility functions for integration
+
 
 def is_tty_available() -> bool:
     """

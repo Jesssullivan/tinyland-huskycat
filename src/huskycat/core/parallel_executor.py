@@ -123,9 +123,7 @@ class ParallelExecutor:
         for tool, deps in self.dependencies.items():
             for dep in deps:
                 if dep not in self.dependencies:
-                    raise ValueError(
-                        f"Tool '{tool}' depends on unknown tool '{dep}'"
-                    )
+                    raise ValueError(f"Tool '{tool}' depends on unknown tool '{dep}'")
                 graph.add_edge(dep, tool)  # dep must run before tool
 
         # Verify no circular dependencies
@@ -379,9 +377,7 @@ class ParallelExecutor:
                 )
 
             # Execute tools within level in parallel
-            level_results = self._execute_level(
-                tools_to_run, tools, progress_callback
-            )
+            level_results = self._execute_level(tools_to_run, tools, progress_callback)
             all_results.extend(level_results)
 
             # Track failures for dependency skipping
@@ -467,7 +463,5 @@ class ParallelExecutor:
             ),
             "sequential_time_estimate": len(self.dependencies) * self.timeout_per_tool,
             "parallel_time_estimate": len(levels) * self.timeout_per_tool,
-            "speedup_factor": (
-                len(self.dependencies) / len(levels) if levels else 1.0
-            ),
+            "speedup_factor": (len(self.dependencies) / len(levels) if levels else 1.0),
         }

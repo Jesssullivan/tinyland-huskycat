@@ -66,7 +66,11 @@ class HookGenerator:
         # Priority 3: Check PATH for huskycat command
         try:
             which_result = subprocess.run(
-                ["which", "huskycat"], capture_output=True, text=True, check=False, timeout=5
+                ["which", "huskycat"],
+                capture_output=True,
+                text=True,
+                check=False,
+                timeout=5,
             )
             if which_result.returncode == 0:
                 binary_path = Path(which_result.stdout.strip())

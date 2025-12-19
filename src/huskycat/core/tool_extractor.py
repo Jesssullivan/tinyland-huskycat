@@ -196,7 +196,10 @@ class ToolExtractor:
             return tools
 
         for tool_file in self.cache_dir.glob("*"):
-            if tool_file.is_file() and tool_file.name not in (".version", "versions.txt"):
+            if tool_file.is_file() and tool_file.name not in (
+                ".version",
+                "versions.txt",
+            ):
                 tools[tool_file.name] = tool_file
 
         return tools
