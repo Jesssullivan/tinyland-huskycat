@@ -79,7 +79,8 @@ TOOL_URLS: Dict[str, Dict[str, tuple]] = {
             None,
         ),
         "darwin-arm64": (
-            "https://github.com/hadolint/hadolint/releases/download/v2.12.0/hadolint-Darwin-arm64",
+            # No native ARM64 build in v2.12.0, use x86_64 (runs via Rosetta 2)
+            "https://github.com/hadolint/hadolint/releases/download/v2.12.0/hadolint-Darwin-x86_64",
             None,
         ),
     },
