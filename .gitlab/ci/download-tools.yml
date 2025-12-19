@@ -14,8 +14,8 @@
   script:
     - echo "Downloading tools for ${PLATFORM}"
     - python3 scripts/download_tools.py --platform ${PLATFORM} --output-dir ${OUTPUT_DIR}
-    - ls -lah ${OUTPUT_DIR}
-    - cat ${OUTPUT_DIR}/versions.txt
+    - ls -lah ${OUTPUT_DIR}/${PLATFORM}
+    - cat ${OUTPUT_DIR}/${PLATFORM}/versions.txt
   artifacts:
     paths:
       - ${OUTPUT_DIR}
@@ -36,28 +36,28 @@ download:tools:linux-amd64:
   <<: *download_tools_template
   variables:
     PLATFORM: linux-amd64
-    OUTPUT_DIR: dist/tools/linux-amd64
+    OUTPUT_DIR: dist/tools
 
 # Linux ARM64 tool downloads
 download:tools:linux-arm64:
   <<: *download_tools_template
   variables:
     PLATFORM: linux-arm64
-    OUTPUT_DIR: dist/tools/linux-arm64
+    OUTPUT_DIR: dist/tools
 
 # macOS Intel (AMD64) tool downloads
 download:tools:darwin-amd64:
   <<: *download_tools_template
   variables:
     PLATFORM: darwin-amd64
-    OUTPUT_DIR: dist/tools/darwin-amd64
+    OUTPUT_DIR: dist/tools
 
 # macOS Apple Silicon (ARM64) tool downloads
 download:tools:darwin-arm64:
   <<: *download_tools_template
   variables:
     PLATFORM: darwin-arm64
-    OUTPUT_DIR: dist/tools/darwin-arm64
+    OUTPUT_DIR: dist/tools
 
 # Verification job - ensure all tools downloaded successfully
 verify:tools:all-platforms:
