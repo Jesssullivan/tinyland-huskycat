@@ -176,6 +176,7 @@ container:build:arm64:
   artifacts:
     reports:
       dotenv: build.env
+  allow_failure: true  # No local ARM64 runner available yet
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
     - if: $CI_COMMIT_TAG
