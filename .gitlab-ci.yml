@@ -142,6 +142,8 @@ test:mcp:server:
 .container_build_template: &container_build_template
   stage: validate
   image: quay.io/buildah/stable:latest
+  variables:
+    STORAGE_DRIVER: vfs  # Use VFS storage driver to avoid user namespace requirements
   before_script:
     - buildah login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   after_script:
