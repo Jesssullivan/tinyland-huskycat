@@ -31,6 +31,7 @@ build:binary:linux-amd64:
     - |
       uv run pyinstaller --onefile \
         --name huskycat-linux-amd64 \
+        --add-data "src:src" \
         --add-binary "dist/tools/linux-amd64/shellcheck:tools/" \
         --add-binary "dist/tools/linux-amd64/hadolint:tools/" \
         --add-binary "dist/tools/linux-amd64/taplo:tools/" \
@@ -93,6 +94,7 @@ build:binary:linux-arm64:
     - |
       uv run pyinstaller --onefile \
         --name huskycat-linux-arm64 \
+        --add-data "src:src" \
         --add-binary "dist/tools/linux-arm64/shellcheck:tools/" \
         --add-binary "dist/tools/linux-arm64/hadolint:tools/" \
         --add-binary "dist/tools/linux-arm64/taplo:tools/" \
@@ -149,6 +151,7 @@ build:binary:darwin-arm64:
     - |
       uv run pyinstaller --onefile \
         --name huskycat-darwin-arm64 \
+        --add-data "src:src" \
         --add-binary "dist/tools/darwin-arm64/shellcheck:tools/" \
         --add-binary "dist/tools/darwin-arm64/hadolint:tools/" \
         --add-binary "dist/tools/darwin-arm64/taplo:tools/" \

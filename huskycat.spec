@@ -1,11 +1,17 @@
 # -*- mode: python ; coding: utf-8 -*-
 
 
+import os
+
+# Get absolute path relative to spec file location
+spec_root = os.path.abspath(SPECPATH)
+src_path = os.path.join(spec_root, 'src')
+
 a = Analysis(
     ['huskycat_main.py'],
     pathex=[],
     binaries=[],
-    datas=[('/Users/jsullivan2/git/huskycats-bates/src', 'src')],
+    datas=[(src_path, 'src')],
     hiddenimports=['huskycat.core.factory', 'huskycat.core.base', 'huskycat.commands', 'huskycat.unified_validation', 'huskycat.gitlab_ci_validator', 'huskycat.mcp_server'],
     hookspath=[],
     hooksconfig={},
