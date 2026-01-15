@@ -2,7 +2,7 @@
 
 Fast, flexible, and AI-integrated validation for modern development workflows.
 
-[![Pipeline](https://gitlab.com/jsullivan2/huskycats-bates/badges/main/pipeline.svg)](https://gitlab.com/jsullivan2/huskycats-bates/-/pipelines)
+[![Pipeline](https://gitlab.com/tinyland/ai/huskycat/badges/main/pipeline.svg)](https://gitlab.com/tinyland/ai/huskycat/-/pipelines)
 
 ## Quick Install
 
@@ -281,9 +281,9 @@ Commit completes immediately while validation runs in background!
 
 | Platform | Architecture | Download |
 |----------|-------------|----------|
-| Linux | x86_64 (amd64) | [Download →](https://gitlab.com/jsullivan2/huskycats-bates/-/jobs/artifacts/main/raw/dist/bin/huskycat-linux-amd64?job=build:binary:linux-amd64) |
-| Linux | ARM64 (aarch64) | [Download →](https://gitlab.com/jsullivan2/huskycats-bates/-/jobs/artifacts/main/raw/dist/bin/huskycat-linux-arm64?job=build:binary:linux-arm64) |
-| macOS | ARM64 (M1/M2/M3/M4) | [Download →](https://gitlab.com/jsullivan2/huskycats-bates/-/jobs/artifacts/main/raw/dist/bin/huskycat-darwin-arm64?job=build:binary:darwin-arm64) |
+| Linux | x86_64 (amd64) | [Download →](https://gitlab.com/tinyland/ai/huskycat/-/jobs/artifacts/main/raw/dist/bin/huskycat-linux-amd64?job=build:binary:linux-amd64) |
+| Linux | ARM64 (aarch64) | [Download →](https://gitlab.com/tinyland/ai/huskycat/-/jobs/artifacts/main/raw/dist/bin/huskycat-linux-arm64?job=build:binary:linux-arm64) |
+| macOS | ARM64 (M1/M2/M3/M4) | [Download →](https://gitlab.com/tinyland/ai/huskycat/-/jobs/artifacts/main/raw/dist/bin/huskycat-darwin-arm64?job=build:binary:darwin-arm64) |
 
 **Binary sizes**: 150-200MB (includes all validation tools)
 
@@ -328,7 +328,7 @@ huskycat auto-devops
 HuskyCat dogfoods its own validation using tracked git hooks:
 
 ```bash
-git clone https://gitlab.com/jsullivan2/huskycats-bates.git
+git clone https://gitlab.com/tinyland/ai/huskycat.git
 cd huskycats-bates
 uv sync --dev
 
@@ -348,15 +348,15 @@ See [docs/dogfooding.md](docs/dogfooding.md) for details.
 
 ## License
 
-[License details here]
+MIT License - see [LICENSE](LICENSE) for details.
 
 ## Links
 
-- **GitLab**: https://gitlab.com/jsullivan2/huskycats-bates
+- **GitLab**: https://gitlab.com/tinyland/ai/huskycat
 - **Documentation**: [docs/](docs/)
 - **Downloads**: https://tinyland.gitlab.io/ai/huskycat/downloads/
-- **CI/CD Pipeline**: https://gitlab.com/jsullivan2/huskycats-bates/-/pipelines
-- **Issues**: https://gitlab.com/jsullivan2/huskycats-bates/-/issues
+- **CI/CD Pipeline**: https://gitlab.com/tinyland/ai/huskycat/-/pipelines
+- **Issues**: https://gitlab.com/tinyland/ai/huskycat/-/issues
 
 ---
 

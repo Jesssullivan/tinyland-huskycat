@@ -1,8 +1,10 @@
 """
-Pydantic configuration schema for .huskycat.yaml validation.
+Pydantic configuration schema for HuskyCat configuration validation.
 
 This module defines the validated configuration schema for HuskyCat,
 ensuring type safety and validation of all configuration options.
+
+Supports both .huskycat.json (preferred) and .huskycat.yaml formats.
 """
 
 from enum import Enum

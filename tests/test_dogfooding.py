@@ -241,9 +241,10 @@ class TestDogfooding:
 
     def test_dogfooding_configuration(self, repo_root):
         """Verify this repository is configured for dogfooding."""
-        # Check .huskycat.yaml exists
-        config_file = repo_root / ".huskycat.yaml"
-        assert config_file.exists(), ".huskycat.yaml missing"
+        # Check config file exists (.huskycat.json or .huskycat.yaml)
+        config_json = repo_root / ".huskycat.json"
+        config_yaml = repo_root / ".huskycat.yaml"
+        assert config_json.exists() or config_yaml.exists(), ".huskycat.json or .huskycat.yaml missing"
 
         # Check hooks are configured
         hooks_dir = repo_root / ".githooks"

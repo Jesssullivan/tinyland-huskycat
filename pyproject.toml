@@ -74,11 +74,11 @@ docs = [
 huskycat = "huskycat.__main__:main"
 
 [project.urls]
-Homepage = "https://huskycat.pages.io"
+Homepage = "https://tinyland.gitlab.io/ai/huskycat/"
 Repository = "https://gitlab.com/tinyland/ai/huskycat"
-Documentation = "https://huskycat.pages.io"
+Documentation = "https://tinyland.gitlab.io/ai/huskycat/"
 "Bug Tracker" = "https://gitlab.com/tinyland/ai/huskycat/-/issues"
-Downloads = "https://huskycat.pages.io/downloads"
+Downloads = "https://tinyland.gitlab.io/ai/huskycat/downloads/"
 
 [build-system]
 requires = ["hatchling>=1.21.0"]

@@ -2,9 +2,13 @@
 Configuration management for HuskyCat.
 
 Handles loading configuration from multiple sources:
-1. .huskycat.yaml in project root
+1. .huskycat.json or .huskycat.yaml in project root
 2. Environment variables
 3. Command-line flags
+
+Supported formats:
+- .huskycat.json (preferred) - JSON format
+- .huskycat.yaml/.huskycat.yml - YAML format
 
 Feature flags control optional or experimental features.
 
@@ -42,7 +46,7 @@ class HuskyCatConfig:
         Initialize configuration.
 
         Args:
-            config_file: Path to .huskycat.yaml (default: find in project root)
+            config_file: Path to config file (default: find .huskycat.json or .huskycat.yaml)
         """
         self.config_file = config_file or self._find_config_file()
         self._config: Dict[str, Any] = {}
@@ -52,7 +56,7 @@ class HuskyCatConfig:
 
     def _find_config_file(self) -> Optional[Path]:
         """
-        Find .huskycat.yaml in current directory or parents.
+        Find .huskycat.json or .huskycat.yaml in current directory or parents.
 
         Returns:
             Path to config file or None if not found
