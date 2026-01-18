@@ -82,6 +82,7 @@ nav:
       - GitHub Actions: github-actions.md
   - Development:
       - Build Guide: development/BUILD.md
+      - Next Steps: development/NEXT_STEPS.md
       - Dogfooding Guide: dogfooding.md
   - Advanced:
       - Performance: performance.md

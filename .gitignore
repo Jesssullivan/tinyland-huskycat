@@ -43,6 +43,7 @@ coverage.json
 dist/
 build/
 *.egg-info/
+site/
 
 # Temporary files
 *.tmp

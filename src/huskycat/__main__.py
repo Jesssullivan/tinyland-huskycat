@@ -303,13 +303,13 @@ def _print_result(result, adapter):
     For Pipeline/MCP modes, uses adapter formatting.
     For CLI/Git Hooks modes, uses emoji-based formatting.
     """
-    from .core.mode_detector import ProductMode
     from .core.adapters.base import OutputFormat
 
     config = adapter.config
 
     # MCP mode: stdout is used for JSON-RPC protocol, never print results
-    if config.mode == ProductMode.MCP:
+    # Check via transport="stdio" which is only set for MCP adapter
+    if config.transport == "stdio":
         return  # MCP server handles its own output
 
     # JSON/JSONRPC modes: use adapter formatting with results data

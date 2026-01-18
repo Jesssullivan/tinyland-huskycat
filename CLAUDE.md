@@ -122,14 +122,17 @@ Mode is auto-detected based on environment:
 - yaml_lint (Apache) - YAML linting (5 rules, clean-room)
 - taplo (MIT) - TOML formatting
 
-### GPL Tools (Container/Sidecar only)
+### GPL Tools (Container only)
 - shellcheck (GPL-3.0) - Shell script analysis
 - hadolint (GPL-3.0) - Comprehensive Dockerfile linting
 - yamllint (GPL-3.0) - Comprehensive YAML linting
 
+**Note**: IPC sidecar client/server implemented but not yet integrated.
+See `src/huskycat/core/gpl_client.py` and `gpl-sidecar/server.py`.
+
 ### Linting Modes
 - `FAST`: Binary-only, Apache/MIT tools (git hooks, quick validation)
-- `COMPREHENSIVE`: Includes GPL tools via sidecar (CI, thorough validation)
+- `COMPREHENSIVE`: Includes GPL tools via container (CI, thorough validation)
 
 Set via: `--mode fast` or `HUSKYCAT_LINTING_MODE=comprehensive`
 
