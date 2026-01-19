@@ -203,6 +203,6 @@ npm run build:binary
 
 ## Next Steps
 
-- [Configuration Reference](docs/configuration.md)
-- [Product Modes](docs/architecture/product-modes.md)
-- [Execution Models](docs/architecture/execution-models.md)
+- [Configuration Reference](../configuration.md)
+- [Product Modes](../architecture/product-modes.md)
+- [Execution Models](../architecture/execution-models.md)
