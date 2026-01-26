@@ -144,25 +144,36 @@ test:mcp:server:
     - if: $CI_COMMIT_BRANCH
 
 # Build stage jobs - multi-architecture container builds
+# Using Docker-in-Docker for GitLab SaaS shared runner compatibility
+# (buildah requires CLONE_NEWUSER which is not permitted on shared runners)
 .container_build_template: &container_build_template
   stage: validate
-  image: quay.io/buildah/stable:latest
+  image: docker:24-cli
+  services:
+    - docker:24-dind
   variables:
-    STORAGE_DRIVER: vfs  # Use VFS storage driver to avoid user namespace requirements
+    DOCKER_HOST: tcp://docker:2376
+    DOCKER_TLS_CERTDIR: "/certs"
+    DOCKER_TLS_VERIFY: 1
+    DOCKER_CERT_PATH: "$DOCKER_TLS_CERTDIR/client"
   before_script:
-    - buildah --storage-driver vfs login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-  after_script:
-    - buildah --storage-driver vfs logout $CI_REGISTRY
+    - echo "Waiting for Docker daemon..."
+    - until docker info; do sleep 1; done
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
 
 container:build:amd64:
   <<: *container_build_template
   variables:
+    DOCKER_HOST: tcp://docker:2376
+    DOCKER_TLS_CERTDIR: "/certs"
+    DOCKER_TLS_VERIFY: 1
+    DOCKER_CERT_PATH: "$DOCKER_TLS_CERTDIR/client"
     PLATFORM: linux/amd64
     ARCH: amd64
   script:
-    - echo "Building container for $PLATFORM with layer caching..."
-    - buildah --storage-driver vfs build --platform=$PLATFORM --layers -f ContainerFile -t $CONTAINER_REGISTRY:$CONTAINER_TAG-$ARCH .
-    - buildah --storage-driver vfs push $CONTAINER_REGISTRY:$CONTAINER_TAG-$ARCH
+    - echo "Building container for $PLATFORM using Docker-in-Docker..."
+    - docker build --platform=$PLATFORM -f ContainerFile -t $CONTAINER_REGISTRY:$CONTAINER_TAG-$ARCH .
+    - docker push $CONTAINER_REGISTRY:$CONTAINER_TAG-$ARCH
   artifacts:
     reports:
       dotenv: build.env
@@ -173,17 +184,23 @@ container:build:amd64:
 
 container:build:arm64:
   <<: *container_build_template
+  tags:
+    - saas-linux-medium-arm64
   variables:
+    DOCKER_HOST: tcp://docker:2376
+    DOCKER_TLS_CERTDIR: "/certs"
+    DOCKER_TLS_VERIFY: 1
+    DOCKER_CERT_PATH: "$DOCKER_TLS_CERTDIR/client"
     PLATFORM: linux/arm64
     ARCH: arm64
   script:
-    - echo "Building container for $PLATFORM with layer caching..."
-    - buildah --storage-driver vfs build --platform=$PLATFORM --layers -f ContainerFile -t $CONTAINER_REGISTRY:$CONTAINER_TAG-$ARCH .
-    - buildah --storage-driver vfs push $CONTAINER_REGISTRY:$CONTAINER_TAG-$ARCH
+    - echo "Building container for $PLATFORM using Docker-in-Docker..."
+    - docker build --platform=$PLATFORM -f ContainerFile -t $CONTAINER_REGISTRY:$CONTAINER_TAG-$ARCH .
+    - docker push $CONTAINER_REGISTRY:$CONTAINER_TAG-$ARCH
   artifacts:
     reports:
       dotenv: build.env
-  allow_failure: true  # No local ARM64 runner available yet
+  allow_failure: true  # ARM64 runner may not always be available
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
     - if: $CI_COMMIT_TAG
@@ -191,28 +208,31 @@ container:build:arm64:
 
 container:build:manifest:
   stage: build
-  image: quay.io/buildah/stable:latest
+  image: docker:24-cli
+  services:
+    - docker:24-dind
+  variables:
+    DOCKER_HOST: tcp://docker:2376
+    DOCKER_TLS_CERTDIR: "/certs"
+    DOCKER_TLS_VERIFY: 1
+    DOCKER_CERT_PATH: "$DOCKER_TLS_CERTDIR/client"
+    DOCKER_CLI_EXPERIMENTAL: enabled
   dependencies:
     - container:build:amd64
     - container:build:arm64
   before_script:
-    - buildah login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - until docker info; do sleep 1; done
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
     # Create multi-arch manifest for commit tag
-    - buildah manifest create $CONTAINER_REGISTRY:$CONTAINER_TAG
-    - buildah manifest add $CONTAINER_REGISTRY:$CONTAINER_TAG $CONTAINER_REGISTRY:$CONTAINER_TAG-amd64
-    - buildah manifest add $CONTAINER_REGISTRY:$CONTAINER_TAG $CONTAINER_REGISTRY:$CONTAINER_TAG-arm64
-    - buildah manifest push --all $CONTAINER_REGISTRY:$CONTAINER_TAG
+    - docker manifest create $CONTAINER_REGISTRY:$CONTAINER_TAG $CONTAINER_REGISTRY:$CONTAINER_TAG-amd64 $CONTAINER_REGISTRY:$CONTAINER_TAG-arm64 || docker manifest create $CONTAINER_REGISTRY:$CONTAINER_TAG $CONTAINER_REGISTRY:$CONTAINER_TAG-amd64
+    - docker manifest push $CONTAINER_REGISTRY:$CONTAINER_TAG
     # Create multi-arch manifest for latest tag (main branch only)
     - |
       if [ "$CI_COMMIT_BRANCH" = "main" ] || [ -n "$CI_COMMIT_TAG" ]; then
-        buildah manifest create $CONTAINER_REGISTRY:latest
-        buildah manifest add $CONTAINER_REGISTRY:latest $CONTAINER_REGISTRY:$CONTAINER_TAG-amd64
-        buildah manifest add $CONTAINER_REGISTRY:latest $CONTAINER_REGISTRY:$CONTAINER_TAG-arm64
-        buildah manifest push --all $CONTAINER_REGISTRY:latest
+        docker manifest create $CONTAINER_REGISTRY:latest $CONTAINER_REGISTRY:$CONTAINER_TAG-amd64 $CONTAINER_REGISTRY:$CONTAINER_TAG-arm64 || docker manifest create $CONTAINER_REGISTRY:latest $CONTAINER_REGISTRY:$CONTAINER_TAG-amd64
+        docker manifest push $CONTAINER_REGISTRY:latest
       fi
-  after_script:
-    - buildah logout $CI_REGISTRY
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
     - if: $CI_COMMIT_TAG
