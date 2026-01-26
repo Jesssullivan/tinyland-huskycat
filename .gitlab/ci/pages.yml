@@ -45,7 +45,7 @@ validate:docs:
         # Don't fail the job, just warn
       fi
     # Verify LLM docs generator exists
-    - test -f scripts/generate-llms-docs.py || echo "WARNING: generate-llms-docs.py not found"
+    - test -f scripts/generate-llms-docs.py || echo "WARNING - generate-llms-docs.py not found"
   artifacts:
     when: on_failure
     paths:

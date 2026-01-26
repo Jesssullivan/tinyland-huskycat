@@ -74,7 +74,7 @@ variables:
       fi
 
     # Set partition list for headless access
-    - security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_NAME"
+    - 'security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_NAME"'
 
     # Verify certificates
     - security find-identity -v -p codesigning "$KEYCHAIN_NAME"
