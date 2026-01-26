@@ -100,3 +100,5 @@ claude-flow.bat
 claude-flow.ps1
 hive-mind-prompt-*.txt
 .mypy_cache/
+.huskycat/results/
+.huskycat/tasks/
