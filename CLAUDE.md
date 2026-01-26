@@ -269,16 +269,18 @@ HuskyCat's MCP server is part of a broader MCP ecosystem deployed by the `crush-
 
 ### RemoteJuggler Integration
 
-HuskyCat integrates with [RemoteJuggler](https://gitlab.com/tinyland/ai/gitlab-switcher) for git identity management. When RemoteJuggler is available, HuskyCat exposes 6 additional MCP tools for identity switching.
+HuskyCat integrates with [RemoteJuggler](https://gitlab.com/tinyland/ai/gitlab-switcher) for git identity management. When RemoteJuggler is available, HuskyCat exposes 8 additional MCP tools for identity switching.
 
 **Integration Location**: `src/huskycat/integrations/remote_juggler.py`
 
-**RemoteJuggler MCP Tools** (exposed as `juggler_*`):
+**RemoteJuggler MCP Tools** (8 tools exposed as `juggler_*`):
 - `juggler_list_identities` - List all configured git identities
 - `juggler_detect_identity` - Detect the appropriate identity for a repository
 - `juggler_switch` - Switch to a different git identity
 - `juggler_status` - Get current git identity status
 - `juggler_validate` - Validate SSH/API credentials for current identity
+- `juggler_store_token` - Store authentication token securely
+- `juggler_sync_config` - Sync configuration across systems
 - `juggler_gpg_status` - Get GPG signing status for current identity
 
 **Configuration**: `~/.huskycat/integrations/remote-juggler.yaml`
@@ -387,7 +389,7 @@ def detect_mode() -> ProductMode:
 - **Multi-Arch Support**: amd64 and arm64 container builds passing
 - **Test Suite**: Unit tests passing, E2E tests operational
 - **CI Pipeline**: 22/22 jobs passing
-- **MCP Tools**: 28 tools (22 validators + 6 RemoteJuggler identity tools)
+- **MCP Tools**: 30 tools (22 validators + 8 RemoteJuggler identity tools)
 - **Desktop Integration**: Icons and .desktop files created in `assets/`
 
 ## Remember
