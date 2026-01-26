@@ -163,29 +163,35 @@ test:mcp:server:
     - if: $CI_COMMIT_BRANCH
 
 # Build stage jobs - multi-architecture container builds
-# Using Docker-in-Docker for GitLab SaaS shared runner compatibility
-# (buildah requires CLONE_NEWUSER which is not permitted on shared runners)
-# NOTE: TLS disabled for custom runners - certs don't share properly between containers
+# Using Docker-in-Docker following crush-dots patterns for Tinyland runners
+# NOTE: TLS disabled, explicit --tls=false in service command
 .container_build_template: &container_build_template
   stage: validate
   image: docker:24-cli
   services:
-    - docker:24-dind
+    - name: docker:24-dind
+      command: ["--tls=false", "--dns=8.8.8.8", "--dns=1.1.1.1"]
+  tags:
+    - docker
+    - dind
   <<: *retry_transient
   variables:
-    # Disable TLS for DinD - custom runners don't share certs properly
     DOCKER_HOST: tcp://docker:2375
     DOCKER_TLS_CERTDIR: ""
   before_script:
-    - echo "Waiting for Docker daemon..."
-    - until docker info; do sleep 1; done
+    - |
+      echo "Waiting for Docker daemon (max 60s)..."
+      ATTEMPTS=0; MAX=30
+      until docker info >/dev/null 2>&1; do
+        ATTEMPTS=$((ATTEMPTS + 1))
+        [ $ATTEMPTS -ge $MAX ] && echo "Docker not ready after 60s" && exit 1
+        sleep 2
+      done
+      docker version
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
 
 container:build:amd64:
   <<: *container_build_template
-  tags:
-    - dind
-    - x86_64
   variables:
     DOCKER_HOST: tcp://docker:2375
     DOCKER_TLS_CERTDIR: ""
@@ -211,17 +217,24 @@ container:tag:latest:
   stage: build
   image: docker:24-cli
   services:
-    - docker:24-dind
+    - name: docker:24-dind
+      command: ["--tls=false", "--dns=8.8.8.8", "--dns=1.1.1.1"]
   tags:
+    - docker
     - dind
-    - x86_64
   variables:
     DOCKER_HOST: tcp://docker:2375
     DOCKER_TLS_CERTDIR: ""
   needs:
     - container:build:amd64
   before_script:
-    - until docker info; do sleep 1; done
+    - |
+      ATTEMPTS=0; MAX=30
+      until docker info >/dev/null 2>&1; do
+        ATTEMPTS=$((ATTEMPTS + 1))
+        [ $ATTEMPTS -ge $MAX ] && echo "Docker not ready" && exit 1
+        sleep 2
+      done
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
     # Tag commit SHA (without -amd64 suffix)
@@ -247,17 +260,24 @@ validate:complete:
   stage: build
   image: docker:24-cli
   services:
-    - docker:24-dind
+    - name: docker:24-dind
+      command: ["--tls=false", "--dns=8.8.8.8", "--dns=1.1.1.1"]
   tags:
+    - docker
     - dind
-    - x86_64
   variables:
     DOCKER_HOST: tcp://docker:2375
     DOCKER_TLS_CERTDIR: ""
   dependencies:
     - container:build:amd64
   before_script:
-    - until docker info; do sleep 1; done
+    - |
+      ATTEMPTS=0; MAX=30
+      until docker info >/dev/null 2>&1; do
+        ATTEMPTS=$((ATTEMPTS + 1))
+        [ $ATTEMPTS -ge $MAX ] && echo "Docker not ready" && exit 1
+        sleep 2
+      done
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
     - echo "🎠 Stage 2 - Complete validation with fresh container"
