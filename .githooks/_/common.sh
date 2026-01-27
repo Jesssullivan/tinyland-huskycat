@@ -65,6 +65,11 @@ is_auto_approve() {
 
 # Verify UV is available and venv is set up
 verify_uv_environment() {
+    # Clear UV_PROJECT_ENVIRONMENT to ensure UV uses THIS project's venv
+    # This prevents issues when user has UV_PROJECT_ENVIRONMENT set globally
+    # pointing to another project (e.g., from shell profile or direnv)
+    unset UV_PROJECT_ENVIRONMENT
+
     # Check for uv command
     if ! command -v uv &> /dev/null; then
         log_error "UV package manager not found!"
