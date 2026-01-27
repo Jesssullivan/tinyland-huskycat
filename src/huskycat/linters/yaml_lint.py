@@ -38,7 +38,9 @@ class YamlIssue:
 
     def __str__(self) -> str:
         """Format issue as human-readable string."""
-        return f"{self.line}:{self.column}: [{self.severity}] {self.rule}: {self.message}"
+        return (
+            f"{self.line}:{self.column}: [{self.severity}] {self.rule}: {self.message}"
+        )
 
     def to_dict(self) -> dict:
         """Convert to dictionary for serialization."""

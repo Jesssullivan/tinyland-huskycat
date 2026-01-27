@@ -38,7 +38,9 @@ def get_gpl_sidecar() -> Optional[GPLSidecarClient]:
         _gpl_sidecar_client = client
         return client
     else:
-        logger.debug("GPL sidecar not available - GPL tools will use local/container execution")
+        logger.debug(
+            "GPL sidecar not available - GPL tools will use local/container execution"
+        )
         return None
 
 

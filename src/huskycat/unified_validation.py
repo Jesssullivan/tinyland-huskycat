@@ -127,7 +127,9 @@ class ValidationEngine:
         self.use_container = use_container
         self.adapter = adapter
         self.linting_mode = linting_mode or get_mode_from_env()
-        logger.info(f"ValidationEngine initialized with linting_mode={self.linting_mode.value}")
+        logger.info(
+            f"ValidationEngine initialized with linting_mode={self.linting_mode.value}"
+        )
         self.validators = self._initialize_validators()
         self._extension_map = self._build_extension_map()
 
@@ -135,6 +137,7 @@ class ValidationEngine:
         """Dynamically load DockerLintValidator if available"""
         try:
             from huskycat.linters.dockerlint_validator import DockerLintValidator  # type: ignore
+
             return DockerLintValidator
         except ImportError:
             logger.debug("DockerLintValidator not available")
@@ -178,7 +181,9 @@ class ValidationEngine:
             return is_tool_bundled(tool_name)
         except KeyError:
             # Tool not in registry - allow it (backward compatibility)
-            logger.warning(f"Tool {tool_name} not in tool registry, allowing by default")
+            logger.warning(
+                f"Tool {tool_name} not in tool registry, allowing by default"
+            )
             return True
 
     def _initialize_validators(self) -> List[Validator]:
@@ -199,7 +204,9 @@ class ValidationEngine:
             ChapelValidator(self._should_tool_auto_fix("chapel")),
             AnsibleLintValidator(self._should_tool_auto_fix("ansible-lint")),
             YamlLintValidator(self._should_tool_auto_fix("yamllint")),
-            HadolintValidator(False),  # No auto-fix support (GPL licensed, being replaced)
+            HadolintValidator(
+                False
+            ),  # No auto-fix support (GPL licensed, being replaced)
             ShellcheckValidator(False),  # No auto-fix support
             GitLabCIValidator(False),  # No auto-fix support
         ]
@@ -214,12 +221,16 @@ class ValidationEngine:
         for v in validators:
             # Check if tool should be used based on linting mode
             if not self._should_use_tool(v.name):
-                logger.info(f"Skipping {v.name} in {self.linting_mode.value} mode (GPL or not bundled)")
+                logger.info(
+                    f"Skipping {v.name} in {self.linting_mode.value} mode (GPL or not bundled)"
+                )
                 continue
 
             if v.is_available():
                 available.append(v)
-                logger.info(f"Validator {v.name} is available (auto_fix={v.auto_fix}, mode={self.linting_mode.value})")
+                logger.info(
+                    f"Validator {v.name} is available (auto_fix={v.auto_fix}, mode={self.linting_mode.value})"
+                )
             else:
                 logger.warning(f"Validator {v.name} is not available")
 
@@ -360,8 +371,7 @@ class ValidationEngine:
                         print("Applying auto-fixes...")
                         # Re-run with auto-fix enabled, preserving linting mode
                         auto_fix_engine = ValidationEngine(
-                            auto_fix=True,
-                            linting_mode=self.linting_mode
+                            auto_fix=True, linting_mode=self.linting_mode
                         )
                         results = {}
                         for filename in result.stdout.splitlines():
@@ -476,12 +486,14 @@ def main() -> None:
     # Parse linting mode from args or environment
     linting_mode = None
     if args.linting_mode:
-        linting_mode = LintingMode.FAST if args.linting_mode == "fast" else LintingMode.COMPREHENSIVE
+        linting_mode = (
+            LintingMode.FAST
+            if args.linting_mode == "fast"
+            else LintingMode.COMPREHENSIVE
+        )
 
     engine = ValidationEngine(
-        auto_fix=args.fix,
-        interactive=interactive_mode,
-        linting_mode=linting_mode
+        auto_fix=args.fix, interactive=interactive_mode, linting_mode=linting_mode
     )
 
     # Run validation

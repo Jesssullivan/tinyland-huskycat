@@ -303,7 +303,11 @@ class HuskyCat:
         tools_available = [v.name for v in self.engine.validators]
 
         # Detect execution mode
-        execution_mode = self.engine.validators[0]._get_execution_mode() if self.engine.validators else "unknown"
+        execution_mode = (
+            self.engine.validators[0]._get_execution_mode()
+            if self.engine.validators
+            else "unknown"
+        )
 
         # Check container availability
         container_available = False
@@ -406,7 +410,9 @@ class HuskyCat:
         # Start validation in background thread
         def _run():
             try:
-                self.task_manager.update_progress(task_id, 0, 100, "Starting validation...")
+                self.task_manager.update_progress(
+                    task_id, 0, 100, "Starting validation..."
+                )
                 result = self.validate(paths, fix=fix, tools=tools)
                 self.task_manager.complete_task(task_id, result.to_dict())
             except Exception as e:

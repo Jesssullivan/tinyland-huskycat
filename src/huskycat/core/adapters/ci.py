@@ -58,9 +58,7 @@ class CIAdapter(ModeAdapter):
             report_path="./reports/",  # Artifact directory
         )
 
-    def format_output(
-        self, results: dict[str, Any], summary: dict[str, Any]
-    ) -> str:
+    def format_output(self, results: dict[str, Any], summary: dict[str, Any]) -> str:
         """
         CI mode: JUnit XML for pipeline artifacts.
         Also outputs human-readable summary to stderr.
@@ -178,12 +176,14 @@ class CIAdapter(ModeAdapter):
                     issues = []
 
                 for issue in issues:
-                    details.append({
-                        "file": filepath,
-                        "tool": tool,
-                        "message": str(issue),
-                        "severity": severity,
-                    })
+                    details.append(
+                        {
+                            "file": filepath,
+                            "tool": tool,
+                            "message": str(issue),
+                            "severity": severity,
+                        }
+                    )
         return details
 
     def _get_tool_name(self, result: Any) -> str:
@@ -214,12 +214,14 @@ class CIAdapter(ModeAdapter):
                     serialized[filepath].append(result.to_dict())
                 else:
                     # Fallback serialization
-                    serialized[filepath].append({
-                        "tool": getattr(result, "tool", "unknown"),
-                        "success": getattr(result, "success", True),
-                        "errors": getattr(result, "errors", []),
-                        "warnings": getattr(result, "warnings", []),
-                    })
+                    serialized[filepath].append(
+                        {
+                            "tool": getattr(result, "tool", "unknown"),
+                            "success": getattr(result, "success", True),
+                            "errors": getattr(result, "errors", []),
+                            "warnings": getattr(result, "warnings", []),
+                        }
+                    )
         return serialized
 
     def _extract_tools_run(self, results: dict[str, Any]) -> list[str]:

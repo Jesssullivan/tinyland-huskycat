@@ -375,7 +375,11 @@ class ComposeSchemaValidator:
                 network_names = list(networks.keys())
 
             for net in network_names:
-                if net != "default" and defined_networks and net not in defined_networks:
+                if (
+                    net != "default"
+                    and defined_networks
+                    and net not in defined_networks
+                ):
                     warnings.append(
                         f"Service '{service_name}' uses undefined network '{net}'"
                     )
@@ -421,7 +425,11 @@ class ComposeSchemaValidator:
                     secret_name = (
                         secret if isinstance(secret, str) else secret.get("source", "")
                     )
-                    if secret_name and defined_secrets and secret_name not in defined_secrets:
+                    if (
+                        secret_name
+                        and defined_secrets
+                        and secret_name not in defined_secrets
+                    ):
                         warnings.append(
                             f"Service '{service_name}' uses undefined "
                             f"secret '{secret_name}'"
@@ -431,10 +439,12 @@ class ComposeSchemaValidator:
             configs = service_config.get("configs", [])
             if isinstance(configs, list):
                 for cfg in configs:
-                    config_name = (
-                        cfg if isinstance(cfg, str) else cfg.get("source", "")
-                    )
-                    if config_name and defined_configs and config_name not in defined_configs:
+                    config_name = cfg if isinstance(cfg, str) else cfg.get("source", "")
+                    if (
+                        config_name
+                        and defined_configs
+                        and config_name not in defined_configs
+                    ):
                         warnings.append(
                             f"Service '{service_name}' uses undefined "
                             f"config '{config_name}'"

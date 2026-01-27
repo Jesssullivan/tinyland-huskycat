@@ -75,7 +75,11 @@ class AsyncTask:
     @property
     def is_complete(self) -> bool:
         """Check if task has finished (completed or failed)"""
-        return self.status in (TaskStatus.COMPLETED, TaskStatus.FAILED, TaskStatus.CANCELLED)
+        return self.status in (
+            TaskStatus.COMPLETED,
+            TaskStatus.FAILED,
+            TaskStatus.CANCELLED,
+        )
 
     @property
     def progress_percent(self) -> float:

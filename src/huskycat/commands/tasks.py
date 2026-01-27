@@ -81,9 +81,7 @@ class TasksCommand(BaseCommand):
             )
 
         # Format output
-        output_lines = [
-            f"Async Tasks (showing {len(tasks)} of {limit} max):"
-        ]
+        output_lines = [f"Async Tasks (showing {len(tasks)} of {limit} max):"]
         if status_filter:
             output_lines[0] += f" [filter: {status_filter}]"
 
@@ -95,7 +93,9 @@ class TasksCommand(BaseCommand):
 
         for task in tasks:
             progress = f"{task.progress_percent:.0f}%" if task.total > 0 else "N/A"
-            message = task.message[:17] + "..." if len(task.message) > 20 else task.message
+            message = (
+                task.message[:17] + "..." if len(task.message) > 20 else task.message
+            )
             output_lines.append(
                 f"{task.task_id[:18]:<20} {task.status.value:<12} {progress:<10} "
                 f"{task.tool_name:<15} {message:<20}"

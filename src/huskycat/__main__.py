@@ -213,9 +213,7 @@ def create_parser() -> argparse.ArgumentParser:
     )
 
     # Tasks command (API parity with MCP)
-    tasks_parser = subparsers.add_parser(
-        "tasks", help="Manage async validation tasks"
-    )
+    tasks_parser = subparsers.add_parser("tasks", help="Manage async validation tasks")
     tasks_parser.add_argument(
         "--status",
         choices=["pending", "running", "completed", "failed", "cancelled"],

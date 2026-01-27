@@ -30,12 +30,14 @@ from .validators._utils import is_running_in_container
 # Import commands for API parity
 try:
     from .commands.ci import CIValidateCommand
+
     HAS_CI_VALIDATE = True
 except ImportError:
     HAS_CI_VALIDATE = False
 
 try:
     from .commands.autodevops import AutoDevOpsCommand
+
     HAS_AUTO_DEVOPS = True
 except ImportError:
     HAS_AUTO_DEVOPS = False
@@ -43,6 +45,7 @@ except ImportError:
 # RemoteJuggler integration for git identity management
 try:
     from .integrations.remote_juggler import RemoteJugglerIntegration
+
     HAS_REMOTE_JUGGLER = True
 except ImportError:
     HAS_REMOTE_JUGGLER = False
@@ -109,56 +112,77 @@ class MCPServer:
             logger.warning(f"Tool output exceeds {WARN_TOKENS} tokens: {token_count}")
 
         if token_count > MAX_TOKENS:
-            truncated_text = text[: MAX_TOKENS * 4] + "\n... [truncated - output exceeded token limit]"
-            logger.warning(f"Output truncated from {token_count} to ~{MAX_TOKENS} tokens")
+            truncated_text = (
+                text[: MAX_TOKENS * 4]
+                + "\n... [truncated - output exceeded token limit]"
+            )
+            logger.warning(
+                f"Output truncated from {token_count} to ~{MAX_TOKENS} tokens"
+            )
             return truncated_text, token_count, True
 
         return text, token_count, False
 
-    def _get_recovery_suggestions(self, error: Exception, context: Optional[str] = None) -> List[str]:
+    def _get_recovery_suggestions(
+        self, error: Exception, context: Optional[str] = None
+    ) -> List[str]:
         """Generate context-aware recovery suggestions for errors"""
         suggestions = []
         error_str = str(error).lower()
 
         # File/path related errors
-        if "no such file" in error_str or "not found" in error_str or "path" in error_str:
-            suggestions.extend([
-                "Verify the file path is correct and exists",
-                "Check for typos in the path",
-                "Use absolute paths instead of relative paths",
-            ])
+        if (
+            "no such file" in error_str
+            or "not found" in error_str
+            or "path" in error_str
+        ):
+            suggestions.extend(
+                [
+                    "Verify the file path is correct and exists",
+                    "Check for typos in the path",
+                    "Use absolute paths instead of relative paths",
+                ]
+            )
 
         # Permission errors
         if "permission" in error_str or "access denied" in error_str:
-            suggestions.extend([
-                "Check file permissions (chmod)",
-                "Verify you have read/write access to the file",
-                "Try running with appropriate privileges",
-            ])
+            suggestions.extend(
+                [
+                    "Check file permissions (chmod)",
+                    "Verify you have read/write access to the file",
+                    "Try running with appropriate privileges",
+                ]
+            )
 
         # Container runtime errors
         if "container" in error_str or "podman" in error_str or "docker" in error_str:
-            suggestions.extend([
-                "Verify container runtime is available (podman or docker)",
-                "Check if the huskycat:local image exists",
-                "Try pulling the image: podman pull huskycat:local",
-            ])
+            suggestions.extend(
+                [
+                    "Verify container runtime is available (podman or docker)",
+                    "Check if the huskycat:local image exists",
+                    "Try pulling the image: podman pull huskycat:local",
+                ]
+            )
 
         # Timeout errors
         if "timeout" in error_str:
-            suggestions.extend([
-                "The operation took too long - try a smaller scope",
-                "Check for infinite loops or large files",
-                "Consider increasing timeout limits",
-            ])
+            suggestions.extend(
+                [
+                    "The operation took too long - try a smaller scope",
+                    "Check for infinite loops or large files",
+                    "Consider increasing timeout limits",
+                ]
+            )
 
         # Validation tool errors
         if "validator" in error_str or "validation" in error_str:
-            suggestions.extend([
-                "Check if the required validation tool is installed",
-                "Verify the file type matches the validator",
-                "Try running with --fix to auto-fix issues",
-            ])
+            suggestions.extend(
+                [
+                    "Check if the required validation tool is installed",
+                    "Verify the file type matches the validator",
+                    "Try running with --fix to auto-fix issues",
+                ]
+            )
 
         # Generic suggestions if none matched
         if not suggestions:
@@ -295,7 +319,9 @@ class MCPServer:
             # For tools/call, return tool error with isError flag
             # For other methods, use protocol-level error
             if method == "tools/call":
-                return self._tool_error_response(request_id, e, context=f"method:{method}")
+                return self._tool_error_response(
+                    request_id, e, context=f"method:{method}"
+                )
             return self._error_response(request_id, -32603, str(e))
 
     def _handle_initialize(self, request_id: Any) -> Dict[str, Any]:
@@ -500,7 +526,13 @@ class MCPServer:
                         "status": {
                             "type": "string",
                             "description": "Filter by task status",
-                            "enum": ["pending", "running", "completed", "failed", "cancelled"],
+                            "enum": [
+                                "pending",
+                                "running",
+                                "completed",
+                                "failed",
+                                "cancelled",
+                            ],
                         },
                         "limit": {
                             "type": "integer",
@@ -651,7 +683,9 @@ class MCPServer:
                 # Individual validator
                 validator_name = tool_name.replace("validate_", "")
                 result = self._validate_with_specific_tool(validator_name, arguments)
-            elif self.remote_juggler and tool_name.startswith(self.remote_juggler.config.tool_prefix):
+            elif self.remote_juggler and tool_name.startswith(
+                self.remote_juggler.config.tool_prefix
+            ):
                 # RemoteJuggler integration tools
                 result = self.remote_juggler.handle_mcp_tool(tool_name, arguments)
             else:
@@ -661,7 +695,9 @@ class MCPServer:
 
             # Serialize and check token count
             result_text = json.dumps(result, indent=2)
-            result_text, token_count, was_truncated = self._truncate_if_needed(result_text)
+            result_text, token_count, was_truncated = self._truncate_if_needed(
+                result_text
+            )
 
             response_content = {
                 "content": [{"type": "text", "text": result_text}],
@@ -840,6 +876,7 @@ class MCPServer:
             if last_run_file.exists():
                 try:
                     import json
+
                     data = json.loads(last_run_file.read_text())
                     run = ValidationRun(**data)
                 except (json.JSONDecodeError, TypeError, ValueError) as e:
@@ -863,6 +900,7 @@ class MCPServer:
         if run_results_file.exists():
             try:
                 import json
+
                 detailed_results = json.loads(run_results_file.read_text())
             except Exception as e:
                 logger.warning(f"Could not load detailed results: {e}")
@@ -875,7 +913,10 @@ class MCPServer:
                 log_content = log_file.read_text()
                 # Truncate if too long
                 if len(log_content) > 5000:
-                    log_content = log_content[-5000:] + "\n... [truncated, showing last 5000 chars]"
+                    log_content = (
+                        log_content[-5000:]
+                        + "\n... [truncated, showing last 5000 chars]"
+                    )
             except Exception as e:
                 logger.warning(f"Could not load log file: {e}")
 
@@ -919,6 +960,7 @@ class MCPServer:
 
         try:
             import json
+
             run_data = json.loads(run_file.read_text())
             run = ValidationRun(**run_data)
         except (json.JSONDecodeError, TypeError, ValueError) as e:
@@ -941,7 +983,10 @@ class MCPServer:
                 log_content = log_file.read_text()
                 # Truncate if too long
                 if len(log_content) > 10000:
-                    log_content = log_content[-10000:] + "\n... [truncated, showing last 10000 chars]"
+                    log_content = (
+                        log_content[-10000:]
+                        + "\n... [truncated, showing last 10000 chars]"
+                    )
             except Exception as e:
                 logger.warning(f"Could not load log file: {e}")
 
@@ -1018,16 +1063,12 @@ class MCPServer:
             )
 
             # Run the actual validation (this may take 10-30s)
-            self.task_manager.update_progress(
-                task_id, 10, 100, "Running validators..."
-            )
+            self.task_manager.update_progress(task_id, 10, 100, "Running validators...")
 
             result = self._validate(arguments)
 
             # Update progress to 90% before completion
-            self.task_manager.update_progress(
-                task_id, 90, 100, "Processing results..."
-            )
+            self.task_manager.update_progress(task_id, 90, 100, "Processing results...")
 
             # Complete the task with results
             self.task_manager.complete_task(task_id, result)
@@ -1074,7 +1115,9 @@ class MCPServer:
         # Include result for completed tasks
         if task.status == TaskStatus.COMPLETED:
             response["result"] = task.result
-            response["message"] = "Validation completed successfully. See 'result' for details."
+            response["message"] = (
+                "Validation completed successfully. See 'result' for details."
+            )
 
         # Include error for failed tasks
         if task.status == TaskStatus.FAILED:
@@ -1186,7 +1229,9 @@ class MCPServer:
                 "success": result.success,
                 "message": result.message,
                 "output": result.output,
-                "files_validated": result.data.get("files_validated", []) if result.data else [],
+                "files_validated": (
+                    result.data.get("files_validated", []) if result.data else []
+                ),
                 "errors": result.data.get("errors", []) if result.data else [],
             }
         except Exception as e:
@@ -1234,8 +1279,12 @@ class MCPServer:
                 "success": result.success,
                 "message": result.message,
                 "output": result.output,
-                "helm_charts": result.data.get("helm_charts", []) if result.data else [],
-                "k8s_manifests": result.data.get("k8s_manifests", []) if result.data else [],
+                "helm_charts": (
+                    result.data.get("helm_charts", []) if result.data else []
+                ),
+                "k8s_manifests": (
+                    result.data.get("k8s_manifests", []) if result.data else []
+                ),
                 "errors": result.data.get("errors", []) if result.data else [],
             }
         except Exception as e:
@@ -1258,11 +1307,13 @@ class MCPServer:
         # Get validator info
         validators = []
         for v in self.engine.validators:
-            validators.append({
-                "name": v.name,
-                "available": v.is_available(),
-                "file_patterns": getattr(v, "file_patterns", []),
-            })
+            validators.append(
+                {
+                    "name": v.name,
+                    "available": v.is_available(),
+                    "file_patterns": getattr(v, "file_patterns", []),
+                }
+            )
 
         # Get recent run count
         recent_runs = self.process_manager.get_run_history(limit=5)
@@ -1274,7 +1325,9 @@ class MCPServer:
             "total": len(all_tasks),
             "pending": len([t for t in all_tasks if t.status == TaskStatus.PENDING]),
             "running": len([t for t in all_tasks if t.status == TaskStatus.RUNNING]),
-            "completed": len([t for t in all_tasks if t.status == TaskStatus.COMPLETED]),
+            "completed": len(
+                [t for t in all_tasks if t.status == TaskStatus.COMPLETED]
+            ),
             "failed": len([t for t in all_tasks if t.status == TaskStatus.FAILED]),
         }
 

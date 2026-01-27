@@ -223,9 +223,7 @@ class GitHubActionsSchemaValidator:
                 },
                 "env": {"type": "object"},
                 "defaults": {"type": "object"},
-                "concurrency": {
-                    "oneOf": [{"type": "string"}, {"type": "object"}]
-                },
+                "concurrency": {"oneOf": [{"type": "string"}, {"type": "object"}]},
                 "jobs": {
                     "type": "object",
                     "additionalProperties": {
@@ -283,9 +281,7 @@ class GitHubActionsSchemaValidator:
                         },
                     },
                 },
-                "permissions": {
-                    "oneOf": [{"type": "string"}, {"type": "object"}]
-                },
+                "permissions": {"oneOf": [{"type": "string"}, {"type": "object"}]},
             },
         }
 
@@ -403,7 +399,10 @@ class GitHubActionsSchemaValidator:
                 for event in ["push", "pull_request"]:
                     if event in on_config and isinstance(on_config[event], dict):
                         event_config = on_config[event]
-                        if "branches-ignore" in event_config and "branches" in event_config:
+                        if (
+                            "branches-ignore" in event_config
+                            and "branches" in event_config
+                        ):
                             warnings.append(
                                 f"'{event}' has both 'branches' and 'branches-ignore' - "
                                 "only one should be used"

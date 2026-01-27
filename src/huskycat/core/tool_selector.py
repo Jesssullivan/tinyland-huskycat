@@ -251,7 +251,9 @@ def get_bundled_tools() -> Set[str]:
         False
     """
     return {
-        name for name, info in TOOL_REGISTRY.items() if info.bundled and info.license != ToolLicense.GPL
+        name
+        for name, info in TOOL_REGISTRY.items()
+        if info.bundled and info.license != ToolLicense.GPL
     }
 
 
@@ -269,7 +271,9 @@ def get_gpl_tools() -> Set[str]:
         >>> "ruff" in tools
         False
     """
-    return {name for name, info in TOOL_REGISTRY.items() if info.license == ToolLicense.GPL}
+    return {
+        name for name, info in TOOL_REGISTRY.items() if info.license == ToolLicense.GPL
+    }
 
 
 def detect_file_types(paths: List[Path]) -> Set[str]:
@@ -443,7 +447,9 @@ def is_tool_bundled(tool_name: str) -> bool:
         return False
 
 
-def get_tools_for_file_type(file_type: str, mode: LintingMode = LintingMode.FAST) -> List[str]:
+def get_tools_for_file_type(
+    file_type: str, mode: LintingMode = LintingMode.FAST
+) -> List[str]:
     """
     Get all tools that can validate a specific file type.
 

@@ -86,7 +86,10 @@ class GPLSidecarClient:
         return self._request_id
 
     def _send_request(
-        self, method: str, params: Optional[Dict[str, Any]] = None, timeout: float = 30.0
+        self,
+        method: str,
+        params: Optional[Dict[str, Any]] = None,
+        timeout: float = 30.0,
     ) -> Dict[str, Any]:
         """Send JSON-RPC 2.0 request to sidecar.
 
@@ -127,9 +130,7 @@ class GPLSidecarClient:
                     f"Connection refused: {self.socket_path}"
                 )
             except socket.timeout:
-                raise GPLSidecarTimeoutError(
-                    f"Connection timeout: {self.socket_path}"
-                )
+                raise GPLSidecarTimeoutError(f"Connection timeout: {self.socket_path}")
 
             # Send request
             request_bytes = json.dumps(request).encode("utf-8")

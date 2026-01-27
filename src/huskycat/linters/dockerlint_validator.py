@@ -40,15 +40,21 @@ class DockerLintValidator(Validator):
 
     def can_handle(self, filepath: Path) -> bool:
         """Check if file is a Dockerfile or ContainerFile"""
-        return filepath.name in ["Dockerfile", "ContainerFile"] or filepath.name.endswith(".dockerfile")
+        return filepath.name in [
+            "Dockerfile",
+            "ContainerFile",
+        ] or filepath.name.endswith(".dockerfile")
 
     def is_available(self) -> bool:
         """Check if dockerfile library is available"""
         try:
             import dockerfile  # type: ignore
+
             return True
         except ImportError:
-            logger.warning("dockerfile library not installed. Install with: pip install dockerfile>=3.4.0")
+            logger.warning(
+                "dockerfile library not installed. Install with: pip install dockerfile>=3.4.0"
+            )
             return False
 
     def validate(self, filepath: Path) -> ValidationResult:
@@ -62,7 +68,9 @@ class DockerLintValidator(Validator):
                 tool=self.name,
                 filepath=str(filepath),
                 success=False,
-                errors=["dockerfile library not installed. Install with: pip install dockerfile>=3.4.0"],
+                errors=[
+                    "dockerfile library not installed. Install with: pip install dockerfile>=3.4.0"
+                ],
                 duration_ms=int((time.time() - start_time) * 1000),
             )
 
@@ -89,7 +97,11 @@ class DockerLintValidator(Validator):
                 if cmd_name == "from":
                     has_from = True
                     if cmd.value:
-                        base_image = cmd.value[0] if isinstance(cmd.value, tuple) else str(cmd.value)
+                        base_image = (
+                            cmd.value[0]
+                            if isinstance(cmd.value, tuple)
+                            else str(cmd.value)
+                        )
                         base_images.append(base_image)
 
                         # Warn about using 'latest' tag
@@ -121,14 +133,20 @@ class DockerLintValidator(Validator):
 
                     # Check for apt/yum without cleanup
                     if "apt-get install" in cmd_value or "apt install" in cmd_value:
-                        if "rm -rf /var/lib/apt/lists/*" not in cmd_value and "apt-get clean" not in cmd_value:
+                        if (
+                            "rm -rf /var/lib/apt/lists/*" not in cmd_value
+                            and "apt-get clean" not in cmd_value
+                        ):
                             warnings.append(
                                 f"Line {cmd.start_line}: apt-get install without cleanup. "
                                 "Consider adding: && rm -rf /var/lib/apt/lists/*"
                             )
 
                     if "yum install" in cmd_value or "dnf install" in cmd_value:
-                        if "yum clean all" not in cmd_value and "dnf clean all" not in cmd_value:
+                        if (
+                            "yum clean all" not in cmd_value
+                            and "dnf clean all" not in cmd_value
+                        ):
                             warnings.append(
                                 f"Line {cmd.start_line}: yum/dnf install without cleanup. "
                                 "Consider adding: && yum clean all"
@@ -145,8 +163,19 @@ class DockerLintValidator(Validator):
                 elif cmd_name in ["copy", "add"]:
                     if cmd_name == "add" and cmd.value:
                         # ADD should only be used for tar extraction
-                        source = cmd.value[0] if isinstance(cmd.value, tuple) and len(cmd.value) > 0 else ""
-                        if not (isinstance(source, str) and (source.endswith(".tar") or source.endswith(".tar.gz") or source.startswith("http"))):
+                        source = (
+                            cmd.value[0]
+                            if isinstance(cmd.value, tuple) and len(cmd.value) > 0
+                            else ""
+                        )
+                        if not (
+                            isinstance(source, str)
+                            and (
+                                source.endswith(".tar")
+                                or source.endswith(".tar.gz")
+                                or source.startswith("http")
+                            )
+                        ):
                             warnings.append(
                                 f"Line {cmd.start_line}: Use COPY instead of ADD for files. "
                                 "ADD should only be used for tar extraction or URLs."
