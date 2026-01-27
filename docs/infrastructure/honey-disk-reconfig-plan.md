@@ -1,21 +1,22 @@
 # Honey Disk Reconfiguration Plan
 
 **Created**: 2026-01-26
-**Status**: DRAFT - Awaiting Review
-**Risk Level**: Medium (requires RKE2 restart, potential data loss if done incorrectly)
+**Updated**: 2026-01-27
+**Status**: PHASE 2 READY - Corrected Approach (Bind Mount)
+**Risk Level**: Low (bind mount approach, reversible)
 
-## Current State
+## Current State (Verified 2026-01-27)
 
 ### Hardware
 - **CPU**: Dual-socket (unknown model)
-- **RAM**: 219GB
+- **RAM**: 219GB (110G per tmpfs)
 - **Storage**: 2x SSDs
 
 ### Disk Layout
 
 | Disk | Size | Current Use | Notes |
 |------|------|-------------|-------|
-| sda | 476GB | Old Proxmox LVM | Legacy cruft, VMs not in use |
+| sda | 476.9GB | runner-vg (GitLab cache) | **100% ALLOCATED - NO VFREE** |
 | sdb | 3.6TB | Rocky Linux | Active system disk |
 
 ### Current sdb (3.6TB) Partitioning
@@ -24,308 +25,256 @@
 |-----------|------|-------|---------|
 | sdb1 | 600MB | /boot/efi | EFI System |
 | sdb2 | 1GB | /boot | Boot |
-| sdb3 (LVM) | 3.6TB | - | LVM PV |
+| sdb3 (LVM) | 3.6TB | - | LVM PV (rl VG) |
 
-### Current LVM Layout (rl VG on sdb3)
+### Current LVM Layout
 
+**Volume Group: runner-vg (sda1)** - PHASE 1 COMPLETE
+| LV | Size | Mount | Status |
+|----|------|-------|--------|
+| runner-cache | 477GB | /var/lib/gitlab-runner/cache | Active, 2% used (9.2GB) |
+
+**CRITICAL**: runner-vg has **0 bytes VFree** - entire VG allocated to runner-cache.
+The original plan incorrectly confused filesystem available space (468GB inside XFS) with LVM VFree.
+
+**Volume Group: rl (sdb3)**
 | LV | Size | Mount | Current Use |
 |----|------|-------|-------------|
-| rl-root | 70GB | / | OS + RKE2 (/var/lib/rancher) |
-| rl-swap | 32GB | swap | Swap |
-| rl-home | 3.5TB | /home | User data + Docker (/home/docker-data) |
+| rl-root | 70GB | / | OS + RKE2 (68% = 48GB used) |
+| rl-swap | 32GB | swap | Swap (commented out in fstab) |
+| rl-home | 3.5TB | /home | User data + Docker (11% = 389GB used, **3.2TB available**) |
 
-### Current Service Data Locations
+### Current Service Data Locations (Verified)
 
-| Service | Path | Partition | Size Used |
-|---------|------|-----------|-----------|
-| RKE2 | /var/lib/rancher | rl-root (/) | ~30GB |
-| Docker | /home/docker-data | rl-home (/home) | ~70GB |
-| GitLab Runner | /home/jess/.gitlab-runner | rl-home (/home) | ~5GB |
-| GitLab Runner Cache | (none dedicated) | - | - |
+| Service | Path | Partition | Size Used | Notes |
+|---------|------|-----------|-----------|-------|
+| RKE2 | /var/lib/rancher | rl-root (/) | ~558MB base + containerd | Containerd data grows |
+| Docker | /home/docker-data | rl-home (/home) | Variable | Root Dir configured |
+| GitLab Runner Cache | /var/lib/gitlab-runner/cache | runner-vg (sda) | 9.2GB | **PHASE 1 COMPLETE** |
+| GitLab Runner Config | /etc/gitlab-runner | rl-root (/) | Minimal | Config only |
 
-## Problems with Current Setup
+### RKE2 Cluster Status
 
-1. **RKE2 on root (/)**: Only 70GB, 68% used - risk of disk exhaustion
-2. **Docker + RKE2 contention**: Both use overlay2, can conflict
-3. **No dedicated runner cache**: Builds slower than necessary
-4. **sda wasted**: 476GB of usable SSD sitting idle
-5. **No separation**: All workloads compete for same I/O
+| Node | Status | Roles | Version |
+|------|--------|-------|---------|
+| honey | Ready | control-plane,etcd,master | v1.31.14+rke2r1 |
+| blahaj | NotReady | agent | v1.31.14+rke2r1 |
 
-## Target State
+**Note**: blahaj is NotReady - this should be investigated separately but does not block Phase 2.
 
-### Goal: Separation of Concerns
+---
 
-| Service | Dedicated Storage | Size | Source |
-|---------|------------------|------|--------|
-| OS + System | rl-root | 70GB | Keep as-is |
-| RKE2 + K8s | New: rl-rancher | 500GB | Carve from rl-home |
-| Docker | /home/docker-data | 500GB | Limit via quota |
-| GitLab Runner Cache | sda (repurposed) | 476GB | Wipe sda |
-| User Home | rl-home (reduced) | ~2.5TB | Remainder |
+## Phase 1: GitLab Runner Cache - COMPLETE
 
-### Target LVM Layout
+Phase 1 has been successfully completed:
+- runner-vg volume group created on sda1
+- runner-cache LV (477GB) mounted at /var/lib/gitlab-runner/cache
+- Currently 2% used (9.2GB of 468GB available)
+- Added to /etc/fstab with noatime option
 
-```
-sda (476GB) - Dedicated GitLab Runner
-├── runner-vg
-│   └── runner-cache (476GB) → /var/lib/gitlab-runner/cache
+---
 
-sdb (3.6TB) - System + RKE2 + Docker
-├── sdb1 (600MB) → /boot/efi
-├── sdb2 (1GB) → /boot
-└── sdb3 (LVM: rl VG)
-    ├── rl-root (70GB) → /
-    ├── rl-swap (32GB) → swap
-    ├── rl-rancher (500GB) → /var/lib/rancher [NEW]
-    └── rl-home (~2.9TB) → /home (reduced)
-```
+## Phase 2: RKE2 Volume Migration - CORRECTED APPROACH
 
-## Implementation Phases
+### Problem Statement
 
-### Phase 0: Preparation (No Changes)
+The original Phase 2 plan to create an LV in runner-vg **FAILED** due to a critical planning error:
 
-**Estimated Time**: 30 minutes
+| Assumption | Reality |
+|------------|---------|
+| runner-vg has 468GB VFree | runner-vg has **0 bytes VFree** |
+| Can create 200GB rancher LV | **IMPOSSIBLE** - no space |
 
-1. **Backup current configs**
-   ```bash
-   mkdir -p /home/jess/honey-backup-$(date +%Y%m%d)
-   cp -a /etc/docker /home/jess/honey-backup-$(date +%Y%m%d)/
-   cp -a /etc/rancher /home/jess/honey-backup-$(date +%Y%m%d)/
-   cp -a /var/lib/rancher/rke2/server/manifests /home/jess/honey-backup-$(date +%Y%m%d)/
-   tar czf /home/jess/honey-backup-$(date +%Y%m%d)/gitlab-runner.tar.gz /etc/gitlab-runner /home/jess/.gitlab-runner
-   ```
+**Root Cause**: The plan confused **filesystem available space** (468GB inside XFS) with **LVM VFree** (0 bytes). The entire 477GB VG was allocated to runner-cache in Phase 1.
 
-2. **Document current state**
-   ```bash
-   lsblk -o NAME,SIZE,TYPE,MOUNTPOINT,FSTYPE > /home/jess/honey-backup-$(date +%Y%m%d)/lsblk.txt
-   vgdisplay > /home/jess/honey-backup-$(date +%Y%m%d)/vgdisplay.txt
-   lvdisplay > /home/jess/honey-backup-$(date +%Y%m%d)/lvdisplay.txt
-   pvdisplay > /home/jess/honey-backup-$(date +%Y%m%d)/pvdisplay.txt
-   df -h > /home/jess/honey-backup-$(date +%Y%m%d)/df.txt
-   ```
+### Options Evaluated
 
-3. **Verify sda is not in use**
-   ```bash
-   # Check for active mounts
-   mount | grep sda
-   # Check for active LVM
-   pvs | grep sda
-   lvs | grep pve
-   # Check for processes using old PVE paths
-   lsof +D /dev/pve-OLD-53B0DA72 2>/dev/null
-   ```
+| Option | Feasibility | Risk | Complexity |
+|--------|-------------|------|------------|
+| 1. Shrink runner-cache LV | **IMPOSSIBLE** | N/A | XFS cannot shrink |
+| 2. Delete/recreate runner-cache smaller | Medium | Medium | High |
+| 3. **Bind mount from /home** | **HIGH** | **LOW** | **LOW** |
+| 4. Symlink from /home | Medium | Medium | SELinux issues |
+| 5. Reclaim swap LV (32GB) | Low | Low | Only 32GB, not enough |
 
-### Phase 1: Repurpose sda for GitLab Runner Cache
+### Recommended Solution: Bind Mount from /home
 
-**Estimated Time**: 15 minutes
-**Risk**: LOW (sda is unused)
-**Rollback**: Remove new VG, no other changes needed
+**Rationale**:
+- /home has **3.2TB available** on rl-home
+- Same pattern Docker already uses (/home/docker-data)
+- No LVM modifications required
+- SELinux compatible (bind mounts preserve contexts)
+- Quick, reversible, low-risk
 
-1. **Wipe old Proxmox LVM**
-   ```bash
-   # Deactivate all LVs in old VG
-   sudo vgchange -an pve-OLD-53B0DA72
+### Implementation Script
 
-   # Remove the VG
-   sudo vgremove -f pve-OLD-53B0DA72
+A migration script has been created: `docs/infrastructure/honey-rke2-migration.sh`
 
-   # Remove the PV
-   sudo pvremove /dev/sda3
+**To execute** (requires interactive sudo on honey):
 
-   # Wipe partition table
-   sudo wipefs -a /dev/sda
-   ```
-
-2. **Create new partition and LVM for runner cache**
-   ```bash
-   # Create single partition
-   sudo parted /dev/sda --script mklabel gpt
-   sudo parted /dev/sda --script mkpart primary 0% 100%
-
-   # Create PV
-   sudo pvcreate /dev/sda1
-
-   # Create VG
-   sudo vgcreate runner-vg /dev/sda1
-
-   # Create LV
-   sudo lvcreate -l 100%FREE -n runner-cache runner-vg
-
-   # Format
-   sudo mkfs.xfs /dev/runner-vg/runner-cache
-   ```
-
-3. **Mount and configure**
-   ```bash
-   # Create mount point
-   sudo mkdir -p /var/lib/gitlab-runner/cache
-
-   # Add to fstab
-   echo '/dev/runner-vg/runner-cache /var/lib/gitlab-runner/cache xfs defaults,noatime 0 2' | sudo tee -a /etc/fstab
-
-   # Mount
-   sudo mount /var/lib/gitlab-runner/cache
-
-   # Set permissions
-   sudo chown -R gitlab-runner:gitlab-runner /var/lib/gitlab-runner/cache
-   ```
-
-4. **Update GitLab Runner config**
-   ```bash
-   # Edit /etc/gitlab-runner/config.toml
-   # Add cache configuration pointing to /var/lib/gitlab-runner/cache
-   ```
-
-**Rollback Phase 1**:
 ```bash
-sudo umount /var/lib/gitlab-runner/cache
-sudo lvremove -f runner-vg/runner-cache
-sudo vgremove runner-vg
-sudo pvremove /dev/sda1
-# Remove fstab entry
+# Copy script to honey
+scp docs/infrastructure/honey-rke2-migration.sh honey:/tmp/
+
+# SSH to honey and run
+ssh honey
+sudo bash /tmp/honey-rke2-migration.sh
 ```
 
-### Phase 2: Create Dedicated RKE2 Volume
+### Manual Implementation Steps
 
-**Estimated Time**: 45 minutes (includes RKE2 restart)
-**Risk**: MEDIUM (requires RKE2 stop/start, data migration)
-**Rollback**: Restore from backup, revert bind mount
+If you prefer to run commands manually:
 
-1. **Stop RKE2 and Docker**
-   ```bash
-   sudo systemctl stop gitlab-runner
-   sudo systemctl stop docker
-   sudo systemctl stop rke2-server  # or rke2-agent
-   ```
+#### Pre-Migration Checklist
+```bash
+# Verify current state
+ssh honey "df -h / /home"
+ssh honey "du -sh /var/lib/rancher"
+```
 
-2. **Shrink rl-home to make space**
-   ```bash
-   # Unmount /home (requires single-user or rescue mode)
-   # This is the risky part - must be done carefully
+#### Step 1: Stop RKE2 (2 min)
+```bash
+sudo systemctl stop rke2-server
+sleep 10
+systemctl is-active rke2-server  # Should say "inactive"
+```
 
-   # Option A: Online resize (if supported)
-   # XFS cannot shrink online - must use Option B
+#### Step 2: Create Target and Copy Data (5 min)
+```bash
+sudo mkdir -p /home/rancher-data
+sudo rsync -avP --xattrs /var/lib/rancher/ /home/rancher-data/
+sudo du -sh /home/rancher-data  # Verify ~558MB copied
+```
 
-   # Option B: Create new LV from free space in VG
-   # Check free space first
-   sudo vgs rl
+#### Step 3: Switch to Bind Mount (2 min)
+```bash
+sudo mv /var/lib/rancher /var/lib/rancher.old
+sudo mkdir /var/lib/rancher
+echo '/home/rancher-data /var/lib/rancher none bind 0 0' | sudo tee -a /etc/fstab
+sudo mount /var/lib/rancher
+df -h /var/lib/rancher  # Should show 3.6TB on rl-home
+```
 
-   # If no free space, we need to:
-   # 1. Backup /home/docker-data
-   # 2. Delete some data from /home
-   # 3. Shrink rl-home in rescue mode
-   ```
+#### Step 4: Restore SELinux and Start Services (5 min)
+```bash
+sudo restorecon -Rv /var/lib/rancher /home/rancher-data
+sudo systemctl start rke2-server
+sleep 60
+systemctl is-active rke2-server
+sudo /var/lib/rancher/rke2/bin/kubectl --kubeconfig /etc/rancher/rke2/rke2.yaml get nodes
+```
 
-3. **Create rl-rancher LV** (if space available)
-   ```bash
-   sudo lvcreate -L 500G -n rl-rancher rl
-   sudo mkfs.xfs /dev/rl/rl-rancher
-   ```
+#### Step 5: Cleanup (after 24-48h verification)
+```bash
+sudo rm -rf /var/lib/rancher.old
+```
 
-4. **Migrate RKE2 data**
-   ```bash
-   # Mount new volume temporarily
-   sudo mkdir -p /mnt/new-rancher
-   sudo mount /dev/rl/rl-rancher /mnt/new-rancher
+### Rollback Procedure
 
-   # Copy data
-   sudo rsync -avP /var/lib/rancher/ /mnt/new-rancher/
-
-   # Verify
-   sudo diff -r /var/lib/rancher /mnt/new-rancher
-
-   # Unmount
-   sudo umount /mnt/new-rancher
-   ```
-
-5. **Update fstab and mount**
-   ```bash
-   # Backup original
-   sudo mv /var/lib/rancher /var/lib/rancher.old
-   sudo mkdir /var/lib/rancher
-
-   # Add to fstab
-   echo '/dev/rl/rl-rancher /var/lib/rancher xfs defaults,noatime 0 2' | sudo tee -a /etc/fstab
-
-   # Mount
-   sudo mount /var/lib/rancher
-   ```
-
-6. **Start services**
-   ```bash
-   sudo systemctl start rke2-server  # or rke2-agent
-   # Wait for RKE2 to be healthy
-   sudo /var/lib/rancher/rke2/bin/kubectl --kubeconfig /etc/rancher/rke2/rke2.yaml get nodes
-
-   sudo systemctl start docker
-   sudo systemctl start gitlab-runner
-   ```
-
-7. **Cleanup old data**
-   ```bash
-   # Only after confirming everything works
-   sudo rm -rf /var/lib/rancher.old
-   ```
-
-**Rollback Phase 2**:
 ```bash
 sudo systemctl stop rke2-server
 sudo umount /var/lib/rancher
-sudo rm -rf /var/lib/rancher
+sudo rmdir /var/lib/rancher
 sudo mv /var/lib/rancher.old /var/lib/rancher
-# Remove fstab entry
+sudo sed -i '/rancher-data.*bind/d' /etc/fstab
 sudo systemctl start rke2-server
 ```
 
-### Phase 3: Docker Volume Quota (Optional)
+### Success Criteria
 
-**Estimated Time**: 10 minutes
-**Risk**: LOW
+| Criterion | Expected |
+|-----------|----------|
+| /var/lib/rancher mounted | On rl-home (3.6TB) |
+| RKE2 service | active (running) |
+| Kubernetes node honey | Ready |
+| Root partition usage | ~68% (unchanged initially) |
+| Available rancher space | ~3.2TB |
 
-1. **Set XFS project quota on /home/docker-data**
-   ```bash
-   # Enable project quotas on /home (requires remount)
-   # Add 'prjquota' to /etc/fstab for /home
+### Verification Commands
 
-   # Create project
-   echo "1:/home/docker-data" | sudo tee -a /etc/projects
-   echo "docker:1" | sudo tee -a /etc/projid
+```bash
+# Disk layout
+df -h /var/lib/rancher
+mount | grep rancher
 
-   # Set 500GB limit
-   sudo xfs_quota -x -c 'project -s docker' /home
-   sudo xfs_quota -x -c 'limit -p bhard=500g docker' /home
-   ```
+# Service health
+systemctl is-active rke2-server
+sudo /var/lib/rancher/rke2/bin/kubectl --kubeconfig /etc/rancher/rke2/rke2.yaml get nodes
 
-## Verification Checklist
+# GitLab runner
+gitlab-runner list 2>&1
+```
 
-After each phase:
+---
 
-- [ ] All services started successfully
-- [ ] `kubectl get nodes` shows Ready
-- [ ] `docker info` shows correct paths
-- [ ] GitLab runner picks up jobs
-- [ ] No errors in `journalctl -u rke2-server`
-- [ ] No errors in `journalctl -u docker`
-- [ ] Disk usage as expected (`df -h`)
+## Risk Assessment
+
+### Identified Risks (Corrected Approach)
+
+| Risk | Likelihood | Impact | Mitigation |
+|------|------------|--------|------------|
+| RKE2 fails to start | Low | High | Keep .old backup |
+| Bind mount not persistent | Low | Medium | Verify fstab entry |
+| SELinux denials | Low | Medium | Run restorecon |
+
+### Timeline
+
+- **Total Duration**: ~15 minutes
+- **RKE2 Downtime**: ~5-10 minutes
+- **GitLab Runner**: No interruption needed
+
+---
+
+## Phase 3: Docker Volume Quota (Optional, Future)
+
+This phase is optional and can be done later without downtime.
+
+See original plan section for XFS project quota setup.
+
+---
 
 ## Schedule
 
-| Phase | When | Duration | Downtime |
-|-------|------|----------|----------|
-| Phase 0 | Anytime | 30 min | None |
-| Phase 1 | Anytime | 15 min | None |
-| Phase 2 | Maintenance window | 45 min | RKE2 restart |
-| Phase 3 | Anytime | 10 min | None |
+| Phase | Status | Duration | Downtime | Notes |
+|-------|--------|----------|----------|-------|
+| Phase 0 | COMPLETE | 30 min | None | Backup done |
+| Phase 1 | COMPLETE | 15 min | None | Runner cache on sda |
+| Phase 2 | READY | 15 min | RKE2 restart (~5-10 min) | Bind mount approach |
+| Phase 3 | FUTURE | 10 min | None | Optional quota |
 
-## Emergency Contacts
+---
 
-- RKE2 Issues: Check `/var/lib/rancher/rke2/server/logs/`
-- Docker Issues: `journalctl -u docker -f`
-- Disk Issues: `dmesg | tail -50`
+## Appendix: Quick Reference Commands
 
-## Notes
+```bash
+# Check disk usage
+df -h / /var/lib/rancher /var/lib/gitlab-runner/cache /home
 
-- Phase 2 is the most complex and risky
-- Consider doing Phase 2 during a maintenance window
-- Have console access ready (not just SSH) in case of boot issues
-- The 476GB sda as runner cache will significantly speed up CI builds
+# Check LVM
+sudo vgs && sudo lvs
+
+# Check RKE2
+systemctl status rke2-server
+/var/lib/rancher/rke2/bin/kubectl --kubeconfig /etc/rancher/rke2/rke2.yaml get nodes
+
+# Check GitLab Runner
+systemctl status gitlab-runner
+gitlab-runner list 2>&1
+
+# Check mounts
+mount | grep -E 'rancher|runner'
+
+# Check fstab
+grep -E 'rancher|runner' /etc/fstab
+```
+
+---
+
+## Change Log
+
+| Date | Change |
+|------|--------|
+| 2026-01-26 | Initial plan created |
+| 2026-01-27 | Phase 1 verified complete, Phase 2 detailed plan added |
+| 2026-01-27 | Updated to use runner-vg instead of shrinking rl-home (XFS limitation) |
+| 2026-01-27 | **CORRECTED**: runner-vg has 0 VFree, cannot create new LV. Changed to bind mount approach from /home |
