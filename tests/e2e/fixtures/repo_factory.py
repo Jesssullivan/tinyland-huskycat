@@ -49,6 +49,13 @@ class TestRepoFactory:
             check=True,
             capture_output=True,
         )
+        # Disable GPG signing for test repos (avoids pinentry issues in CI)
+        subprocess.run(
+            ["git", "config", "commit.gpgsign", "false"],
+            cwd=repo_path,
+            check=True,
+            capture_output=True,
+        )
 
         # Create feature files based on requested features
         if "gitlab_ci" in features:
@@ -77,7 +84,7 @@ class TestRepoFactory:
             capture_output=True,
         )
         subprocess.run(
-            ["git", "commit", "-m", "chore: initial commit"],
+            ["git", "commit", "--no-verify", "-m", "chore: initial commit"],
             cwd=repo_path,
             check=True,
             capture_output=True,
