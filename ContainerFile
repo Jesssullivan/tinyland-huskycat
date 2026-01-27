@@ -68,8 +68,18 @@ RUN pip3 install --no-cache-dir --break-system-packages \
     safety \
     gitpython
 
-# Install Shell tools
-RUN apk add --no-cache shellcheck
+# Install Shell tools - use pre-built binary (apk add takes 10+ minutes in DinD)
+RUN ARCH=$(uname -m) && \
+    SHELLCHECK_VERSION="v0.10.0" && \
+    if [ "$ARCH" = "x86_64" ]; then SC_ARCH="x86_64"; \
+    elif [ "$ARCH" = "aarch64" ]; then SC_ARCH="aarch64"; \
+    else echo "Unsupported architecture: $ARCH"; exit 1; fi && \
+    echo "Downloading shellcheck ${SHELLCHECK_VERSION} for architecture: ${SC_ARCH}" && \
+    curl -L "https://github.com/koalaman/shellcheck/releases/download/${SHELLCHECK_VERSION}/shellcheck-${SHELLCHECK_VERSION}.linux.${SC_ARCH}.tar.xz" -o shellcheck.tar.xz && \
+    tar -xJf shellcheck.tar.xz && \
+    mv shellcheck-${SHELLCHECK_VERSION}/shellcheck /usr/local/bin/shellcheck && \
+    chmod +x /usr/local/bin/shellcheck && \
+    rm -rf shellcheck.tar.xz shellcheck-${SHELLCHECK_VERSION}
 
 # Install Docker tools with multi-arch support
 WORKDIR /tmp
@@ -137,7 +147,7 @@ COPY --from=builder /usr/bin/isort /usr/bin/isort
 COPY --from=builder /usr/bin/yamllint /usr/bin/yamllint
 COPY --from=builder /usr/bin/ansible-lint /usr/bin/ansible-lint
 COPY --from=builder /usr/bin/pytest /usr/bin/pytest
-COPY --from=builder /usr/bin/shellcheck /usr/bin/shellcheck
+COPY --from=builder /usr/local/bin/shellcheck /usr/local/bin/shellcheck
 COPY --from=builder /root/.cargo/bin/taplo /usr/local/bin/taplo
 COPY --from=builder /usr/lib/python3.11 /usr/lib/python3.11/
 COPY --from=builder /usr/lib/node_modules /usr/lib/node_modules/
