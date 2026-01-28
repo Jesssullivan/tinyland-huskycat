@@ -1,0 +1,26 @@
+# HuskyCat Bazel configuration
+
+# Enable bzlmod (Bazel module system)
+common --enable_bzlmod
+
+# Reproducibility settings
+build --incompatible_strict_action_env
+
+# Python configuration
+build --python_version=PY3
+
+# Test configuration
+test --test_output=errors
+test --test_verbose_timeout_warnings
+
+# CI configuration (use with --config=ci)
+build:ci --remote_download_minimal
+build:ci --jobs=4
+
+# Debug configuration (use with --config=debug)
+build:debug --compilation_mode=dbg
+build:debug --verbose_failures
+
+# Release configuration (use with --config=release)
+build:release --compilation_mode=opt
+build:release --strip=always

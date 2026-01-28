@@ -1,12 +1,14 @@
 #!/bin/bash
 # HuskyCat One-Line Installer v2
-# Usage: curl -fsSL https://tinyland.gitlab.io/ai/huskycat/install.sh | bash
+# Usage: curl -fsSL https://huskycat-570fbd.gitlab.io/install.sh | bash
 # Options: HUSKYCAT_WITH_CLAUDE=1 HUSKYCAT_SCOPE=user
 
 set -euo pipefail
 
 # Configuration
-GITLAB_PROJECT="tinyland/ai/huskycat"
+# Override with HUSKYCAT_DOWNLOAD_BASE environment variable if needed
+DOWNLOAD_BASE="${HUSKYCAT_DOWNLOAD_BASE:-https://huskycat-570fbd.gitlab.io}"
+GITLAB_PROJECT="jsullivan2/huskycats-bates"
 VERSION="${HUSKYCAT_VERSION:-latest}"
 WITH_CLAUDE="${HUSKYCAT_WITH_CLAUDE:-0}"
 SCOPE="${HUSKYCAT_SCOPE:-user}"
@@ -151,7 +153,7 @@ show_usage() {
         echo '  claude mcp add huskycat -- huskycat mcp-server'
         echo ""
         echo "Or reinstall with auto-registration:"
-        echo '  HUSKYCAT_WITH_CLAUDE=1 curl -fsSL https://tinyland.gitlab.io/ai/huskycat/install.sh | bash'
+        echo "  HUSKYCAT_WITH_CLAUDE=1 curl -fsSL ${DOWNLOAD_BASE}/install.sh | bash"
         echo ""
     fi
 }

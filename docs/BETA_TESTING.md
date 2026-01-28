@@ -23,7 +23,7 @@ HuskyCat is a universal code validation platform with:
 ### Option A: One-Line Install (Recommended)
 
 ```bash
-curl -fsSL https://tinyland.gitlab.io/ai/huskycat/install.sh | bash
+curl -fsSL https://huskycat-570fbd.gitlab.io/install.sh | bash
 ```
 
 This will:

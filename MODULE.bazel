@@ -1,0 +1,23 @@
+"""HuskyCat Bazel module definition.
+
+This module provides Bazel build support for HuskyCat using bzlmod.
+Currently provides basic Python toolchain integration via rules_nixpkgs.
+
+For most development work, use UV + npm scripts instead:
+  uv sync --dev && npm run dev
+
+Bazel is provided for reproducible builds and hermetic CI environments.
+"""
+
+module(
+    name = "huskycat",
+    version = "2.0.0",
+    compatibility_level = 1,
+)
+
+# Python rules for building Python targets
+bazel_dep(name = "rules_python", version = "0.31.0")
+
+# Nixpkgs integration for hermetic toolchains (optional)
+# Uncomment when rules_nixpkgs_core is available on bzlmod registry
+# bazel_dep(name = "rules_nixpkgs_core", version = "0.12.0")

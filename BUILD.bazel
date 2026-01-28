@@ -1,0 +1,24 @@
+# Root BUILD file for HuskyCat
+# Provides basic Bazel targets for the project
+
+# Export configuration files for dependent rules
+exports_files([
+    "pyproject.toml",
+    "flake.nix",
+    "LICENSE",
+    "README.md",
+])
+
+# Filegroup for Python source files
+filegroup(
+    name = "python_srcs",
+    srcs = glob(["src/**/*.py"]),
+    visibility = ["//visibility:public"],
+)
+
+# Filegroup for test files
+filegroup(
+    name = "test_srcs",
+    srcs = glob(["tests/**/*.py"]),
+    visibility = ["//visibility:public"],
+)

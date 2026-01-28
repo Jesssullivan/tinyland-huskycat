@@ -1,0 +1,53 @@
+# Nix build verification
+# Verifies the Nix flake builds correctly and passes basic checks
+
+nix:build:
+  stage: validate
+  image: nixos/nix:latest
+  variables:
+    NIX_CONFIG: |
+      experimental-features = nix-command flakes
+      sandbox = false
+  before_script:
+    - nix --version
+  script:
+    - echo "Building HuskyCat with Nix..."
+    - nix build --print-build-logs --no-link
+    - echo "Checking flake..."
+    - nix flake check --no-build
+    - echo "Showing flake outputs..."
+    - nix flake show
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      changes:
+        - flake.nix
+        - flake.lock
+    - if: $CI_MERGE_REQUEST_ID
+      changes:
+        - flake.nix
+        - flake.lock
+  allow_failure: true  # Don't block pipeline until Nix builds are stable
+
+nix:devshell:
+  stage: validate
+  image: nixos/nix:latest
+  variables:
+    NIX_CONFIG: |
+      experimental-features = nix-command flakes
+      sandbox = false
+  script:
+    - echo "Testing development shell..."
+    - nix develop --command echo "Dev shell works!"
+    - echo "Testing CI shell..."
+    - nix develop .#ci --command shellcheck --version
+    - nix develop .#ci --command hadolint --version
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      changes:
+        - flake.nix
+        - flake.lock
+    - if: $CI_MERGE_REQUEST_ID
+      changes:
+        - flake.nix
+        - flake.lock
+  allow_failure: true

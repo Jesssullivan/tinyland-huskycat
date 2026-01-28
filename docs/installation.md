@@ -5,7 +5,7 @@
 The easiest way to install HuskyCat is with the automated installer:
 
 ```bash
-curl -fsSL https://tinyland.gitlab.io/ai/huskycat/install.sh | bash
+curl -fsSL https://huskycat-570fbd.gitlab.io/install.sh | bash
 ```
 
 This downloads the correct binary for your platform, verifies checksums, and installs to `~/.local/bin`.
@@ -15,7 +15,7 @@ This downloads the correct binary for your platform, verifies checksums, and ins
 To automatically register HuskyCat as an MCP server with Claude Code:
 
 ```bash
-HUSKYCAT_WITH_CLAUDE=1 curl -fsSL https://tinyland.gitlab.io/ai/huskycat/install.sh | bash
+HUSKYCAT_WITH_CLAUDE=1 curl -fsSL https://huskycat-570fbd.gitlab.io/install.sh | bash
 ```
 
 **Options:**
@@ -30,7 +30,7 @@ If you prefer to download manually:
 ### Linux (amd64)
 
 ```bash
-curl -L 'https://gitlab.com/tinyland/ai/huskycat/-/jobs/artifacts/main/raw/dist/bin/huskycat-linux-amd64?job=build:binary:linux-amd64' -o huskycat
+curl -L 'https://gitlab.com/jsullivan2/huskycats-bates/-/jobs/artifacts/main/raw/dist/bin/huskycat-linux-amd64?job=build:binary:linux-amd64' -o huskycat
 chmod +x huskycat
 ./huskycat install
 ```
@@ -38,7 +38,7 @@ chmod +x huskycat
 ### Linux (ARM64)
 
 ```bash
-curl -L 'https://gitlab.com/tinyland/ai/huskycat/-/jobs/artifacts/main/raw/dist/bin/huskycat-linux-arm64?job=build:binary:linux-arm64' -o huskycat
+curl -L 'https://gitlab.com/jsullivan2/huskycats-bates/-/jobs/artifacts/main/raw/dist/bin/huskycat-linux-arm64?job=build:binary:linux-arm64' -o huskycat
 chmod +x huskycat
 ./huskycat install
 ```
@@ -46,7 +46,7 @@ chmod +x huskycat
 ### macOS (ARM64 - M1/M2/M3/M4)
 
 ```bash
-curl -L 'https://gitlab.com/tinyland/ai/huskycat/-/jobs/artifacts/main/raw/dist/bin/huskycat-darwin-arm64?job=build:binary:darwin-arm64' -o huskycat
+curl -L 'https://gitlab.com/jsullivan2/huskycats-bates/-/jobs/artifacts/main/raw/dist/bin/huskycat-darwin-arm64?job=build:binary:darwin-arm64' -o huskycat
 chmod +x huskycat
 ./huskycat install
 ```
@@ -344,7 +344,7 @@ huskycat setup-hooks --force
 
 ```bash
 # Clone repository
-git clone https://gitlab.com/tinyland/ai/huskycat.git
+git clone https://gitlab.com/jsullivan2/huskycats-bates.git
 cd huskycat
 
 # Install dependencies

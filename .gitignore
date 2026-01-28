@@ -102,3 +102,12 @@ hive-mind-prompt-*.txt
 .mypy_cache/
 .huskycat/results/
 .huskycat/tasks/
+
+# Nix
+result
+result-*
+.direnv/
+
+# Bazel
+bazel-*
+.bazelisk/

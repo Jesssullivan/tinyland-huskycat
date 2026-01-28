@@ -66,6 +66,37 @@ ssh honey "gitlab-runner list 2>&1"  # List runners
 
 See `~/.claude/skills/ci-monitoring.md` for full skill reference.
 
+### macOS Code Signing CI Variables
+
+To enable signed macOS binaries and PKG installers, configure these GitLab CI variables:
+
+| Variable | Description | How to Obtain |
+|----------|-------------|---------------|
+| `APPLE_CERTIFICATE_BASE64` | Developer ID Application cert (.p12, base64) | Export from Keychain, base64 encode |
+| `APPLE_INSTALLER_CERTIFICATE_BASE64` | Developer ID Installer cert (.p12, base64) | Export from Keychain, base64 encode |
+| `APPLE_CERTIFICATE_PASSWORD` | Password for .p12 files | Your export password |
+| `APPLE_DEVELOPER_ID_APPLICATION` | Full cert name | `"Developer ID Application: Name (TEAMID)"` |
+| `APPLE_DEVELOPER_ID_INSTALLER` | Full cert name | `"Developer ID Installer: Name (TEAMID)"` |
+| `APPLE_DEVELOPER_ID_CA_G2` | G2 intermediate cert (optional) | Download from Apple |
+| `APPLE_ID` | Apple ID email | Your developer account email |
+| `APPLE_NOTARIZE_PASSWORD` | App-specific password | Apple ID → Security → App-Specific Passwords |
+| `APPLE_TEAM_ID` | 10-character team ID | Apple Developer Portal → Membership |
+
+**Export Process:**
+```bash
+# From Keychain Access on macOS:
+# 1. Export "Developer ID Application" cert as .p12
+# 2. Export "Developer ID Installer" cert as .p12
+
+# Encode for CI:
+base64 -i "Developer ID Application.p12" | tr -d '\n' > app_cert_base64.txt
+base64 -i "Developer ID Installer.p12" | tr -d '\n' > installer_cert_base64.txt
+```
+
+**Configure in GitLab:** Settings → CI/CD → Variables (Masked: Yes, Protected: No)
+
+See `.gitlab/ci/macos-pkg.yml` for full implementation.
+
 ## Product Mode Architecture
 
 HuskyCat operates in **5 distinct product modes**, each with different requirements:
@@ -210,6 +241,33 @@ uv run python -m src.huskycat --mode cli status  # Force CLI mode
 uv run python -m src.huskycat --json validate .  # Force JSON output
 ```
 
+### 4. Nix Flake (Reproducible Builds)
+```bash
+# Build HuskyCat with Nix
+nix build                           # Build package
+./result/bin/huskycat --version     # Run built binary
+
+# Development shells
+nix develop                         # FAST mode (Apache/MIT tools)
+nix develop .#ci                    # COMPREHENSIVE mode (includes GPL tools)
+
+# With direnv (auto-activates shell)
+direnv allow                        # Enable .envrc
+# Shell auto-activates on cd
+
+# CI verification
+nix flake check                     # Verify flake
+nix flake show                      # Show outputs
+```
+
+### 5. Bazel (Hermetic Builds)
+```bash
+# Basic Bazel targets (optional, use UV for most work)
+bazel build //...                   # Build all targets
+bazel query //...                   # List targets
+bazel test //...                    # Run tests (when configured)
+```
+
 ## CLI Commands Reference
 
 ```bash
@@ -242,10 +300,12 @@ huskycat clean                   # Clean cache
 
 See [docs/architecture/execution-models.md](docs/architecture/execution-models.md) for complete details.
 
-**Summary**: HuskyCat supports three execution models:
+**Summary**: HuskyCat supports five execution models:
 1. **Binary Execution** - PyInstaller binary with embedded or delegated tools
 2. **Container Execution** - Alpine-based multi-arch container
 3. **UV Development Mode** - npm scripts + UV package manager
+4. **Nix Flake** - Reproducible builds with declarative dependencies
+5. **Bazel** - Hermetic builds for CI (optional)
 
 **Tool Resolution Priority**: Bundled tools > System PATH > Container delegation
 

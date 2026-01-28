@@ -114,7 +114,7 @@ pages:
         <p>Binary releases and installation scripts for HuskyCat.</p>
 
         <h2>Quick Install</h2>
-        <div class="install-cmd">curl -sSL https://tinyland.gitlab.io/ai/huskycat/install.sh | bash</div>
+        <div class="install-cmd">curl -fsSL https://huskycat-570fbd.gitlab.io/install.sh | bash</div>
 
         <h2>Binary Releases</h2>
         <ul class="downloads">
