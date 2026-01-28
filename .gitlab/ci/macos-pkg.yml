@@ -33,6 +33,31 @@ variables:
 .keychain_setup:
   before_script:
     - echo "🔐 Setting up temporary keychain for code signing..."
+
+    # Validate required variables
+    - |
+      MISSING_VARS=""
+      if [ -z "$APPLE_CERTIFICATE_BASE64" ]; then
+        MISSING_VARS="$MISSING_VARS APPLE_CERTIFICATE_BASE64"
+      fi
+      if [ -z "$APPLE_CERTIFICATE_PASSWORD" ]; then
+        MISSING_VARS="$MISSING_VARS APPLE_CERTIFICATE_PASSWORD"
+      fi
+      if [ -z "$APPLE_DEVELOPER_ID_APPLICATION" ]; then
+        MISSING_VARS="$MISSING_VARS APPLE_DEVELOPER_ID_APPLICATION"
+      fi
+      if [ -n "$MISSING_VARS" ]; then
+        echo "❌ ERROR: Missing required CI variables:$MISSING_VARS"
+        echo ""
+        echo "Configure these in GitLab CI/CD Settings → Variables"
+        echo "See .gitlab/ci/macos-pkg.yml for documentation"
+        exit 1
+      fi
+      echo "✅ Required variables present"
+      echo "   APPLE_CERTIFICATE_BASE64: ${#APPLE_CERTIFICATE_BASE64} chars"
+      echo "   APPLE_CERTIFICATE_PASSWORD: ${#APPLE_CERTIFICATE_PASSWORD} chars"
+      echo "   APPLE_DEVELOPER_ID_APPLICATION: $APPLE_DEVELOPER_ID_APPLICATION"
+
     # Create temporary keychain
     - KEYCHAIN_NAME="signing-$CI_JOB_ID.keychain-db"
     - KEYCHAIN_PASSWORD=$(openssl rand -base64 32)
@@ -51,34 +76,101 @@ variables:
       if [ -n "$APPLE_DEVELOPER_ID_CA_G2" ]; then
         echo "Importing Developer ID CA G2..."
         echo "$APPLE_DEVELOPER_ID_CA_G2" | base64 -d > DeveloperIDG2CA.cer
-        security import DeveloperIDG2CA.cer -k "$KEYCHAIN_NAME" -T /usr/bin/codesign -T /usr/bin/productsign -T /usr/bin/pkgbuild -A
-        rm DeveloperIDG2CA.cer
+        if ! security import DeveloperIDG2CA.cer -k "$KEYCHAIN_NAME" -T /usr/bin/codesign -T /usr/bin/productsign -T /usr/bin/pkgbuild -A 2>&1; then
+          echo "⚠️  WARNING: Failed to import Developer ID CA G2 (continuing anyway)"
+        fi
+        rm -f DeveloperIDG2CA.cer
       fi
 
-    # Import Application certificate
+    # Import Application certificate with error handling
     - |
-      if [ -n "$APPLE_CERTIFICATE_BASE64" ]; then
-        echo "Importing Application certificate..."
-        echo "$APPLE_CERTIFICATE_BASE64" | base64 -d > certificate.p12
-        security import certificate.p12 -k "$KEYCHAIN_NAME" -P "$APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/codesign -A
-        rm certificate.p12
-      fi
+      echo "Importing Application certificate..."
+      echo "$APPLE_CERTIFICATE_BASE64" | base64 -d > certificate.p12
 
-    # Import Installer certificate
+      # Verify the P12 file is valid before import
+      if ! openssl pkcs12 -info -in certificate.p12 -passin pass:"$APPLE_CERTIFICATE_PASSWORD" -noout 2>/dev/null; then
+        echo "❌ ERROR: Failed to read P12 certificate"
+        echo "   This usually means the password is incorrect"
+        echo ""
+        echo "   Certificate size: $(wc -c < certificate.p12) bytes"
+        echo "   Password length: ${#APPLE_CERTIFICATE_PASSWORD} chars"
+        echo ""
+        echo "   To fix: Update APPLE_CERTIFICATE_PASSWORD in GitLab CI/CD variables"
+        echo "   Or re-export the certificate with the correct password"
+        rm -f certificate.p12
+        exit 1
+      fi
+      echo "✅ P12 certificate validated"
+
+      # Import into keychain
+      if ! security import certificate.p12 -k "$KEYCHAIN_NAME" -P "$APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/codesign -A 2>&1; then
+        echo "❌ ERROR: Failed to import certificate into keychain"
+        rm -f certificate.p12
+        exit 1
+      fi
+      echo "✅ Application certificate imported"
+      rm -f certificate.p12
+
+    # Import Installer certificate (optional, for PKG signing)
     - |
       if [ -n "$APPLE_INSTALLER_CERTIFICATE_BASE64" ]; then
         echo "Importing Installer certificate..."
         echo "$APPLE_INSTALLER_CERTIFICATE_BASE64" | base64 -d > installer.p12
-        security import installer.p12 -k "$KEYCHAIN_NAME" -P "$APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/productsign -T /usr/bin/pkgbuild -A
-        rm installer.p12
+
+        # Use separate password if provided, otherwise use same as application cert
+        INSTALLER_PASSWORD="${APPLE_INSTALLER_CERTIFICATE_PASSWORD:-$APPLE_CERTIFICATE_PASSWORD}"
+
+        if ! openssl pkcs12 -info -in installer.p12 -passin pass:"$INSTALLER_PASSWORD" -noout 2>/dev/null; then
+          echo "⚠️  WARNING: Failed to validate Installer certificate (continuing without it)"
+          rm -f installer.p12
+        elif ! security import installer.p12 -k "$KEYCHAIN_NAME" -P "$INSTALLER_PASSWORD" -T /usr/bin/productsign -T /usr/bin/pkgbuild -A 2>&1; then
+          echo "⚠️  WARNING: Failed to import Installer certificate (continuing without it)"
+          rm -f installer.p12
+        else
+          echo "✅ Installer certificate imported"
+          rm -f installer.p12
+        fi
+      else
+        echo "ℹ️  No Installer certificate provided (PKG signing will be skipped)"
       fi
 
     # Set partition list for headless access
     - 'security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_NAME"'
 
-    # Verify certificates
-    - security find-identity -v -p codesigning "$KEYCHAIN_NAME"
-    - echo "✅ Keychain setup complete"
+    # Verify certificates were imported
+    - |
+      echo ""
+      echo "=== Imported Signing Identities ==="
+      IDENTITY_COUNT=$(security find-identity -v -p codesigning "$KEYCHAIN_NAME" | grep -c "valid identities found" || echo "0")
+      security find-identity -v -p codesigning "$KEYCHAIN_NAME"
+
+      if security find-identity -v -p codesigning "$KEYCHAIN_NAME" | grep -q "0 valid identities found"; then
+        echo ""
+        echo "❌ ERROR: No valid signing identities found after import"
+        echo ""
+        echo "   This can happen if:"
+        echo "   1. The certificate password is wrong"
+        echo "   2. The P12 file doesn't contain a private key"
+        echo "   3. The certificate has expired"
+        echo "   4. The certificate is not a Developer ID Application certificate"
+        echo ""
+        echo "   Expected identity: $APPLE_DEVELOPER_ID_APPLICATION"
+        echo ""
+        echo "   To debug locally:"
+        echo "   1. security find-identity -v -p codesigning"
+        echo "   2. openssl pkcs12 -info -in your.p12 -passin pass:YOUR_PASSWORD"
+        exit 1
+      fi
+
+      # Verify the expected identity is present
+      if ! security find-identity -v -p codesigning "$KEYCHAIN_NAME" | grep -q "$APPLE_TEAM_ID"; then
+        echo ""
+        echo "⚠️  WARNING: Expected Team ID ($APPLE_TEAM_ID) not found in imported identities"
+        echo "   The signing may fail if the certificate doesn't match"
+      fi
+
+      echo ""
+      echo "✅ Keychain setup complete"
 
   after_script:
     - |
