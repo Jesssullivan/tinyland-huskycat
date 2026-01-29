@@ -6,6 +6,8 @@
 .download_tools_template: &download_tools_template
   stage: build
   image: python:3.11-slim
+  tags:
+    - linux  # Allow any Linux runner to pick up these jobs
   before_script:
     - apt-get update -qq
     - apt-get install -y --no-install-recommends curl ca-certificates xz-utils gzip
