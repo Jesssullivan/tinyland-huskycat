@@ -28,14 +28,12 @@
 # E2E: Test bootstrap on full GitOps repository
 test:e2e:bootstrap:gitops:
   stage: test
-  image: python:3.11-alpine
+  image: registry.gitlab.com/tinyland/ai/huskycat-ci-base:latest
   <<: *e2e_retry
   <<: *e2e_cache
   needs: []  # Start immediately, don't wait for container build
   before_script:
-    - apk add --no-cache git curl bash gcc musl-dev linux-headers
-    - curl -LsSf https://astral.sh/uv/install.sh | sh
-    - export PATH="$HOME/.local/bin:$PATH"
+    # UV and tools already pre-installed in base image
     - uv --version
     - git config --global user.name "CI Test"
     - git config --global user.email "ci@test.com"
@@ -66,14 +64,12 @@ test:e2e:bootstrap:gitops:
 # E2E: Test bootstrap on different repository types
 test:e2e:bootstrap:types:
   stage: test
-  image: python:3.11-alpine
+  image: registry.gitlab.com/tinyland/ai/huskycat-ci-base:latest
   <<: *e2e_retry
   <<: *e2e_cache
   needs: []
   before_script:
-    - apk add --no-cache git curl bash gcc musl-dev linux-headers
-    - curl -LsSf https://astral.sh/uv/install.sh | sh
-    - export PATH="$HOME/.local/bin:$PATH"
+    # UV and tools already pre-installed in base image
     - uv --version
     - git config --global user.name "CI Test"
     - git config --global user.email "ci@test.com"
@@ -105,14 +101,12 @@ test:e2e:bootstrap:types:
 # E2E: Test hook execution (pre-commit, pre-push, commit-msg)
 test:e2e:hooks:execution:
   stage: test
-  image: python:3.11-alpine
+  image: registry.gitlab.com/tinyland/ai/huskycat-ci-base:latest
   <<: *e2e_retry
   <<: *e2e_cache
   needs: []
   before_script:
-    - apk add --no-cache git curl bash gcc musl-dev linux-headers
-    - curl -LsSf https://astral.sh/uv/install.sh | sh
-    - export PATH="$HOME/.local/bin:$PATH"
+    # UV and tools already pre-installed in base image
     - uv --version
     - git config --global user.name "CI Test"
     - git config --global user.email "ci@test.com"
