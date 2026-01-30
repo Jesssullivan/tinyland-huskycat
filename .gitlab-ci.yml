@@ -19,6 +19,7 @@ include:
   - local: '/.gitlab/ci/nix.yml'
 
 stages:
+  - lint
   - validate
   - security
   - build  # Tool downloads happen here
@@ -65,13 +66,13 @@ variables:
       - api_failure
       - scheduler_failure
 
-# Debug: Test if validate stage works (clean job, no anchors)
-test:validate-clean:
-  stage: validate
+# Debug: Test if lint stage works (changed from validate)
+test:lint-stage:
+  stage: lint
   image: alpine:latest
   needs: []
   script:
-    - echo "Validate stage works!"
+    - echo "Lint stage works!"
 
 # Debug: Test if package stage works (NO RULES)
 test:package-stage-works:
