@@ -12,7 +12,7 @@
 1. **Wave 1**: GitLab Pages + Install Script Hosting (100% complete)
 2. **Wave 2**: macOS Code Signing (100% complete - CI variables already configured!)
 3. **Wave 3**: Nix Flake (100% complete)
-4. **Wave 4 Phase 1**: Nix binary cache configured (95% - needs public key)
+4. **Wave 4 Phase 1**: Nix binary cache configured (100% - COMPLETE ✅)
 5. **Wave 4 Phase 2a**: Bazel disk cache configured (100% complete)
 
 ### 🔍 Key Discovery: Apple Code Signing Already Complete!
@@ -45,11 +45,13 @@ The `ATTIC_TOKEN` CI variable is **already configured** at the GitLab `tinyland`
 
 ## Remaining Tasks (5 of 13)
 
-### ⏸️ Task 8: Obtain Attic Public Key (Wave 4 Phase 1)
+### ✅ Task 8: Obtain Attic Public Key (Wave 4 Phase 1) - COMPLETE
 
-**Status**: 95% complete - configuration done, needs public key
+**Status**: 100% complete - public key obtained and configured
 
-**Problem**: The standard endpoint `https://nix-cache.fuzzy-dev.tinyland.dev/main/nix-cache-info` doesn't return the public key (only returns StoreDir, WantMassQuery, Priority).
+**Public Key**: `main:PBDvqG8OP3W2XF4QzuqWwZD/RhLRsE7ONxwM09kqTtw=`
+
+**Configuration**: Both `flake.nix` and `.gitlab/ci/nix.yml` now include the Attic cache public key in `trusted-public-keys`.
 
 **Solution Options**:
 

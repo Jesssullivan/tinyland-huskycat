@@ -956,6 +956,89 @@ feature_flags:
 
 ---
 
+## CI Test Coverage
+
+This section documents which execution models are tested in the HuskyCat CI pipeline.
+
+| Execution Model | Tested in CI | CI Job(s) | Coverage |
+|----------------|--------------|-----------|----------|
+| **Container** | ✅ Yes | `validate:complete`, `test:unit`, `test:mcp:server` | Full validation with all tools |
+| **Binary (Fat)** | ✅ Yes | `build:binary:linux-amd64`, `build:binary:darwin-arm64` | Binary build + artifact verification |
+| **Binary (Nix)** | ✅ Yes | `nix:binary:linux-amd64`, `nix:binary:darwin-arm64` | Lightweight Nix binary |
+| **UV Development** | ✅ Yes | `test:e2e:bootstrap:*`, `test:e2e:hooks:*` | E2E tests with UV |
+| **nix2container** | ✅ Yes | `nix:container:amd64` | Layer-cached container build |
+| **Non-Blocking Mode** | ⚠️ Partial | E2E tests only (when enabled) | Not systematically tested |
+| **Parallel Execution** | ⚠️ Partial | Implicitly in some tests | Not explicitly tested |
+| **Embedded Tools** | ✅ Yes | `build:binary:*` (with `download:tools:*`) | Tools embedded in fat binaries |
+
+### Test Job Details
+
+**Container Validation**:
+- `validate:complete`: Comprehensive validation using fresh container (`$CONTAINER_TAG-amd64`)
+- `test:unit`: Unit tests with property-based testing (Hypothesis)
+- `test:mcp:server`: MCP server protocol tests
+
+**Binary Builds**:
+- `build:binary:linux-amd64`: Rocky Linux 10 runner, PyInstaller + UPX compression
+- `build:binary:darwin-arm64`: macOS Apple Silicon runner, PyInstaller (no UPX)
+- `verify:binary-size`: Ensures binaries stay under 250MB target
+- `checksums:generate`: SHA256 checksums for release artifacts
+
+**Nix Builds**:
+- `nix:build:*`: Matrix builds for 4 systems (x86_64-linux, aarch64-linux, x86_64-darwin, aarch64-darwin)
+- `nix:binary:*`: Lightweight binaries (~2MB) requiring tools in PATH
+- `nix:container:amd64`: nix2container with 3-layer caching strategy
+
+**E2E Tests** (using CI base image with pre-installed UV + tools):
+- `test:e2e:bootstrap:gitops`: Full GitOps repository bootstrap
+- `test:e2e:bootstrap:types`: Helm-only, K8s-only, Python-only repos
+- `test:e2e:hooks:execution`: Pre-commit, pre-push, commit-msg hooks
+
+### Coverage Gaps
+
+**Non-Blocking Mode**:
+- Not systematically tested in CI
+- Implicitly tested when `feature_flags.nonblocking_hooks: true` in E2E tests
+- **Recommendation**: Add dedicated `test:mode:non-blocking` job
+
+**Parallel Execution**:
+- No explicit test coverage for parallel tool execution
+- Dependency graph building not validated in CI
+- **Recommendation**: Add dedicated `test:mode:parallel` job
+
+### Recommended Additions (Optional)
+
+If non-blocking and parallel modes are production features, add explicit test jobs:
+
+```yaml
+# .gitlab/ci/execution-mode-tests.yml
+test:mode:non-blocking:
+  stage: test
+  image: registry.gitlab.com/tinyland/ai/huskycat:latest
+  script:
+    - huskycat validate --mode non-blocking --background &
+    - sleep 0.1  # Should return immediately (<100ms)
+    - wait
+  rules:
+    - changes:
+        - src/huskycat/core/mode_detector.py
+        - src/huskycat/core/adapters/git_hooks.py
+
+test:mode:parallel:
+  stage: test
+  image: registry.gitlab.com/tinyland/ai/huskycat:latest
+  script:
+    - huskycat validate --parallel --jobs 8
+  rules:
+    - changes:
+        - src/huskycat/unified_validation.py
+        - src/huskycat/core/parallel_executor.py
+```
+
+**Status**: These test jobs are **not currently implemented** in the CI pipeline.
+
+---
+
 ## Related Documentation
 
 - [Product Modes](product-modes.md) - 5 distinct modes with different requirements
