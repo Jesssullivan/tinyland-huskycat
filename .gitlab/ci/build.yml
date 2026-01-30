@@ -68,15 +68,15 @@ build:binary:linux-amd64:
 
 # Fat binary build - macOS Apple Silicon (ARM64)
 build:binary:darwin-arm64:
-  extends: .macos_saas_runners
   stage: package
+  tags:
+    - darwin
+    - native
   needs:
     - job: download:tools:darwin-arm64
       artifacts: true
     - job: validate:complete
       optional: true
-  dependencies:
-    - download:tools:darwin-arm64
   before_script:
     - curl -LsSf https://astral.sh/uv/install.sh | sh
     - export PATH="$HOME/.local/bin:$PATH"

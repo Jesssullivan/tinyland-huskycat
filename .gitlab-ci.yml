@@ -410,20 +410,10 @@ package:python:
 #   APPLE_ID - Apple ID email for notarization
 #   APPLE_NOTARIZE_PASSWORD - App-specific password for notarization
 #   APPLE_TEAM_ID - Team ID
-.macos_saas_runners:
-  tags:
-    - native
-    - darwin
-
-# Old binary:build:darwin-arm64 job (replaced by build:binary:darwin-arm64 in build.yml)
-# The new version includes embedded validation tools
-# binary:build:darwin-arm64:
-#   extends: .macos_saas_runners
-#   stage: package
-#   ...
-
+#
+# NOTE: .macos_saas_runners template is defined in .gitlab/ci/macos-pkg.yml
 # NOTE: sign:darwin-arm64 job is defined in .gitlab/ci/macos-pkg.yml
-# Uses the cleaner .keychain_setup template for code signing
+# NOTE: build:binary:darwin-arm64 job is defined in .gitlab/ci/build.yml
 
 # Deploy stage jobs
 
