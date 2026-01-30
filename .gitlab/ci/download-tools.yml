@@ -1,14 +1,9 @@
 # Download platform-specific validation tools for fat binary builds
 # This stage downloads pre-compiled binaries (shellcheck, hadolint, taplo)
 # that will be embedded into HuskyCat binaries for each platform.
-
-# Simple test job to verify this file is being processed
-test:download-file-included:
-  stage: package
-  image: alpine:latest
-  needs: []
-  script:
-    - echo "download-tools.yml IS being included!"
+#
+# NOTE: This file is NOT currently included in .gitlab-ci.yml
+# Jobs are defined inline in the main CI file due to include issues.
 
 # Shared configuration for download jobs (uses extends: instead of YAML anchors)
 .download_tools_template:
