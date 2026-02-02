@@ -40,8 +40,8 @@ build:ci-base-image:
         .
     - echo "Pushing CI base image to registry..."
     - docker push $BASE_IMAGE_TAG
-    - echo "✅ CI base image published: $BASE_IMAGE_TAG"
-    - echo "Size: $(docker images $BASE_IMAGE_TAG --format '{{.Size}}')"
+    - 'echo "[OK] CI base image published: $BASE_IMAGE_TAG"'
+    - 'echo "Size: $(docker images $BASE_IMAGE_TAG --format ''{{.Size}}'')"'
   rules:
     # Build on schedule (weekly refresh)
     - if: $CI_PIPELINE_SOURCE == "schedule"
