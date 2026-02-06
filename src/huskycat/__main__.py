@@ -234,6 +234,16 @@ def create_parser() -> argparse.ArgumentParser:
         "--force", action="store_true", help="Overwrite existing configuration files"
     )
 
+    # Audit config command
+    audit_parser = subparsers.add_parser(
+        "audit-config", help="Audit git configuration for best practices"
+    )
+    audit_parser.add_argument(
+        "--fix",
+        action="store_true",
+        help="Auto-fix detected issues where possible",
+    )
+
     return parser
 
 

@@ -19,6 +19,8 @@ class HookGenerator:
         "pre-commit": "templates/hooks/pre-commit.template",
         "pre-push": "templates/hooks/pre-push.template",
         "commit-msg": "templates/hooks/commit-msg.template",
+        "post-commit": "templates/hooks/post-commit.template",
+        "prepare-commit-msg": "templates/hooks/prepare-commit-msg.template",
     }
 
     def __init__(self, repo_path: Path, binary_path: Optional[Path] = None):

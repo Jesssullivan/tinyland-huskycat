@@ -25,6 +25,16 @@
   };
 
   outputs = { self, nixpkgs, flake-utils, nix2container }:
+    {
+      # Home-manager module for declarative HuskyCat configuration
+      homeManagerModules.default = import ./nix/modules/huskycat.nix;
+      homeManagerModules.huskycat = self.homeManagerModules.default;
+
+      # Nixpkgs overlay for easy integration
+      overlays.default = final: prev: {
+        huskycat = self.packages.${prev.system}.default;
+      };
+    } //
     flake-utils.lib.eachSystem [
       "x86_64-linux"
       "aarch64-linux"
@@ -179,8 +189,11 @@
             python312
             uv
 
-            # Node.js for npm scripts
+            # Node.js (legacy npm scripts)
             nodejs_22
+
+            # Task runner (replaces npm scripts)
+            just
 
             # Linting tools (Apache/MIT compatible)
             black
@@ -205,13 +218,13 @@
             echo "======================================="
             echo "Python: $(python --version)"
             echo "UV: $(uv --version 2>/dev/null || echo 'run: curl -LsSf https://astral.sh/uv/install.sh | sh')"
-            echo "Node: $(node --version)"
+            echo "Just: $(just --version 2>/dev/null || echo 'not found')"
             echo ""
             echo "Quick Start:"
             echo "  uv sync --dev       Install Python dependencies"
-            echo "  npm install         Install Node dependencies"
-            echo "  npm run dev         Run HuskyCat CLI"
-            echo "  npm run validate    Validate codebase"
+            echo "  just validate       Validate codebase"
+            echo "  just test           Run tests"
+            echo "  just build-binary   Build binary"
             echo "  nix build           Build Nix package"
             echo ""
             echo "Linting Mode: FAST (Apache/MIT tools only)"

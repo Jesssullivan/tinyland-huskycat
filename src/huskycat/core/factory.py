@@ -54,6 +54,7 @@ class HuskyCatFactory:
             "status": f"{base_package}.commands.status.StatusCommand",
             "history": f"{base_package}.commands.history.HistoryCommand",
             "tasks": f"{base_package}.commands.tasks.TasksCommand",
+            "audit-config": f"{base_package}.commands.audit_config.AuditConfigCommand",
         }
 
         for name, class_path in command_modules.items():
