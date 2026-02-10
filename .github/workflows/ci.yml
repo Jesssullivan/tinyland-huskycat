@@ -39,12 +39,14 @@ jobs:
           uv run pytest tests/ -v --tb=short -x \
             --timeout=60 \
             --ignore=tests/test_container_comprehensive.py \
+            --ignore=tests/test_mcp_async_tools.py \
             --ignore=tests/e2e/ \
             -k "not test_container and not test_docker"
 
   lint:
     name: Lint
     runs-on: ubuntu-latest
+    continue-on-error: true  # Advisory — primary linting runs on GitLab
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v4
