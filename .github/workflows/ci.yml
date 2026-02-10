@@ -50,6 +50,7 @@ jobs:
       - uses: astral-sh/setup-uv@v4
       - run: uv python install 3.12
       - run: uv sync --dev
+      - run: uv pip install ruff black
       - run: uv run ruff check src/ tests/
       - run: uv run black --check src/ tests/
 

@@ -53,7 +53,7 @@ class TestGitHookExecution:
     def test_repo(self, isolated_dir: Path) -> Path:
         """Create a test Git repository."""
         repo_dir = isolated_dir / "test_git_repo"
-        repo_dir.mkdir()
+        repo_dir.mkdir(exist_ok=True)
 
         # Initialize Git repo
         subprocess.run(["git", "init"], cwd=repo_dir, check=True, capture_output=True)
