@@ -297,8 +297,8 @@ test:mcp:server:
   services:
     - name: docker:25.0-dind
       command: ["--tls=false", "--dns=8.8.8.8", "--dns=1.1.1.1"]
-  # No tags — runs on GitLab SaaS shared runners (DinD supported via services)
-  # Previously tagged [dind, linux] which only matched the honey self-hosted runner
+  tags:
+    - saas-linux-small-amd64  # Force SaaS runners — self-hosted darwin runners lack DinD kernel modules
   <<: *retry_transient
   variables:
     DOCKER_HOST: tcp://docker:2375
@@ -354,7 +354,8 @@ container:tag:latest:
   services:
     - name: docker:25.0-dind
       command: ["--tls=false", "--dns=8.8.8.8", "--dns=1.1.1.1"]
-  # No tags — uses shared runners (DinD via services)
+  tags:
+    - saas-linux-small-amd64  # Force SaaS runners for DinD
   <<: *retry_transient
   variables:
     DOCKER_HOST: tcp://docker:2375
@@ -399,7 +400,8 @@ validate:complete:
   services:
     - name: docker:25.0-dind
       command: ["--tls=false", "--dns=8.8.8.8", "--dns=1.1.1.1"]
-  # No tags — uses shared runners (DinD via services)
+  tags:
+    - saas-linux-small-amd64  # Force SaaS runners for DinD
   variables:
     DOCKER_HOST: tcp://docker:2375
     DOCKER_TLS_CERTDIR: ""
