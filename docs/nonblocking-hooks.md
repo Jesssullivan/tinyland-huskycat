@@ -441,8 +441,7 @@ Planned improvements:
 
 ## References
 
-- [Process Manager Implementation](../src/huskycat/core/process_manager.py)
-- [TUI Framework](../src/huskycat/core/tui.py)
-- [Parallel Executor](../src/huskycat/core/parallel_executor.py)
-- [Non-Blocking Adapter](../src/huskycat/core/adapters/git_hooks_nonblocking.py)
-- [Sprint Plan](./SPRINT_PLAN.md)
+- Process Manager: `src/huskycat/core/process_manager.py`
+- TUI Framework: `src/huskycat/core/tui.py`
+- Parallel Executor: `src/huskycat/core/parallel_executor.py`
+- Non-Blocking Adapter: `src/huskycat/core/adapters/git_hooks_nonblocking.py`

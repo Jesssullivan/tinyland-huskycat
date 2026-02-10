@@ -15,32 +15,35 @@ class TestGitHookValidation:
 
     def test_pre_commit_hook_exists(self):
         """Verify pre-commit hook exists and is executable."""
-        pre_commit_path = Path(".husky/pre-commit")
+        pre_commit_path = Path(".githooks/pre-commit")
         assert pre_commit_path.exists(), "Pre-commit hook not found"
         assert os.access(pre_commit_path, os.X_OK), "Pre-commit hook is not executable"
 
-    def test_pre_commit_mcp_hook_exists(self):
-        """Verify pre-commit MCP hook exists and is executable."""
-        pre_commit_mcp_path = Path(".husky/pre-commit-mcp")
-        assert pre_commit_mcp_path.exists(), "Pre-commit MCP hook not found"
-        assert os.access(
-            pre_commit_mcp_path, os.X_OK
-        ), "Pre-commit MCP hook is not executable"
+    def test_post_commit_hook_exists(self):
+        """Verify post-commit hook exists and is executable."""
+        post_commit_path = Path(".githooks/post-commit")
+        assert post_commit_path.exists(), "Post-commit hook not found"
+        assert os.access(post_commit_path, os.X_OK), "Post-commit hook is not executable"
 
     def test_commit_msg_hook_exists(self):
         """Verify commit-msg hook exists."""
-        commit_msg_path = Path(".husky/commit-msg")
+        commit_msg_path = Path(".githooks/commit-msg")
         assert commit_msg_path.exists(), "Commit-msg hook not found"
 
-    def test_husky_directory_structure(self):
-        """Verify Husky directory structure is correct."""
-        husky_dir = Path(".husky")
-        assert husky_dir.exists(), "Husky directory not found"
-        assert husky_dir.is_dir(), "Husky path is not a directory"
+    def test_pre_push_hook_exists(self):
+        """Verify pre-push hook exists."""
+        pre_push_path = Path(".githooks/pre-push")
+        assert pre_push_path.exists(), "Pre-push hook not found"
 
-        # Check for Husky internal files
-        husky_internal = husky_dir / "_"
-        assert husky_internal.exists(), "Husky internal directory not found"
+    def test_githooks_directory_structure(self):
+        """Verify .githooks directory structure is correct."""
+        githooks_dir = Path(".githooks")
+        assert githooks_dir.exists(), ".githooks directory not found"
+        assert githooks_dir.is_dir(), ".githooks path is not a directory"
+
+        # Check for internal files directory
+        internal_dir = githooks_dir / "_"
+        assert internal_dir.exists(), ".githooks/_ internal directory not found"
 
 
 class TestGitHookExecution:
@@ -98,7 +101,7 @@ if __name__ == "__main__":
         self._setup_test_hooks(test_repo)
 
         # Run pre-commit hook directly
-        hook_path = test_repo / ".husky" / "pre-commit"
+        hook_path = test_repo / ".githooks" / "pre-commit"
         if hook_path.exists():
             result = subprocess.run(
                 [str(hook_path)],
@@ -140,7 +143,7 @@ def concatenate(a,b):  # Style issues
         self._setup_test_hooks(test_repo)
 
         # Run pre-commit hook directly
-        hook_path = test_repo / ".husky" / "pre-commit"
+        hook_path = test_repo / ".githooks" / "pre-commit"
         if hook_path.exists():
             result = subprocess.run(
                 [str(hook_path)],
@@ -166,7 +169,7 @@ def concatenate(a,b):  # Style issues
         ]
 
         self._setup_test_hooks(test_repo)
-        commit_msg_hook = test_repo / ".husky" / "commit-msg"
+        commit_msg_hook = test_repo / ".githooks" / "commit-msg"
 
         if commit_msg_hook.exists():
             for msg in test_messages:
@@ -185,15 +188,15 @@ def concatenate(a,b):  # Style issues
 
     def _setup_test_hooks(self, repo_dir: Path):
         """Set up test hooks in the repository."""
-        husky_dir = repo_dir / ".husky"
-        husky_dir.mkdir(exist_ok=True)
+        hooks_dir = repo_dir / ".githooks"
+        hooks_dir.mkdir(exist_ok=True)
 
         # Copy hooks from main repo if they exist
-        main_husky = Path(".husky")
-        if main_husky.exists():
-            for hook_file in main_husky.glob("*"):
+        main_hooks = Path(".githooks")
+        if main_hooks.exists():
+            for hook_file in main_hooks.glob("*"):
                 if hook_file.is_file() and not hook_file.name.startswith("."):
-                    dest = husky_dir / hook_file.name
+                    dest = hooks_dir / hook_file.name
                     try:
                         shutil.copy2(hook_file, dest)
                         dest.chmod(0o755)
@@ -205,12 +208,12 @@ def concatenate(a,b):  # Style issues
                         dest.chmod(0o755)
         else:
             # Create minimal test hooks
-            self._create_minimal_hooks(husky_dir)
+            self._create_minimal_hooks(hooks_dir)
 
-    def _create_minimal_hooks(self, husky_dir: Path):
+    def _create_minimal_hooks(self, hooks_dir: Path):
         """Create minimal test hooks."""
         # Pre-commit hook
-        pre_commit = husky_dir / "pre-commit"
+        pre_commit = hooks_dir / "pre-commit"
         pre_commit.write_text(
             r"""#!/bin/sh
 echo "Running pre-commit validation..."
@@ -230,7 +233,7 @@ exit 0
         pre_commit.chmod(0o755)
 
         # Commit message hook
-        commit_msg = husky_dir / "commit-msg"
+        commit_msg = hooks_dir / "commit-msg"
         commit_msg.write_text(
             """#!/bin/sh
 commit_msg_file=$1
@@ -277,7 +280,7 @@ if __name__ == "__main__":
             )
 
         self._setup_test_hooks(test_repo)
-        hook_path = test_repo / ".husky" / "pre-commit"
+        hook_path = test_repo / ".githooks" / "pre-commit"
 
         if hook_path.exists():
             start_time = time.time()
@@ -292,11 +295,11 @@ if __name__ == "__main__":
 
     def _setup_test_hooks(self, repo_dir: Path):
         """Set up test hooks - reused from TestGitHookExecution."""
-        husky_dir = repo_dir / ".husky"
-        husky_dir.mkdir(exist_ok=True)
+        hooks_dir = repo_dir / ".githooks"
+        hooks_dir.mkdir(exist_ok=True)
 
         # Create performance-focused minimal hook
-        pre_commit = husky_dir / "pre-commit"
+        pre_commit = hooks_dir / "pre-commit"
         pre_commit.write_text(
             r"""#!/bin/sh
 echo "Running fast pre-commit validation..."
@@ -324,7 +327,7 @@ class TestGitHookIntegration:
 
         self._setup_mcp_hooks(test_repo)
 
-        mcp_hook = test_repo / ".husky" / "pre-commit-mcp"
+        mcp_hook = test_repo / ".githooks" / "pre-commit-mcp"
         if mcp_hook.exists():
             # Test that MCP hook is properly structured
             content = mcp_hook.read_text()
@@ -344,12 +347,12 @@ class TestGitHookIntegration:
 
     def _setup_mcp_hooks(self, repo_dir: Path):
         """Set up MCP-specific hooks."""
-        husky_dir = repo_dir / ".husky"
-        husky_dir.mkdir(exist_ok=True)
+        hooks_dir = repo_dir / ".githooks"
+        hooks_dir.mkdir(exist_ok=True)
 
         # Copy MCP hook from main repo or create test version
-        main_mcp_hook = Path(".husky/pre-commit-mcp")
-        mcp_hook = husky_dir / "pre-commit-mcp"
+        main_mcp_hook = Path(".githooks/pre-commit-mcp")
+        mcp_hook = hooks_dir / "pre-commit-mcp"
 
         if main_mcp_hook.exists():
             try:
@@ -385,21 +388,13 @@ exit 0
 class TestGitHookConfiguration:
     """Test Git hook configuration and customization."""
 
-    def test_husky_configuration(self):
-        """Test Husky configuration in package.json."""
-        package_json = Path("package.json")
-        if package_json.exists():
-            with open(package_json) as f:
-                config = json.load(f)
-
-            # Check for Husky setup
-            if "scripts" in config:
-                scripts = config["scripts"]
-                # Should have prepare script for Husky
-                assert "prepare" in scripts, "No prepare script found for Husky"
-                assert (
-                    "husky" in scripts["prepare"]
-                ), "Prepare script doesn't mention Husky"
+    def test_githooks_configuration(self):
+        """Test .githooks directory is properly configured."""
+        githooks_dir = Path(".githooks")
+        if githooks_dir.exists():
+            hooks = list(githooks_dir.glob("*"))
+            hook_files = [h for h in hooks if h.is_file() and not h.name.startswith(".")]
+            assert len(hook_files) >= 3, f"Expected at least 3 hooks, found {len(hook_files)}"
 
     def test_lint_staged_configuration(self):
         """Test lint-staged configuration."""
@@ -418,10 +413,10 @@ class TestGitHookConfiguration:
 
     def test_hook_file_permissions(self):
         """Test that hook files have correct permissions."""
-        husky_dir = Path(".husky")
-        if husky_dir.exists():
-            for hook_file in husky_dir.glob("*"):
-                if hook_file.is_file() and not hook_file.name.startswith("_"):
+        githooks_dir = Path(".githooks")
+        if githooks_dir.exists():
+            for hook_file in githooks_dir.glob("*"):
+                if hook_file.is_file() and not hook_file.name.startswith(".") and hook_file.suffix != ".md":
                     # Hook files should be executable
                     assert os.access(
                         hook_file, os.X_OK
@@ -498,11 +493,11 @@ if __name__ == "__main__":
 
     def _setup_complete_hooks(self, repo_dir: Path):
         """Set up complete hook suite."""
-        husky_dir = repo_dir / ".husky"
-        husky_dir.mkdir(exist_ok=True)
+        hooks_dir = repo_dir / ".githooks"
+        hooks_dir.mkdir(exist_ok=True)
 
         # Pre-commit hook with comprehensive checks
-        pre_commit = husky_dir / "pre-commit"
+        pre_commit = hooks_dir / "pre-commit"
         pre_commit.write_text(
             r"""#!/bin/sh
 echo "🔍 Running pre-commit validation..."
@@ -534,7 +529,7 @@ exit 0
         pre_commit.chmod(0o755)
 
         # Commit message hook
-        commit_msg = husky_dir / "commit-msg"
+        commit_msg = hooks_dir / "commit-msg"
         commit_msg.write_text(
             """#!/bin/sh
 commit_msg_file=$1

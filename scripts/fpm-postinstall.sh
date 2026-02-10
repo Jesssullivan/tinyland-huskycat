@@ -29,9 +29,27 @@ echo ""
 echo "HuskyCat installed successfully!"
 echo ""
 echo "Quick Start:"
-echo "  huskycat status        # Check installation"
-echo "  huskycat setup-hooks   # Install git hooks"
-echo "  huskycat validate      # Validate current directory"
+echo "  huskycat --version       Check version"
+echo "  huskycat status          Check installation"
+echo "  huskycat setup-hooks     Install git hooks in current repo"
+echo "  huskycat validate .      Validate current directory"
+echo ""
+
+# Detect git and suggest hooks setup
+if command -v git &> /dev/null; then
+    echo "Git detected. To set up validation hooks in a repository:"
+    echo "  cd /path/to/your/repo && huskycat setup-hooks"
+    echo ""
+fi
+
+# Detect Claude Code and suggest MCP registration
+if command -v claude &> /dev/null; then
+    echo "Claude Code detected. To register HuskyCat as an MCP server:"
+    echo "  claude mcp add huskycat -- huskycat mcp-server"
+    echo ""
+fi
+
+echo "Documentation: https://huskycat-570fbd.gitlab.io"
 echo ""
 
 exit 0

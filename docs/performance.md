@@ -608,9 +608,8 @@ feature_flags:
 ## References
 
 - [Non-Blocking Hooks Documentation](nonblocking-hooks.md)
-- [Parallel Executor Documentation](parallel_executor.md)
-- [Embedded Tools Architecture](EMBEDDED_TOOL_EXECUTION.md)
-- [Fat Binary Architecture](FAT_BINARY_ARCHITECTURE.md)
+- [Fat Binary Architecture](architecture/fat-binaries.md)
+- [Execution Models](architecture/execution-models.md)
 - [Execution Models](architecture/execution-models.md)
 
 ---

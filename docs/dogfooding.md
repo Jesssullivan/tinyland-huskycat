@@ -408,8 +408,7 @@ def execute(self, command, files):
 
 ## References
 
-- [Sprint 11 Plan](SPRINT11_DOGFOODING_BINARY_BOOTSTRAP.md)
 - [Architecture: Product Modes](architecture/product-modes.md)
-- [Git Hooks Adapter](../src/huskycat/core/adapters/git_hooks.py)
-- [Non-Blocking Adapter](../src/huskycat/core/adapters/git_hooks_nonblocking.py)
-- [Hook Generator](../src/huskycat/core/hook_generator.py)
+- Git Hooks Adapter: `src/huskycat/core/adapters/git_hooks.py`
+- Non-Blocking Adapter: `src/huskycat/core/adapters/git_hooks_nonblocking.py`
+- Hook Generator: `src/huskycat/core/hook_generator.py`

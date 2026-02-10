@@ -5,6 +5,74 @@ All notable changes to HuskyCat will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] - 2026-02-08 - Full Distribution & Integration
+
+### Added
+
+#### Distribution Channels
+- GitLab Pages site with downloads page, install script, and LLM docs
+- RPM packages for Rocky Linux via FPM with GitLab Package Registry upload
+- DEB packages for Debian/Ubuntu via FPM with GitLab Package Registry upload
+- nix2container images pushed to GitLab Container Registry
+- macOS PKG installers with code signing, notarization, and stapling
+- One-line installer: `curl -fsSL https://huskycat-570fbd.gitlab.io/install.sh | bash`
+- SHA256 checksum verification in install script (supports SHA256SUMS.txt)
+
+#### Nix Home-Manager Module
+- Recursive git repo auto-discovery across configurable scan directories
+- Shell hook integration (direnv/cd-based) for automatic hook installation
+- Per-repo opt-out via `.huskycat-disable` sentinel file
+- Crush-dots dispatcher integration for multi-hook priority handling
+- Configurable options: `tinyland.huskycat.autoDiscover.*`
+
+#### Auto-Triage Engine
+- Platform adapters for GitLab, GitHub, and Codeberg
+- Post-commit hook for non-blocking triage
+- Commit analysis with label suggestions and iteration assignment
+- API integration via `glab` and `gh` CLI tools
+
+#### New CLI Commands
+- `huskycat audit-config` - Git configuration audit with 9 checks and `--fix` mode
+- `huskycat triage` - Manual triage trigger for commit analysis
+
+#### Documentation
+- 3 new installation pages: nix-install.md, package-install.md, container-usage.md
+- LLM-friendly docs served at /llms.txt, /llms.json, /llms-full.md
+- Downloads page with platform detection and auto-generated index
+- 28 total documentation pages (16,649 lines)
+
+#### CI/CD Hardening
+- Robust notarization error handling (replaces `|| true` with exit code capture)
+- Container registry push verification with `skopeo inspect`
+- SBOM container job retry logic
+- Docker pull verification after DinD push
+- Nix flake check now catches real test failures (removed `|| true`)
+- `allow_failure: false` on nix:container, nix:flake:check, nix:devshell
+- Registry variable consolidation ($CONTAINER_REGISTRY used consistently)
+
+#### Testing
+- 60%+ test coverage (up from 27.5%)
+- pytest configuration formalized in pyproject.toml
+- Coverage enforcement: CI fails below 60%
+- Updated git hook tests from legacy .husky/ to .githooks/
+- 30+ new test files for validators, commands, and core modules
+
+### Changed
+- `justfile` replaces npm scripts (44 recipes)
+- Pages job now pulls build artifacts via `needs:` dependencies
+- Install script checksum verification uses SHA256SUMS.txt format
+- FPM packages use correct desktop file path (assets/linux/huskycat.desktop)
+
+### Fixed
+- Downloads page artifact paths (was looking in wrong directories)
+- Desktop entry file not found in FPM packaging
+- Nix container registry variable inconsistency ($CI_REGISTRY_IMAGE vs $CONTAINER_REGISTRY)
+- macOS notarization failures silently swallowed by `|| true`
+- PKG installer shipped unsigned without warning when cert missing
+- Flake check always passing due to `|| true` on pytest
+
+---
+
 ## [2.0.0] - 2025-12-07 - Sprint 10
 
 ### Added
@@ -207,6 +275,7 @@ export HUSKYCAT_FEATURE_NONBLOCKING_HOOKS=false
 
 ## Version History
 
+- **2.1.0** (2026-02-08): Full Distribution - Pages, Nix, RPM/DEB, containers, macOS signing, triage, 60%+ coverage
 - **2.0.0** (2025-12-07): Sprint 10 - Non-blocking hooks, fat binaries, parallel execution
 - **1.0.0** (2025-11-XX): Sprint 0-9 - Initial release with 5 product modes, 3 execution models
 
@@ -214,10 +283,11 @@ export HUSKYCAT_FEATURE_NONBLOCKING_HOOKS=false
 
 ## Links
 
-- [GitHub Repository](https://github.com/tinyland/huskycat)
-- [Documentation](https://huskycat.pages.io/)
-- [Issue Tracker](https://github.com/tinyland/huskycat/issues)
-- [Release Notes](https://github.com/tinyland/huskycat/releases)
+- [GitLab Repository](https://gitlab.com/tinyland/ai/huskycat)
+- [Documentation](https://huskycat-570fbd.gitlab.io)
+- [Issue Tracker](https://gitlab.com/tinyland/ai/huskycat/-/issues)
+- [Releases](https://gitlab.com/tinyland/ai/huskycat/-/releases)
+- [Container Registry](https://gitlab.com/tinyland/ai/huskycat/container_registry)
 
 ---
 

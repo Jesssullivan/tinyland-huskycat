@@ -304,7 +304,7 @@ npm run build:binary
 ./dist/huskycat --version
 ```
 
-See [Development Guide](../CONTRIBUTING.md) for details.
+See [Development Guide](CONTRIBUTING.md) for details.
 
 ## Release Channels
 

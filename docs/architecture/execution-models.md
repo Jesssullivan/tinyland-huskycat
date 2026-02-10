@@ -1042,12 +1042,10 @@ test:mode:parallel:
 ## Related Documentation
 
 - [Product Modes](product-modes.md) - 5 distinct modes with different requirements
-- [Architecture Overview](../architecture/simplified-architecture.md) - High-level system design
 - [Installation Guide](../installation.md) - Setup for all execution models
 - [CLI Reference](../cli-reference.md) - Command-line interface usage
 - [Non-Blocking Hooks](../nonblocking-hooks.md) - Sprint 10 non-blocking mode
-- [Fat Binary Architecture](../FAT_BINARY_ARCHITECTURE.md) - Sprint 10 embedded tools
-- [Parallel Executor](../parallel_executor.md) - Sprint 10 parallel execution
+- [Fat Binary Architecture](fat-binaries.md) - Sprint 10 embedded tools
 - [Performance Guide](../performance.md) - Benchmarks and optimization
 
 ---

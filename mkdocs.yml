@@ -41,6 +41,12 @@ plugins:
 # Exclude archived docs from build warnings
 not_in_nav: |
   archive/**
+  infrastructure/**
+  build-system-enhancement-plan.md
+
+# Exclude archived docs from the build entirely (they have stale cross-links)
+exclude_docs: |
+  archive/
 
 markdown_extensions:
   - pymdownx.highlight:
@@ -66,6 +72,9 @@ nav:
   - Getting Started:
       - Installation: installation.md
       - Binary Downloads: binary-downloads.md
+      - Nix Installation: nix-install.md
+      - RPM & DEB Packages: package-install.md
+      - Container Usage: container-usage.md
       - Configuration: configuration.md
       - Beta Testing: BETA_TESTING.md
   - CLI Reference: cli-reference.md

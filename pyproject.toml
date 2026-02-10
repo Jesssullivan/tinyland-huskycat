@@ -293,6 +293,54 @@ exclude = [
     "BLE001", "TRY", "SIM", "RUF", "EM", "PGH003",
 ]
 
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "-v",
+    "--tb=short",
+    "--strict-markers",
+    "--timeout=60",
+]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "e2e: end-to-end tests requiring external services",
+    "container: tests requiring Docker/Podman",
+    "darwin: tests requiring macOS",
+    "integration: integration tests",
+]
+filterwarnings = [
+    "ignore::DeprecationWarning:hypothesis.*",
+]
+
+[tool.coverage.run]
+source = ["src/huskycat"]
+omit = [
+    "*/tests/*",
+    "*/__pycache__/*",
+    "*/conftest.py",
+]
+branch = false
+
+[tool.coverage.report]
+show_missing = true
+precision = 1
+fail_under = 60
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if TYPE_CHECKING:",
+    "if __name__ == .__main__.",
+    "raise NotImplementedError",
+    "pass",
+    "\\.\\.\\.",
+]
+
+[tool.coverage.html]
+directory = "htmlcov"
+
 [dependency-groups]
 dev = [
     "autoflake>=2.3.1",

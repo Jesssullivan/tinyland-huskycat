@@ -297,12 +297,17 @@ def format_bytes(num_bytes: int) -> str:
 
 def main():
     """Generate all LLM-friendly documentation formats"""
+    import sys
+
+    # Support output directory argument (default: "site")
+    output_dir = sys.argv[1] if len(sys.argv) > 1 else "site"
+
     print("")
-    print("🚀 Generating LLM-friendly documentation formats...")
+    print("Generating LLM-friendly documentation formats...")
     print("")
 
     # Extract metadata
-    print("1️⃣  Extracting metadata from mkdocs.yml and git...")
+    print("1. Extracting metadata from mkdocs.yml and git...")
     metadata = extract_metadata()
     print(f"   Project: {metadata['project']}")
     print(f"   Version: {metadata['version']}")
@@ -310,55 +315,56 @@ def main():
 
     # Parse markdown files
     print("")
-    print("2️⃣  Parsing markdown files from docs/...")
+    print("2. Parsing markdown files from docs/...")
     pages = parse_markdown_files(metadata)
-    print(f"   ✓ Found {len(pages)} pages in navigation")
+    print(f"   Found {len(pages)} pages in navigation")
     total_words = sum(p.word_count for p in pages)
-    print(f"   ✓ Total word count: {total_words:,}")
+    print(f"   Total word count: {total_words:,}")
 
-    # Ensure site/ directory exists
-    Path("site").mkdir(exist_ok=True)
+    # Ensure output directory exists
+    out = Path(output_dir)
+    out.mkdir(exist_ok=True)
 
     # Generate llms.txt
     print("")
-    print("3️⃣  Generating llms.txt...")
+    print("3. Generating llms.txt...")
     llms_txt = generate_llms_txt(metadata, pages)
-    llms_txt_path = Path("site/llms.txt")
+    llms_txt_path = out / "llms.txt"
     llms_txt_path.write_text(llms_txt, encoding="utf-8")
     size = llms_txt_path.stat().st_size
-    print(f"   ✓ Written: site/llms.txt ({format_bytes(size)})")
+    print(f"   Written: {llms_txt_path} ({format_bytes(size)})")
 
     # Generate llms.json
     print("")
-    print("4️⃣  Generating llms.json...")
+    print("4. Generating llms.json...")
     llms_json_data = generate_llms_json(metadata, pages)
     llms_json = json.dumps(llms_json_data, indent=2)
-    llms_json_path = Path("site/llms.json")
+    llms_json_path = out / "llms.json"
     llms_json_path.write_text(llms_json, encoding="utf-8")
     size = llms_json_path.stat().st_size
-    print(f"   ✓ Written: site/llms.json ({format_bytes(size)})")
+    print(f"   Written: {llms_json_path} ({format_bytes(size)})")
 
     # Generate llms-full.md
     print("")
-    print("5️⃣  Generating llms-full.md...")
+    print("5. Generating llms-full.md...")
     llms_full_md = generate_llms_full_md(metadata, pages)
-    llms_full_md_path = Path("site/llms-full.md")
+    llms_full_md_path = out / "llms-full.md"
     llms_full_md_path.write_text(llms_full_md, encoding="utf-8")
     size = llms_full_md_path.stat().st_size
-    print(f"   ✓ Written: site/llms-full.md ({format_bytes(size)})")
+    print(f"   Written: {llms_full_md_path} ({format_bytes(size)})")
 
     print("")
-    print("✅ LLM documentation generation complete!")
+    print("LLM documentation generation complete!")
     print("")
-    print("📄 Files generated:")
-    print("   • site/llms.txt")
-    print("   • site/llms.json")
-    print("   • site/llms-full.md")
+    print("Files generated:")
+    print(f"   {llms_txt_path}")
+    print(f"   {llms_json_path}")
+    print(f"   {llms_full_md_path}")
     print("")
-    print("🌐 These files will be served at:")
-    print(f"   • {metadata['docs_url']}/llms.txt")
-    print(f"   • {metadata['docs_url']}/llms.json")
-    print(f"   • {metadata['docs_url']}/llms-full.md")
+    print("These files will be served at:")
+    print(f"   {metadata['docs_url']}/llms.txt")
+    print(f"   {metadata['docs_url']}/llms.json")
+    print(f"   {metadata['docs_url']}/llms-full.md")
     print("")
 
 

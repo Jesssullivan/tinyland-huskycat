@@ -78,6 +78,12 @@ sbom:generate:source:
 sbom:generate:container:
   stage: security
   image: alpine:3.19
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
+      - script_failure
   needs:
     - job: container:build:amd64
       artifacts: false

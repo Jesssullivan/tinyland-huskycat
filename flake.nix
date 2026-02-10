@@ -271,14 +271,21 @@
           # Verify package builds
           package = self.packages.${system}.default;
 
-          # Run tests (if pytest is available)
+          # Run tests (skip container/e2e tests that need Docker/network)
           tests = pkgs.runCommand "huskycat-tests" {
             buildInputs = [ pythonEnv pkgs.git ];
           } ''
             cd ${self}
             export HOME=$(mktemp -d)
             export PYTHONPATH=${self}/src
-            python -m pytest tests/ -v --tb=short -x || true
+            # Initialize a minimal git config for tests that need it
+            git config --global user.email "test@test.com"
+            git config --global user.name "Test"
+            python -m pytest tests/ -v --tb=short -x \
+              --timeout=60 \
+              --ignore=tests/test_container_comprehensive.py \
+              --ignore=tests/e2e/ \
+              -k "not test_container and not test_docker"
             touch $out
           '';
         };

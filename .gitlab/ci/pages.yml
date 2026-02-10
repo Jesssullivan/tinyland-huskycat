@@ -7,9 +7,8 @@ validate:docs:
   before_script:
     - pip install --no-cache-dir mkdocs mkdocs-material mkdocs-mermaid2-plugin pyyaml
   script:
-    # Build documentation - use non-strict for now due to archived docs with broken links
-    # TODO: Re-enable strict mode after docs cleanup: mkdocs build --strict
-    - mkdocs build --site-dir _site_test 2>&1 | tee docs_build.log
+    # Build documentation with strict mode (archive/ excluded via exclude_docs in mkdocs.yml)
+    - mkdocs build --strict --site-dir _site_test 2>&1 | tee docs_build.log
     # Count warnings and fail if critical errors
     - |
       warnings=$(grep -c "^WARNING" docs_build.log || echo 0)
@@ -61,6 +60,25 @@ validate:docs:
 pages:
   stage: deploy
   image: python:3.11-slim
+  needs:
+    - job: build:binary:linux-amd64
+      artifacts: true
+      optional: true
+    - job: build:binary:darwin-arm64
+      artifacts: true
+      optional: true
+    - job: checksums:generate
+      artifacts: true
+      optional: true
+    - job: package:rpm:x86_64
+      artifacts: true
+      optional: true
+    - job: package:deb:amd64
+      artifacts: true
+      optional: true
+    - job: package:macos-pkg
+      artifacts: true
+      optional: true
   before_script:
     # Install mkdocs and dependencies
     - pip install --no-cache-dir mkdocs mkdocs-material mkdocs-mermaid2-plugin pyyaml
@@ -68,24 +86,45 @@ pages:
     # Build documentation with strict mode to catch errors
     - mkdocs build --strict --site-dir public
 
-    # Generate LLM-friendly documentation formats
+    # Generate LLM-friendly documentation formats into public/
     - echo "Generating LLM-friendly documentation formats..."
-    - python scripts/generate-llms-docs.py
+    - python scripts/generate-llms-docs.py public
 
     # Create downloads directory
     - mkdir -p public/downloads
 
-    # Copy binary artifacts if they exist
+    # Copy binary artifacts from build jobs
     - |
-      if [ -d "dist/binaries" ]; then
-        cp -r dist/binaries/* public/downloads/ || true
+      echo "Copying binary artifacts to downloads..."
+      for binary in dist/bin/huskycat-*; do
+        if [ -f "$binary" ]; then
+          cp "$binary" public/downloads/
+          echo "  Copied $(basename "$binary")"
+        fi
+      done
+
+    # Copy checksums
+    - |
+      if [ -f "dist/bin/SHA256SUMS.txt" ]; then
+        cp dist/bin/SHA256SUMS.txt public/downloads/
+        echo "  Copied SHA256SUMS.txt"
       fi
 
-    # Copy release artifacts from previous jobs
+    # Copy RPM/DEB packages if available
     - |
-      for artifact in huskycat-*; do
-        if [ -f "$artifact" ]; then
-          cp "$artifact" public/downloads/
+      for pkg in dist/rpm/*.rpm dist/deb/*.deb; do
+        if [ -f "$pkg" ]; then
+          cp "$pkg" public/downloads/
+          echo "  Copied $(basename "$pkg")"
+        fi
+      done
+
+    # Copy macOS PKG if available
+    - |
+      for pkg in dist/macos/*.pkg; do
+        if [ -f "$pkg" ]; then
+          cp "$pkg" public/downloads/
+          echo "  Copied $(basename "$pkg")"
         fi
       done
 

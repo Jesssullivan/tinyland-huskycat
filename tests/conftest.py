@@ -170,16 +170,14 @@ def git_hook_test_repo(isolated_dir: Path) -> Path:
     os.system(f"cd {repo_dir} && git config user.email 'test@example.com'")
     os.system(f"cd {repo_dir} && git config user.name 'Test User'")
 
-    # Create .husky directory
-    husky_dir = repo_dir / ".husky"
-    husky_dir.mkdir()
+    # Create .githooks directory
+    hooks_dir = repo_dir / ".githooks"
+    hooks_dir.mkdir()
 
     # Create sample pre-commit hook
-    pre_commit = husky_dir / "pre-commit"
+    pre_commit = hooks_dir / "pre-commit"
     pre_commit.write_text(
         """#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
-
 echo "Running pre-commit validation..."
 exit 0
 """

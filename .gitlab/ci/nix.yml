@@ -169,12 +169,16 @@ nix:container:amd64:
         # Push to GitLab Container Registry with version tag
         skopeo copy --dest-creds "$CI_REGISTRY_USER:$CI_REGISTRY_PASSWORD" \
           docker-archive:./result \
-          docker://$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA-nix
+          docker://$CONTAINER_REGISTRY:$CI_COMMIT_SHORT_SHA-nix
+        # Verify push succeeded
+        skopeo inspect --creds "$CI_REGISTRY_USER:$CI_REGISTRY_PASSWORD" \
+          docker://$CONTAINER_REGISTRY:$CI_COMMIT_SHORT_SHA-nix > /dev/null
+        echo "Verified: $CONTAINER_REGISTRY:$CI_COMMIT_SHORT_SHA-nix"
         # Tag as latest-nix on main branch
         if [ "$CI_COMMIT_BRANCH" = "main" ] || [ -n "$CI_COMMIT_TAG" ]; then
           skopeo copy --dest-creds "$CI_REGISTRY_USER:$CI_REGISTRY_PASSWORD" \
             docker-archive:./result \
-            docker://$CI_REGISTRY_IMAGE:latest-nix
+            docker://$CONTAINER_REGISTRY:latest-nix
         fi
         # Push layers to Attic cache
         attic push tinyland:main ./result || true
@@ -191,7 +195,7 @@ nix:container:amd64:
     - if: $CI_COMMIT_BRANCH == "main"
     - if: $CI_COMMIT_TAG
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-  allow_failure: true  # Keep non-blocking during transition period
+  allow_failure: false  # nix2container must succeed for registry distribution
 
 # Flake check - validates flake structure (fast, no build)
 nix:flake:check:
@@ -207,7 +211,7 @@ nix:flake:check:
   rules:
     - if: $CI_COMMIT_BRANCH
     - if: $CI_MERGE_REQUEST_ID
-  allow_failure: true  # Flake check is informational
+  allow_failure: false  # Flake structure check should always pass
 
 # Development shell test - verifies dev environment works
 nix:devshell:
@@ -230,4 +234,4 @@ nix:devshell:
     - changes:
         - flake.nix
         - flake.lock
-  allow_failure: true  # Dev shell test is informational
+  allow_failure: false  # Dev shell must work for developers

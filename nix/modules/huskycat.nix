@@ -41,6 +41,36 @@ in
       };
     };
 
+    # Auto-discovery configuration
+    autoDiscover = {
+      enable = lib.mkOption {
+        type = lib.types.bool;
+        default = false;
+        description = "Enable automatic discovery and hook installation for git repos";
+      };
+
+      directories = lib.mkOption {
+        type = lib.types.listOf lib.types.str;
+        default = [ "~/git" "~/src" "~/projects" ];
+        description = "Directories to scan for git repositories";
+      };
+
+      excludeRepos = lib.mkOption {
+        type = lib.types.listOf lib.types.str;
+        default = [];
+        description = "List of repository paths to exclude from auto-discovery";
+        example = [ "~/git/vendor-repo" "~/src/third-party" ];
+      };
+
+      shellHook = {
+        enable = lib.mkOption {
+          type = lib.types.bool;
+          default = true;
+          description = "Enable shell hook that detects new repos on cd";
+        };
+      };
+    };
+
     # Triage configuration
     triage = {
       enable = lib.mkOption {
@@ -88,6 +118,13 @@ in
       type = lib.types.enum [ "fast" "comprehensive" ];
       default = "fast";
       description = "Linting mode: fast (Apache/MIT tools) or comprehensive (includes GPL)";
+    };
+
+    # Default linting mode for newly discovered repos
+    defaultLintingMode = lib.mkOption {
+      type = lib.types.enum [ "fast" "comprehensive" ];
+      default = "fast";
+      description = "Default linting mode for newly discovered repositories";
     };
   };
 
@@ -212,6 +249,119 @@ in
         exit 0
       '';
     };
+
+    # Auto-discovery: activation script that scans directories for git repos
+    home.activation.huskycatAutoDiscover = lib.mkIf cfg.autoDiscover.enable (
+      lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+        # HuskyCat auto-discovery: scan directories for git repos and install hooks
+        DISCOVERY_LOG="''${XDG_CACHE_HOME:-$HOME/.cache}/huskycat/discovery.log"
+        mkdir -p "$(dirname "$DISCOVERY_LOG")"
+
+        echo "$(date -Iseconds) HuskyCat auto-discovery starting" >> "$DISCOVERY_LOG"
+
+        ${lib.concatMapStringsSep "\n" (dir: ''
+          SCAN_DIR="${dir}"
+          SCAN_DIR="''${SCAN_DIR/#\~/$HOME}"
+          if [ -d "$SCAN_DIR" ]; then
+            for repo_dir in $(find "$SCAN_DIR" -maxdepth 3 -name ".git" -type d 2>/dev/null); do
+              repo="$(dirname "$repo_dir")"
+
+              # Check opt-out sentinel file
+              if [ -f "$repo/.huskycat-disable" ]; then
+                echo "$(date -Iseconds) SKIP (opt-out): $repo" >> "$DISCOVERY_LOG"
+                continue
+              fi
+
+              # Check exclude list
+              EXCLUDED=0
+              ${lib.concatMapStringsSep "\n" (excl: ''
+                EXCL_PATH="${excl}"
+                EXCL_PATH="''${EXCL_PATH/#\~/$HOME}"
+                if [ "$repo" = "$EXCL_PATH" ]; then
+                  EXCLUDED=1
+                fi
+              '') cfg.autoDiscover.excludeRepos}
+              if [ "$EXCLUDED" = "1" ]; then
+                echo "$(date -Iseconds) SKIP (excluded): $repo" >> "$DISCOVERY_LOG"
+                continue
+              fi
+
+              # Install hooks if not already present
+              if [ ! -f "$repo/.git/hooks/pre-commit" ] || ! grep -q "huskycat" "$repo/.git/hooks/pre-commit" 2>/dev/null; then
+                echo "$(date -Iseconds) ENABLE: $repo" >> "$DISCOVERY_LOG"
+                # Write a minimal pre-commit hook
+                mkdir -p "$repo/.git/hooks"
+                cat > "$repo/.git/hooks/pre-commit" << 'HOOKEOF'
+        #!/usr/bin/env bash
+        # HuskyCat pre-commit hook (auto-installed by home-manager)
+        if command -v huskycat &>/dev/null; then
+          HUSKYCAT_LINTING_MODE="${cfg.defaultLintingMode}" \
+            huskycat validate --staged --mode git_hooks || exit 1
+        fi
+        HOOKEOF
+                chmod +x "$repo/.git/hooks/pre-commit"
+              fi
+            done
+          fi
+        '') cfg.autoDiscover.directories}
+
+        echo "$(date -Iseconds) HuskyCat auto-discovery complete" >> "$DISCOVERY_LOG"
+        $VERBOSE_ECHO "HuskyCat auto-discovery complete (see $DISCOVERY_LOG)"
+      ''
+    );
+
+    # Shell hook for cd-based repo detection
+    # Generates a shell function that checks for .git/ when changing directories
+    programs.bash.initExtra = lib.mkIf (cfg.autoDiscover.enable && cfg.autoDiscover.shellHook.enable) ''
+      # HuskyCat: auto-detect git repos and install hooks on cd
+      _huskycat_cd_hook() {
+        builtin cd "$@" || return
+        if [ -d ".git" ] && [ ! -f ".huskycat-disable" ]; then
+          if [ ! -f ".git/hooks/pre-commit" ] || ! grep -q "huskycat" ".git/hooks/pre-commit" 2>/dev/null; then
+            if command -v huskycat &>/dev/null; then
+              mkdir -p .git/hooks
+              cat > .git/hooks/pre-commit << 'HOOKEOF'
+      #!/usr/bin/env bash
+      # HuskyCat pre-commit hook (auto-installed by shell hook)
+      if command -v huskycat &>/dev/null; then
+        huskycat validate --staged --mode git_hooks || exit 1
+      fi
+      HOOKEOF
+              chmod +x .git/hooks/pre-commit
+              local DISCOVERY_LOG="''${XDG_CACHE_HOME:-$HOME/.cache}/huskycat/discovery.log"
+              mkdir -p "$(dirname "$DISCOVERY_LOG")"
+              echo "$(date -Iseconds) SHELL-HOOK: $(pwd)" >> "$DISCOVERY_LOG"
+            fi
+          fi
+        fi
+      }
+      alias cd='_huskycat_cd_hook'
+    '';
+
+    programs.zsh.initExtra = lib.mkIf (cfg.autoDiscover.enable && cfg.autoDiscover.shellHook.enable) ''
+      # HuskyCat: auto-detect git repos and install hooks on cd
+      _huskycat_chpwd_hook() {
+        if [ -d ".git" ] && [ ! -f ".huskycat-disable" ]; then
+          if [ ! -f ".git/hooks/pre-commit" ] || ! grep -q "huskycat" ".git/hooks/pre-commit" 2>/dev/null; then
+            if command -v huskycat &>/dev/null; then
+              mkdir -p .git/hooks
+              cat > .git/hooks/pre-commit << 'HOOKEOF'
+      #!/usr/bin/env bash
+      # HuskyCat pre-commit hook (auto-installed by shell hook)
+      if command -v huskycat &>/dev/null; then
+        huskycat validate --staged --mode git_hooks || exit 1
+      fi
+      HOOKEOF
+              chmod +x .git/hooks/pre-commit
+              local DISCOVERY_LOG="''${XDG_CACHE_HOME:-$HOME/.cache}/huskycat/discovery.log"
+              mkdir -p "$(dirname "$DISCOVERY_LOG")"
+              echo "$(date -Iseconds) SHELL-HOOK: $(pwd)" >> "$DISCOVERY_LOG"
+            fi
+          fi
+        fi
+      }
+      chpwd_functions+=(_huskycat_chpwd_hook)
+    '';
 
     # MCP server registration for Claude Code
     # Writes to ~/.claude.json mcpServers section

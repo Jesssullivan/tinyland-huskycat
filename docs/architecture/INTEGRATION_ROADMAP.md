@@ -2,7 +2,7 @@
 
 **Status**: Research Complete → Ready for Implementation
 **Date**: 2026-01-15
-**Based On**: [AI Assistant Integration Research](ai-assistant-integration-research.md)
+**Based On**: AI Assistant Integration Research
 
 ---
 

@@ -42,36 +42,50 @@ detect_platform() {
 verify_checksum() {
     local binary_path="$1"
     local checksum_url="$2"
+    local binary_name
+    binary_name=$(basename "$binary_path")
 
-    # Try to download checksum
-    if curl -fsSL "$checksum_url" -o "${TMP_DIR}/checksum.txt" 2>/dev/null; then
+    # Try SHA256SUMS.txt first (contains all checksums), then individual .sha256
+    local checksums_url="${checksum_url%/*}/SHA256SUMS.txt"
+    local expected_checksum=""
+
+    if curl -fsSL "$checksums_url" -o "${TMP_DIR}/SHA256SUMS.txt" 2>/dev/null; then
+        log_info "Verifying checksum from SHA256SUMS.txt..."
+        # Extract checksum for our specific binary (format: "hash  filename")
+        expected_checksum=$(grep "huskycat-${PLATFORM}-${ARCH}" "${TMP_DIR}/SHA256SUMS.txt" | awk '{print $1}')
+    elif curl -fsSL "$checksum_url" -o "${TMP_DIR}/checksum.txt" 2>/dev/null; then
         log_info "Verifying checksum..."
-        local expected_checksum
-        expected_checksum=$(cat "${TMP_DIR}/checksum.txt")
-
-        if command -v sha256sum &> /dev/null; then
-            local actual_checksum
-            actual_checksum=$(sha256sum "$binary_path" | awk '{print $1}')
-            if [ "$expected_checksum" = "$actual_checksum" ]; then
-                log_success "Checksum verified"
-                return 0
-            else
-                log_error "Checksum verification failed! Expected: $expected_checksum, Got: $actual_checksum"
-            fi
-        elif command -v shasum &> /dev/null; then
-            local actual_checksum
-            actual_checksum=$(shasum -a 256 "$binary_path" | awk '{print $1}')
-            if [ "$expected_checksum" = "$actual_checksum" ]; then
-                log_success "Checksum verified"
-                return 0
-            else
-                log_error "Checksum verification failed! Expected: $expected_checksum, Got: $actual_checksum"
-            fi
-        else
-            log_warn "No sha256sum or shasum available - skipping verification"
-        fi
+        expected_checksum=$(awk '{print $1}' "${TMP_DIR}/checksum.txt")
     else
         log_warn "Checksum not available - skipping verification"
+        return 0
+    fi
+
+    if [ -z "$expected_checksum" ]; then
+        log_warn "Checksum for ${PLATFORM}-${ARCH} not found - skipping verification"
+        return 0
+    fi
+
+    if command -v sha256sum &> /dev/null; then
+        local actual_checksum
+        actual_checksum=$(sha256sum "$binary_path" | awk '{print $1}')
+        if [ "$expected_checksum" = "$actual_checksum" ]; then
+            log_success "Checksum verified"
+            return 0
+        else
+            log_error "Checksum verification failed! Expected: $expected_checksum, Got: $actual_checksum"
+        fi
+    elif command -v shasum &> /dev/null; then
+        local actual_checksum
+        actual_checksum=$(shasum -a 256 "$binary_path" | awk '{print $1}')
+        if [ "$expected_checksum" = "$actual_checksum" ]; then
+            log_success "Checksum verified"
+            return 0
+        else
+            log_error "Checksum verification failed! Expected: $expected_checksum, Got: $actual_checksum"
+        fi
+    else
+        log_warn "No sha256sum or shasum available - skipping verification"
     fi
     return 0
 }

@@ -214,29 +214,59 @@ sign:darwin-arm64:
     - |
       if [ -n "$APPLE_ID" ]; then
         echo "Submitting for notarization..."
+        NOTARIZE_EXIT=0
         SUBMISSION_OUTPUT=$(xcrun notarytool submit huskycat-darwin-arm64.zip \
           --apple-id "$APPLE_ID" \
           --password "$APPLE_NOTARIZE_PASSWORD" \
           --team-id "$APPLE_TEAM_ID" \
-          --wait 2>&1) || true
+          --wait 2>&1) || NOTARIZE_EXIT=$?
 
         echo "$SUBMISSION_OUTPUT"
 
-        # Check for failure
-        if echo "$SUBMISSION_OUTPUT" | grep -q "status: Invalid"; then
-          SUBMISSION_ID=$(echo "$SUBMISSION_OUTPUT" | grep "id:" | head -1 | awk '{print $2}')
-          echo "Notarization failed, fetching log..."
+        # Extract submission ID for log retrieval
+        SUBMISSION_ID=$(echo "$SUBMISSION_OUTPUT" | grep "id:" | head -1 | awk '{print $2}')
+
+        # Check for any failure (non-zero exit or Invalid status)
+        if [ $NOTARIZE_EXIT -ne 0 ] || echo "$SUBMISSION_OUTPUT" | grep -q "status: Invalid"; then
+          echo "Notarization failed (exit=$NOTARIZE_EXIT), fetching log..."
+          if [ -n "$SUBMISSION_ID" ]; then
+            xcrun notarytool log "$SUBMISSION_ID" \
+              --apple-id "$APPLE_ID" \
+              --password "$APPLE_NOTARIZE_PASSWORD" \
+              --team-id "$APPLE_TEAM_ID" \
+              notarization-log.json || true
+            cat notarization-log.json || true
+          fi
+          exit 1
+        fi
+
+        # Verify notarization succeeded (must see "status: Accepted")
+        if ! echo "$SUBMISSION_OUTPUT" | grep -q "status: Accepted"; then
+          echo "WARNING: Notarization status unclear, fetching log..."
+          if [ -n "$SUBMISSION_ID" ]; then
+            xcrun notarytool log "$SUBMISSION_ID" \
+              --apple-id "$APPLE_ID" \
+              --password "$APPLE_NOTARIZE_PASSWORD" \
+              --team-id "$APPLE_TEAM_ID" \
+              notarization-log.json || true
+            cat notarization-log.json || true
+          fi
+          exit 1
+        fi
+
+        echo "Notarization accepted, collecting log..."
+        if [ -n "$SUBMISSION_ID" ]; then
           xcrun notarytool log "$SUBMISSION_ID" \
             --apple-id "$APPLE_ID" \
             --password "$APPLE_NOTARIZE_PASSWORD" \
             --team-id "$APPLE_TEAM_ID" \
             notarization-log.json || true
-          cat notarization-log.json || true
-          exit 1
         fi
+      else
+        echo "WARNING: APPLE_ID not set, skipping notarization"
       fi
 
-    - rm huskycat-darwin-arm64.zip
+    - rm -f huskycat-darwin-arm64.zip
     - echo "✅ macOS binary signed and notarized"
   artifacts:
     paths:
@@ -372,6 +402,8 @@ package:macos-pkg:
           HuskyCat-${PKG_VERSION#v}.pkg
         pkgutil --check-signature HuskyCat-${PKG_VERSION#v}.pkg
       else
+        echo "WARNING: APPLE_DEVELOPER_ID_INSTALLER not set - PKG will be unsigned"
+        echo "         Users will see Gatekeeper warnings on install"
         mv HuskyCat-${PKG_VERSION#v}-unsigned.pkg HuskyCat-${PKG_VERSION#v}.pkg
       fi
 
@@ -379,28 +411,48 @@ package:macos-pkg:
     - |
       if [ -n "$APPLE_ID" ]; then
         echo "Notarizing PKG..."
+        NOTARIZE_EXIT=0
         SUBMISSION_OUTPUT=$(xcrun notarytool submit HuskyCat-${PKG_VERSION#v}.pkg \
           --apple-id "$APPLE_ID" \
           --password "$APPLE_NOTARIZE_PASSWORD" \
           --team-id "$APPLE_TEAM_ID" \
-          --wait 2>&1) || true
+          --wait 2>&1) || NOTARIZE_EXIT=$?
 
         echo "$SUBMISSION_OUTPUT"
 
-        if echo "$SUBMISSION_OUTPUT" | grep -q "status: Invalid"; then
-          SUBMISSION_ID=$(echo "$SUBMISSION_OUTPUT" | grep "id:" | head -1 | awk '{print $2}')
-          xcrun notarytool log "$SUBMISSION_ID" \
-            --apple-id "$APPLE_ID" \
-            --password "$APPLE_NOTARIZE_PASSWORD" \
-            --team-id "$APPLE_TEAM_ID" \
-            pkg-notarization-log.json || true
-          cat pkg-notarization-log.json || true
+        SUBMISSION_ID=$(echo "$SUBMISSION_OUTPUT" | grep "id:" | head -1 | awk '{print $2}')
+
+        if [ $NOTARIZE_EXIT -ne 0 ] || echo "$SUBMISSION_OUTPUT" | grep -q "status: Invalid"; then
+          echo "PKG notarization failed (exit=$NOTARIZE_EXIT), fetching log..."
+          if [ -n "$SUBMISSION_ID" ]; then
+            xcrun notarytool log "$SUBMISSION_ID" \
+              --apple-id "$APPLE_ID" \
+              --password "$APPLE_NOTARIZE_PASSWORD" \
+              --team-id "$APPLE_TEAM_ID" \
+              pkg-notarization-log.json || true
+            cat pkg-notarization-log.json || true
+          fi
+          exit 1
+        fi
+
+        if ! echo "$SUBMISSION_OUTPUT" | grep -q "status: Accepted"; then
+          echo "PKG notarization status unclear, fetching log..."
+          if [ -n "$SUBMISSION_ID" ]; then
+            xcrun notarytool log "$SUBMISSION_ID" \
+              --apple-id "$APPLE_ID" \
+              --password "$APPLE_NOTARIZE_PASSWORD" \
+              --team-id "$APPLE_TEAM_ID" \
+              pkg-notarization-log.json || true
+            cat pkg-notarization-log.json || true
+          fi
           exit 1
         fi
 
         # Staple the notarization ticket
         xcrun stapler staple HuskyCat-${PKG_VERSION#v}.pkg
         xcrun stapler validate HuskyCat-${PKG_VERSION#v}.pkg
+      else
+        echo "WARNING: APPLE_ID not set, skipping PKG notarization"
       fi
 
     # Move to artifacts

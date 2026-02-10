@@ -1275,7 +1275,6 @@ class AdapterFactory:
 ## Related Documentation
 
 - [Execution Models](execution-models.md) - Binary, Container, UV execution details
-- [Architecture Overview](../architecture/simplified-architecture.md) - High-level system design
 - [CLI Reference](../cli-reference.md) - Command-line interface usage
 - [MCP Server](../features/mcp-server.md) - MCP integration guide
 
