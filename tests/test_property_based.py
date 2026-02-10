@@ -6,7 +6,7 @@ import tempfile
 from typing import Any, Dict, List
 
 import pytest
-from hypothesis import example, given
+from hypothesis import HealthCheck, example, given, settings
 from hypothesis import strategies as st
 
 
@@ -95,7 +95,7 @@ class TestProcessData:
         except Exception as e:
             pytest.fail(f"process_data crashed with input {data}: {e}")
 
-    @given(st.lists(st.text(min_size=1).filter(lambda x: x.strip())))
+    @given(st.lists(st.text(min_size=1, alphabet="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")))
     def test_processed_data_is_uppercase(self, data: List[str]):
         """Property: All processed strings should be uppercase."""
         result = process_data(data)
@@ -115,7 +115,7 @@ class TestProcessData:
         result = process_data(data)
         assert len(result) <= len(data)
 
-    @given(st.lists(st.text().filter(lambda x: not x.strip())))
+    @given(st.lists(st.from_regex(r"[\s]*", fullmatch=True), min_size=0, max_size=10))
     def test_whitespace_only_returns_empty(self, data: List[str]):
         """Property: Whitespace-only strings should result in empty list."""
         result = process_data(data)
@@ -138,7 +138,7 @@ class TestCodeValidation:
         except Exception as e:
             pytest.fail(f"validate_python_code crashed: {e}")
 
-    @given(st.text().filter(lambda x: "def " in x or "class " in x))
+    @given(st.from_regex(r"(def |class )\w+", fullmatch=False))
     def test_code_with_definitions_analysis(self, code: str):
         """Property: Code with definitions should be analyzable."""
         result = validate_python_code(code)
@@ -198,13 +198,14 @@ class TestFileOperations:
     @given(st.text())
     def test_write_and_read_consistency(self, content: str):
         """Property: Writing and reading a file should be consistent."""
-        with tempfile.NamedTemporaryFile(mode="w+", delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="wb", delete=False) as f:
             try:
-                f.write(content)
+                encoded = content.encode("utf-8")
+                f.write(encoded)
                 f.flush()
 
-                with open(f.name) as read_f:
-                    read_content = read_f.read()
+                with open(f.name, "rb") as read_f:
+                    read_content = read_f.read().decode("utf-8")
 
                 assert read_content == content
             finally:
@@ -215,19 +216,19 @@ class TestFileOperations:
         """Property: Multiple file operations should be consistent."""
         temp_files = []
         try:
-            # Write all files
+            # Write all files in binary mode to avoid newline translation
             for i, content in enumerate(contents):
                 temp_file = tempfile.NamedTemporaryFile(
-                    mode="w", delete=False, suffix=f"_{i}.txt"
+                    mode="wb", delete=False, suffix=f"_{i}.txt"
                 )
-                temp_file.write(content)
+                temp_file.write(content.encode("utf-8"))
                 temp_file.close()
                 temp_files.append(temp_file.name)
 
             # Read all files and verify
             for i, temp_file in enumerate(temp_files):
-                with open(temp_file) as f:
-                    read_content = f.read()
+                with open(temp_file, "rb") as f:
+                    read_content = f.read().decode("utf-8")
                 assert read_content == contents[i]
 
         finally:
@@ -271,7 +272,7 @@ class TestConfigurationHandling:
             keys=st.text(
                 min_size=1,
                 max_size=20,
-                alphabet=st.characters(whitelist_categories=("Ll", "Lu", "Nd", "_")),
+                alphabet=st.characters(whitelist_categories=("Ll", "Lu", "Nd"), whitelist_characters="_"),
             ),
             values=st.one_of(
                 st.text(), st.integers(min_value=0, max_value=1000), st.booleans()
@@ -297,6 +298,7 @@ class TestPerformanceProperties:
     """Property-based performance tests."""
 
     @given(st.lists(st.integers(), min_size=1000, max_size=10000))
+    @settings(suppress_health_check=[HealthCheck.too_slow], deadline=None)
     def test_sum_performance_scales_linearly(self, numbers: List[int]):
         """Property: Sum performance should scale roughly linearly."""
         import time
@@ -318,17 +320,14 @@ class TestPerformanceProperties:
 
 
 # Integration with pytest-benchmark if available
-try:
+pytest.importorskip("pytest_benchmark")
 
-    class TestBenchmarkProperties:
-        """Benchmark-based property tests."""
 
-        @given(st.lists(st.integers(), min_size=100, max_size=1000))
-        def test_sum_benchmark(self, benchmark, numbers: List[int]):
-            """Benchmark sum function with property-based inputs."""
-            result = benchmark(calculate_sum, numbers)
-            assert result == sum(numbers)
+class TestBenchmarkProperties:
+    """Benchmark-based property tests."""
 
-except ImportError:
-    # pytest-benchmark not available, skip benchmark tests
-    pass
+    @given(st.lists(st.integers(), min_size=100, max_size=1000))
+    def test_sum_benchmark(self, benchmark, numbers: List[int]):
+        """Benchmark sum function with property-based inputs."""
+        result = benchmark(calculate_sum, numbers)
+        assert result == sum(numbers)

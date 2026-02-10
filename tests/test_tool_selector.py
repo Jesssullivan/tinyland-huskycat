@@ -273,7 +273,8 @@ class TestGetModeFromEnv:
             assert get_mode_from_env() == LintingMode.COMPREHENSIVE
 
     @patch.dict(os.environ, {}, clear=True)
-    def test_default_is_fast(self):
+    @patch("os.path.exists", return_value=False)
+    def test_default_is_fast(self, mock_exists):
         assert get_mode_from_env() == LintingMode.FAST
 
 

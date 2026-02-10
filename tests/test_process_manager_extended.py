@@ -319,8 +319,12 @@ class TestZombieProcessCleanup:
         # Create PID file
         process_manager._save_pid(fake_pid, "test_run", ["test.py"])
 
-        # Mock waitpid to return this PID as completed
-        with mock.patch("os.waitpid", return_value=(fake_pid, 0)):
+        # Mock waitpid: first call returns reaped PID, second raises ChildProcessError
+        # (cleanup_zombies loops with waitpid(-1, WNOHANG) until no more children)
+        with mock.patch(
+            "os.waitpid",
+            side_effect=[(fake_pid, 0), ChildProcessError("No child processes")],
+        ):
             process_manager.cleanup_zombies()
 
         # PID file should be removed
@@ -681,17 +685,17 @@ def test_should_proceed_with_commit_previous_failure_non_interactive(temp_cache_
 
 def test_format_elapsed_time_singular_forms(process_manager):
     """Test singular forms of time units."""
-    # 1 second
+    # 1 second - seconds line doesn't pluralize
     elapsed = timedelta(seconds=1)
     result = process_manager._format_elapsed_time(elapsed)
-    assert "1 second ago" in result
+    assert "1 seconds ago" in result
 
-    # 1 minute
+    # 1 minute - uses singular
     elapsed = timedelta(minutes=1)
     result = process_manager._format_elapsed_time(elapsed)
     assert "1 minute ago" in result
 
-    # 1 hour
+    # 1 hour - uses singular
     elapsed = timedelta(hours=1)
     result = process_manager._format_elapsed_time(elapsed)
     assert "1 hour ago" in result

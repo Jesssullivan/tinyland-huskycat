@@ -51,16 +51,12 @@ class TestExecutionModeDetection:
         """Test bundled mode detection (PyInstaller)."""
         validator = BlackValidator()
 
-        # Mock sys.frozen and Path.exists properly
-        bundled_dir = Path.home() / ".huskycat" / "tools"
-
         with mock.patch.object(sys, "frozen", True, create=True):
-            with mock.patch.object(Path, "exists") as mock_exists:
-                # Return True for bundled tools directory
-                mock_exists.return_value = True
-
-                mode = validator._get_execution_mode()
-                assert mode == "bundled"
+            # Mock os.path.exists to return False for container files
+            with mock.patch("os.path.exists", return_value=False):
+                with mock.patch.object(Path, "exists", return_value=True):
+                    mode = validator._get_execution_mode()
+                    assert mode == "bundled"
 
     def test_local_mode_detection(self):
         """Test local mode detection (development)."""

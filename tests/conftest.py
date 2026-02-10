@@ -5,6 +5,7 @@ import os
 import shutil
 import sys
 import tempfile
+import uuid
 from pathlib import Path
 from typing import Any, Dict, Iterator
 
@@ -22,7 +23,10 @@ hypothesis.settings.register_profile(
     "ci",
     max_examples=10,  # Reduced from 1000 to prevent timeouts
     deadline=None,
-    suppress_health_check=[hypothesis.HealthCheck.too_slow],
+    suppress_health_check=[
+        hypothesis.HealthCheck.too_slow,
+        hypothesis.HealthCheck.filter_too_much,
+    ],
 )
 # Dev profile: Moderate testing for local development
 hypothesis.settings.register_profile("dev", max_examples=50, deadline=200)
@@ -43,7 +47,7 @@ def temp_project_dir() -> Iterator[Path]:
 @pytest.fixture(scope="function")
 def isolated_dir(temp_project_dir: Path) -> Iterator[Path]:
     """Create an isolated directory for each test."""
-    test_dir = temp_project_dir / f"test_{os.getpid()}"
+    test_dir = temp_project_dir / f"test_{uuid.uuid4().hex[:12]}"
     test_dir.mkdir(exist_ok=True)
     original_cwd = os.getcwd()
     try:
@@ -195,7 +199,7 @@ def python_code_strategy(draw) -> str:
         st.text(
             min_size=3,
             max_size=20,
-            alphabet=st.characters(whitelist_categories=("Ll", "Lu", "Nd", "_")),
+            alphabet=st.characters(whitelist_categories=("Ll", "Lu", "Nd"), whitelist_characters="_"),
         )
     )
     if not function_name[0].isalpha():
@@ -206,7 +210,7 @@ def python_code_strategy(draw) -> str:
             st.text(
                 min_size=1,
                 max_size=10,
-                alphabet=st.characters(whitelist_categories=("Ll", "Lu", "Nd", "_")),
+                alphabet=st.characters(whitelist_categories=("Ll", "Lu", "Nd"), whitelist_characters="_"),
             ),
             min_size=0,
             max_size=3,

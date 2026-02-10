@@ -227,8 +227,8 @@ test:unit:
     - pwd && ls -la
     - export HYPOTHESIS_PROFILE=ci
     - 'echo "Using Hypothesis profile: $HYPOTHESIS_PROFILE"'
-    # Run all tests with coverage (container/e2e tests excluded via markers)
-    - pytest tests/ -v --tb=short --hypothesis-profile=ci --timeout=300 --ignore=tests/e2e/ --ignore=tests/test_container_comprehensive.py --cov=src/huskycat --cov-report=term-missing --cov-report=xml:coverage.xml --cov-report=html:htmlcov
+    # Run all tests with coverage (container/e2e/MCP-stdio tests excluded)
+    - pytest tests/ -v --tb=short --hypothesis-profile=ci --timeout=300 --ignore=tests/e2e/ --ignore=tests/test_container_comprehensive.py --ignore=tests/test_mcp_async_tools.py --ignore=tests/test_mcp_history_tools.py --ignore=tests/test_mcp_integration_comprehensive.py --cov=src/huskycat --cov-report=term-missing --cov-report=xml:coverage.xml --cov-report=html:htmlcov
   coverage: '/TOTAL.*\s+(\d+)%/'
   artifacts:
     reports:

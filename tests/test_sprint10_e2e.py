@@ -36,6 +36,12 @@ def git_repo(tmp_path):
         check=True,
         capture_output=True,
     )
+    subprocess.run(
+        ["git", "config", "commit.gpgsign", "false"],
+        cwd=repo_dir,
+        check=True,
+        capture_output=True,
+    )
 
     # Create .huskycat directory
     huskycat_dir = repo_dir / ".huskycat"
@@ -370,6 +376,7 @@ class TestConcurrentCommitScenarios:
 
     def test_multiple_commits_different_files(self, tmp_path):
         """Test multiple commits on different files simultaneously."""
+        from unittest.mock import patch
         from huskycat.core.process_manager import ProcessManager
 
         cache_dir = tmp_path / ".huskycat" / "runs"
@@ -386,13 +393,15 @@ class TestConcurrentCommitScenarios:
         manager1._save_pid(1001, "commit1", files1)
         manager2._save_pid(1002, "commit2", files2)
 
-        # Both should see running validations
-        running1 = manager1.get_running_validations()
-        running2 = manager2.get_running_validations()
+        # Mock _is_process_alive since 1001/1002 are fake PIDs
+        with patch.object(ProcessManager, "_is_process_alive", return_value=True):
+            # Both should see running validations
+            running1 = manager1.get_running_validations()
+            running2 = manager2.get_running_validations()
 
-        # Should have 2 running validations
-        assert len(running1) >= 1
-        assert len(running2) >= 1
+            # Should have 2 running validations
+            assert len(running1) >= 1
+            assert len(running2) >= 1
 
         # Cleanup
         manager1._remove_pid(1001)

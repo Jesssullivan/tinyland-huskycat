@@ -17,6 +17,11 @@ import tempfile
 import shutil
 
 
+pytestmark = pytest.mark.skipif(
+    not shutil.which("uv"), reason="uv not available in PATH"
+)
+
+
 class TestDogfooding:
     """Tests for HuskyCat dogfooding its own validation."""
 

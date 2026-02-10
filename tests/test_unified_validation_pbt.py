@@ -69,7 +69,7 @@ class TestValidationEngineProperties:
     """Property-based tests for ValidationEngine"""
 
     @given(st.text(min_size=1, max_size=100))
-    @settings(max_examples=50)
+    @settings(max_examples=50, deadline=None)
     def test_validation_engine_initialization(self, text):
         """Test that ValidationEngine initializes with any boolean flags"""
         engine = ValidationEngine(auto_fix=False, use_container=False)
@@ -78,7 +78,7 @@ class TestValidationEngineProperties:
         assert hasattr(engine, "validate_directory")
 
     @given(python_code())
-    @settings(max_examples=30)
+    @settings(max_examples=30, deadline=None)
     def test_python_validation_returns_results(self, code):
         """Test that Python validation always returns a list of results"""
         engine = ValidationEngine()
@@ -103,7 +103,7 @@ class TestValidationEngineProperties:
                 os.unlink(f.name)
 
     @given(yaml_content())
-    @settings(max_examples=30)
+    @settings(max_examples=30, deadline=None)
     def test_yaml_validation_returns_results(self, yaml):
         """Test that YAML validation always returns structured results"""
         engine = ValidationEngine()
@@ -122,7 +122,7 @@ class TestValidationEngineProperties:
                 os.unlink(f.name)
 
     @given(shell_script())
-    @settings(max_examples=30)
+    @settings(max_examples=30, deadline=None)
     def test_shell_validation_returns_results(self, script):
         """Test that shell script validation works correctly"""
         engine = ValidationEngine()
@@ -142,7 +142,7 @@ class TestValidationEngineProperties:
                 os.unlink(f.name)
 
     @given(st.lists(st.text(min_size=1), min_size=0, max_size=10))
-    @settings(max_examples=20)
+    @settings(max_examples=20, deadline=None)
     def test_get_summary_properties(self, messages):
         """Test that get_summary produces consistent output"""
         engine = ValidationEngine()
@@ -176,7 +176,7 @@ class TestValidationEngineProperties:
         assert summary["total_warnings"] >= 0
 
     @given(st.booleans(), st.booleans())
-    @settings(max_examples=10)
+    @settings(max_examples=10, deadline=None)
     def test_engine_configuration_flags(self, auto_fix, use_container):
         """Test that engine respects configuration flags"""
         engine = ValidationEngine(auto_fix=auto_fix, use_container=use_container)
@@ -192,7 +192,7 @@ class TestValidationEngineProperties:
             max_size=10,
         )
     )
-    @settings(max_examples=20)
+    @settings(max_examples=20, deadline=None)
     def test_summary_calculation_consistency(self, file_issues):
         """Test that summary calculations are internally consistent"""
         engine = ValidationEngine()

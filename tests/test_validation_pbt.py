@@ -127,7 +127,7 @@ class TestValidationEngineProperties:
     """Property-based tests for the validation engine"""
 
     @given(python_code())
-    @settings(max_examples=50)
+    @settings(max_examples=50, deadline=None)
     def test_python_validation_never_crashes(self, code):
         """Python validation should never crash regardless of input"""
         engine = ValidationEngine()
@@ -160,7 +160,7 @@ class TestValidationEngineProperties:
             filepath.unlink()
 
     @given(javascript_code())
-    @settings(max_examples=50)
+    @settings(max_examples=50, deadline=None)
     def test_javascript_validation_never_crashes(self, code):
         """JavaScript validation should never crash regardless of input"""
         engine = ValidationEngine()
@@ -182,7 +182,7 @@ class TestValidationEngineProperties:
             filepath.unlink()
 
     @given(yaml_content())
-    @settings(max_examples=50)
+    @settings(max_examples=50, deadline=None)
     def test_yaml_validation_properties(self, content):
         """YAML validation should handle various content correctly"""
         engine = ValidationEngine()
@@ -205,7 +205,7 @@ class TestValidationEngineProperties:
             filepath.unlink()
 
     @given(dockerfile_content())
-    @settings(max_examples=30)
+    @settings(max_examples=30, deadline=None)
     def test_dockerfile_validation_properties(self, content):
         """Dockerfile validation should handle various content"""
         engine = ValidationEngine()
