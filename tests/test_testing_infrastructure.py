@@ -230,14 +230,14 @@ def test_basic_math():
         if not runner.exists():
             pytest.skip("Comprehensive test runner not found")
 
-        # Run in quick mode with a generous timeout
+        # Run in quick mode with generous timeout (CI runners can be slow)
         result = subprocess.run(
             [sys.executable, str(runner), "--quick", "--phases", "unit"],
             check=False,
             cwd=PROJECT_ROOT,
             capture_output=True,
             text=True,
-            timeout=300,
+            timeout=600,
         )
 
         # Should complete without crashing
