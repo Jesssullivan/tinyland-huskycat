@@ -22,7 +22,9 @@ include:
   # CI base image (Phase 7 - pre-baked UV + tools)
   - local: '/.gitlab/ci/ci-base-image.yml'
   # OutBot tri-VCS sync (GitLab -> GitHub + Codeberg)
-  - remote: 'https://gitlab.com/tinyland/ai/outbot-ci/-/raw/main/templates/gitlab-ci/outbot-sync.yml'
+  - project: 'tinyland/ai/outbot-ci'
+    ref: main
+    file: '/templates/gitlab-ci/outbot-sync.yml'
 
 stages:
   - validate
